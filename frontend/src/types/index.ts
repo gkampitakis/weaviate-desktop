@@ -1,10 +1,10 @@
+import { sql } from "wailsjs/go/models";
+
 export enum ConnectionStatus {
   Connected,
+  Disconnected,
 }
 
-export interface Connection {
-  id: string;
-  name: string;
+export interface Connection extends sql.Connection {
   status?: ConnectionStatus;
-  starred?: boolean;
 }

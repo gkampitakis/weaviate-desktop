@@ -1,25 +1,32 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Connection as ConnectionI } from "@/types/index";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
-import { Connection } from "./Connection";
 import { useDebouncedCallback } from "use-debounce";
 import { useFuzzySearchList } from "@nozbe/microfuzz/react";
 import { NewConnection } from "./NewConnection";
+import { useConnectionsStore } from "@/store/connections-store";
+import { Connection } from "./Connection";
+import type { Connection as ConnectionI } from "@/types";
 
-interface SidebarProps {
-  connections: ConnectionI[];
-}
+const sortConnections = (a: ConnectionI, b: ConnectionI) => {
+  if (a.favorite && !b.favorite) {
+    return -1;
+  }
+  if (!a.favorite && b.favorite) {
+    return 1;
+  }
 
-// FIXME: put starred connection on top
+  return a.name.localeCompare(b.name, undefined, { numeric: true });
+};
 
-const Sidebar: React.FC<SidebarProps> = ({ connections }) => {
+const Sidebar: React.FC = () => {
+  const connections = useConnectionsStore((state) => state.connections);
   const [search, setSearch] = useState("");
   const [openNewConnection, setOpenConnection] = useState(false);
 
   const filteredList = useFuzzySearchList({
-    list: connections,
+    list: connections.sort(sortConnections),
     queryText: search,
     getText: (item) => [item.name],
     mapResultItem: ({ item }) => item,
@@ -52,6 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ connections }) => {
           <Input
             type="search"
             placeholder="Search connections"
+            autoComplete="off"
             defaultValue={search}
             className="p4 rounded-none bg-white"
             onChange={(e) => handleSearch(e.target.value)}

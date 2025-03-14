@@ -11,6 +11,7 @@ const root = createRoot(container!);
 root.render(
   <React.StrictMode>
     <App />
-    <Toaster />
+    {/* className fixes the issue with dialog being on top of toaster */}
+    <Toaster className="pointer-events-auto" />
   </React.StrictMode>
 );

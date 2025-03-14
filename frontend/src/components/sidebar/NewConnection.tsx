@@ -10,50 +10,88 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "../ui/label";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { TestConnection } from "../../../wailsjs/go/weaviate/Weaviate";
+import { TestConnection } from "wailsjs/go/weaviate/Weaviate";
+import { SaveConnection } from "wailsjs/go/sql/Storage";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Check, LoaderCircle, X } from "lucide-react";
+import { Check, LoaderCircle } from "lucide-react";
+import { sql } from "wailsjs/go/models";
+import { useConnectionsStore } from "@/store/connections-store";
+import { ConnectionStatus } from "@/types";
 
 interface Props {
   open: boolean;
   setOpen: (v: boolean) => void;
 }
 
+const RestTestAfterSuccessMS = 3000;
+
 interface NewConnectionForm {
   uri: string;
   name: string;
 }
 
-// FIXME: handle error
-// FIXME: add a loader on the button
-// FIXME: test should be enabled when URI only exists
-//
-
 export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
-  const [disabled, setDisabled] = useState(false);
+  // const [disabled, setDisabled] = useState(false);
+  const [testLoading, setTestLoading] = useState(false);
+  const [testSuccess, setTestSuccess] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors, isValid, isDirty },
     getValues,
-    // clearErrors,
-    // control,
     reset,
-  } = useForm<NewConnectionForm>({ disabled });
+  } = useForm<NewConnectionForm>({});
+  const saveConnection = useConnectionsStore((state) => state.save);
 
-  const onSubmit: SubmitHandler<NewConnectionForm> = (data) => {
-    console.log(data);
+  const save: SubmitHandler<NewConnectionForm> = async ({ name, uri }) => {
+    try {
+      const id = await SaveConnection(
+        new sql.Connection({ uri: uri, name: name, favorite: false })
+      );
+
+      saveConnection({
+        id,
+        name,
+        uri,
+        status: ConnectionStatus.Disconnected,
+        favorite: false,
+      });
+      setOpen(false);
+      reset();
+    } catch (error) {
+      console.error(error);
+      toast.error(String(error), {
+        dismissible: true,
+        duration: 5000,
+        closeButton: true,
+      });
+    }
   };
 
   const testConnection = async () => {
-    console.log("testing connection");
+    if (testSuccess) {
+      return;
+    }
+    setTestLoading(true);
+
     try {
       await TestConnection(getValues("uri"));
+
+      setTestSuccess(true);
+
+      setTimeout(() => {
+        setTestSuccess(false);
+      }, RestTestAfterSuccessMS);
     } catch (error) {
-      console.error(error);
-      toast(String(error.error), { duration: 10000 });
+      toast.error(String(error), {
+        dismissible: true,
+        duration: 5000,
+        closeButton: true,
+      });
     }
+
+    setTestLoading(false);
   };
 
   const onOpenChange = (o: boolean) => {
@@ -61,6 +99,11 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
     if (!o) {
       reset();
     }
+  };
+
+  const OnCancel = () => {
+    setOpen(false);
+    reset();
   };
 
   return (
@@ -78,7 +121,7 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+          <form onSubmit={handleSubmit(save)} autoComplete="off">
             <div className="grid grid-rows-4 items-center">
               <Label>*Name</Label>
               <Input
@@ -108,7 +151,7 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
             <DialogFooter>
               <div className="flex justify-between min-w-full">
                 <div>
-                  <Button variant="secondary" onClick={() => setOpen(false)}>
+                  <Button variant="secondary" type="reset" onClick={OnCancel}>
                     Cancel
                   </Button>
                 </div>
@@ -116,12 +159,12 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
                   <Button
                     disabled={!getValues("uri")}
                     variant="secondary"
+                    type="button"
                     onClick={testConnection}
                   >
                     Test
-                    {/* <LoaderCircle className="animate-spin" /> */}
-                    {/* <Check className="text-green-600" /> */}
-                    {/* <X className="text-red-500" /> */}
+                    {testLoading && <LoaderCircle className="animate-spin" />}
+                    {testSuccess && <Check className="text-green-600" />}
                   </Button>
                   <Button disabled={!isValid || !isDirty} type="submit">
                     Save

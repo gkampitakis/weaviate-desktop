@@ -11,10 +11,10 @@ import (
 type Weaviate struct {
 }
 
-func (w Weaviate) TestConnection(uri string) (bool, error) {
+func (w Weaviate) TestConnection(uri string) error {
 	u, err := url.Parse(uri)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	cfg := weaviate.Config{
@@ -23,11 +23,12 @@ func (w Weaviate) TestConnection(uri string) (bool, error) {
 	}
 	client, err := weaviate.NewClient(cfg)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	return client.Misc().ReadyChecker().Do(ctx)
+	_, err = client.Misc().ReadyChecker().Do(ctx)
+	return err
 }
