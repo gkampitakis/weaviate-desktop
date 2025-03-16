@@ -1,4 +1,4 @@
-export namespace sql {
+export namespace models {
 	
 	export class Connection {
 	    id: number;

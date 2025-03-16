@@ -5,14 +5,15 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  user-select: none;
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
+  --primary: #00a142; /* Main primary color */
+  --primary-foreground: #ffffff; /* Text color on primary background */
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);
   --muted: oklch(0.968 0.007 247.896);
@@ -121,4 +122,23 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Ant tabs */
+:where(.ant-tabs-card) .ant-tabs-tab {
+  border-radius: 0 !important;
+  border: none !important;
+  margin: 0 !important;
+  opacity: 0.65; /* Faint effect */
+  transition: opacity 0.3s ease-in-out;
+  @apply gap-2;
+}
+
+:where(.ant-tabs-card) .ant-tabs-tab.ant-tabs-tab-active {
+  opacity: 1; /* Full visibility for active tab */
+}
+
+.ant-tabs-nav {
+  margin: 0 !important;
+  height: 50px;
 }

@@ -1,4 +1,5 @@
-import { ConnectionStatus, type Connection as ConnectionI } from "@/types";
+import type { Connection as ConnectionI } from "@/types";
+import { ConnectionStatus } from "@/types/enums";
 import { Button } from "@/components/ui/button";
 import { Ellipsis, Layers3, Pencil, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -8,9 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { RemoveConnection, UpdateFavorite } from "wailsjs/go/sql/Storage";
-import { useConnectionsStore } from "@/store/connections-store";
+import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
+import { toast } from "sonner";
 
 interface Props {
   connection: ConnectionI;
@@ -19,7 +20,7 @@ interface Props {
 export const Connection: React.FC<Props> = ({ connection }) => {
   const { favorite, name, status, id } = connection;
   const [isHovered, setIsHovered] = useState(false);
-  const { removeConnection, setFavoriteConnection } = useConnectionsStore(
+  const { removeConnection, setFavoriteConnection } = useConnectionStore(
     useShallow((state) => ({
       removeConnection: state.remove,
       setFavoriteConnection: state.setFavorite,
@@ -28,19 +29,29 @@ export const Connection: React.FC<Props> = ({ connection }) => {
 
   const deleteConnection = async () => {
     try {
-      await RemoveConnection(id);
       removeConnection(id);
     } catch (error) {
       console.error(error);
+
+      toast.error(String(error), {
+        dismissible: true,
+        duration: 5000,
+        closeButton: true,
+      });
     }
   };
 
   const setFavorite = async () => {
     try {
-      await UpdateFavorite(id, !favorite);
       setFavoriteConnection(id, !favorite);
     } catch (error) {
       console.error(error);
+
+      toast.error(String(error), {
+        dismissible: true,
+        duration: 5000,
+        closeButton: true,
+      });
     }
   };
 

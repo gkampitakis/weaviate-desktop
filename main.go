@@ -9,18 +9,17 @@ import (
 	"weaviate-gui/internal/weaviate"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/leaanthony/u"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/mac"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
 
 func main() {
-	// Create an instance of the app structure
-	app := NewApp()
-
 	db, err := sqlx.Open("sqlite", sql.GetStorageSource())
 	if err != nil {
 		log.Fatalf("failed opening sqlite: %v", err)
@@ -34,19 +33,29 @@ func main() {
 
 	// Create application with options
 	if err := wails.Run(&options.App{
-		Title:  "weaviate-gui",
-		Width:  1024,
-		Height: 768,
+		Title:     "weaviate-gui",
+		Width:     1440,
+		Height:    1024,
+		MinHeight: 640,
+		MinWidth:  1024,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
 		OnShutdown: func(_ context.Context) {
 			db.Close()
 		},
+		DragAndDrop: &options.DragAndDrop{
+			DisableWebViewDrop: true,
+		},
+
+		Mac: &mac.Options{
+			Preferences: &mac.Preferences{
+				FullscreenEnabled:      u.True,
+				TextInteractionEnabled: u.False,
+			},
+		},
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
-		OnStartup:        func(_ context.Context) {},
 		Bind: []any{
-			app,
 			w,
 			sqlStorage,
 		},

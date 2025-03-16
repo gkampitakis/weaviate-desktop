@@ -5,9 +5,10 @@ import { Plus } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
 import { useFuzzySearchList } from "@nozbe/microfuzz/react";
 import { NewConnection } from "./NewConnection";
-import { useConnectionsStore } from "@/store/connections-store";
+import { useConnectionStore } from "@/store/connection-store";
 import { Connection } from "./Connection";
 import type { Connection as ConnectionI } from "@/types";
+import logo from "@/assets/images/weaviate-logo.png";
 
 const sortConnections = (a: ConnectionI, b: ConnectionI) => {
   if (a.favorite && !b.favorite) {
@@ -21,7 +22,7 @@ const sortConnections = (a: ConnectionI, b: ConnectionI) => {
 };
 
 const Sidebar: React.FC = () => {
-  const connections = useConnectionsStore((state) => state.connections);
+  const connections = useConnectionStore((state) => state.connections);
   const [search, setSearch] = useState("");
   const [openNewConnection, setOpenConnection] = useState(false);
 
@@ -38,8 +39,12 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className="h-screen min-w-64 bg-gray-100 border-r border-gray-200 text-gray-700 left-0 top-0 flex-1 flex-col">
-      <div className="p-4 border-b border-gray-200">
-        <h1 className="text-xl font-bold">Weaviate</h1>
+      <div className="p-4 border-b border-gray-200 flex justify-center">
+        <img
+          src={logo}
+          className="w-[200px] select-none pointer-events-none"
+          alt="Weaviate log"
+        />
       </div>
       <div className="flex-1 overflow-y-auto">
         <div className="p-4">

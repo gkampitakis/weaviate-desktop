@@ -1,9 +1,14 @@
 package sql
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
+
+	"weaviate-gui/internal/models"
 
 	"github.com/jmoiron/sqlx"
 	_ "modernc.org/sqlite"
@@ -15,6 +20,12 @@ type Storage struct {
 	db *sqlx.DB
 }
 
+type SqlDB interface {
+	SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
+	NamedExecContext(ctx context.Context, query string, arg interface{})
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+}
+
 var connectionTable = `CREATE TABLE IF NOT EXISTS connections (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	name TEXT NOT NULL,
@@ -23,7 +34,10 @@ var connectionTable = `CREATE TABLE IF NOT EXISTS connections (
 );`
 
 func InitStorage(db *sqlx.DB) error {
-	if _, err := db.Exec(connectionTable); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if _, err := db.ExecContext(ctx, connectionTable); err != nil {
 		return fmt.Errorf("failed creating connections table: %w", err)
 	}
 
@@ -50,32 +64,29 @@ func NewStorage(db *sqlx.DB) *Storage {
 	return &Storage{db: db}
 }
 
-type Connection struct {
-	ID       int64  `db:"id" json:"id"`
-	URI      string `db:"uri" json:"uri"`
-	Name     string `db:"name" json:"name"`
-	Favorite bool   `db:"favorite" json:"favorite"`
-}
+func (s *Storage) GetConnections() ([]models.Connection, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-// ctx context.Context
-func (s *Storage) GetConnections() ([]Connection, error) {
-	var connections []Connection
-
-	if err := s.db.Select(&connections, "SELECT * FROM connections"); err != nil {
+	var connections []models.Connection
+	if err := s.db.SelectContext(ctx, &connections, "SELECT * FROM connections"); err != nil {
 		return nil, fmt.Errorf("failed getting connections: %w", err)
 	}
 
 	return connections, nil
 }
 
-// ctx context.Context,
-func (s *Storage) SaveConnection(connection Connection) (int64, error) {
+func (s *Storage) SaveConnection(c models.Connection) (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	q := `
 		INSERT INTO connections (name, uri)
 		VALUES (:name, :uri)
 		RETURNING id;
 	`
-	result, err := s.db.NamedExec(q, connection)
+
+	result, err := s.db.NamedExecContext(ctx, q, c)
 	if err != nil {
 		return 0, fmt.Errorf("failed inserting connection: %w", err)
 	}
@@ -84,7 +95,10 @@ func (s *Storage) SaveConnection(connection Connection) (int64, error) {
 }
 
 func (s *Storage) RemoveConnection(id int64) error {
-	result, err := s.db.Exec("DELETE FROM connections WHERE id = ?", id)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result, err := s.db.ExecContext(ctx, "DELETE FROM connections WHERE id = ?", id)
 	if err != nil {
 		return fmt.Errorf("failed deleting connection: %w", err)
 	}
@@ -101,10 +115,10 @@ func (s *Storage) RemoveConnection(id int64) error {
 }
 
 func (s *Storage) UpdateFavorite(id int64, favorite bool) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	fmt.Println(id, favorite)
-
-	result, err := s.db.Exec("UPDATE connections SET favorite = ? WHERE id = ?", favorite, id)
+	result, err := s.db.ExecContext(ctx, "UPDATE connections SET favorite = ? WHERE id = ?", favorite, id)
 	if err != nil {
 		return fmt.Errorf("failed updating favorite: %w", err)
 	}

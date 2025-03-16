@@ -11,13 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "../ui/label";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { TestConnection } from "wailsjs/go/weaviate/Weaviate";
-import { SaveConnection } from "wailsjs/go/sql/Storage";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Check, LoaderCircle } from "lucide-react";
-import { sql } from "wailsjs/go/models";
-import { useConnectionsStore } from "@/store/connections-store";
-import { ConnectionStatus } from "@/types";
+import { useConnectionStore } from "@/store/connection-store";
+import { ConnectionStatus } from "@/types/enums";
 
 interface Props {
   open: boolean;
@@ -32,7 +30,6 @@ interface NewConnectionForm {
 }
 
 export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
-  // const [disabled, setDisabled] = useState(false);
   const [testLoading, setTestLoading] = useState(false);
   const [testSuccess, setTestSuccess] = useState(false);
   const {
@@ -42,16 +39,11 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
     getValues,
     reset,
   } = useForm<NewConnectionForm>({});
-  const saveConnection = useConnectionsStore((state) => state.save);
+  const saveConnection = useConnectionStore((state) => state.save);
 
   const save: SubmitHandler<NewConnectionForm> = async ({ name, uri }) => {
     try {
-      const id = await SaveConnection(
-        new sql.Connection({ uri: uri, name: name, favorite: false })
-      );
-
-      saveConnection({
-        id,
+      await saveConnection({
         name,
         uri,
         status: ConnectionStatus.Disconnected,
