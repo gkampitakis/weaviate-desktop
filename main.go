@@ -28,8 +28,8 @@ func main() {
 		log.Fatalf("failed initializing storage: %v", err)
 	}
 
-	w := &weaviate.Weaviate{}
 	sqlStorage := sql.NewStorage(db)
+	w := weaviate.New(sqlStorage)
 
 	// Create application with options
 	if err := wails.Run(&options.App{
@@ -47,11 +47,9 @@ func main() {
 		DragAndDrop: &options.DragAndDrop{
 			DisableWebViewDrop: true,
 		},
-
 		Mac: &mac.Options{
 			Preferences: &mac.Preferences{
-				FullscreenEnabled:      u.True,
-				TextInteractionEnabled: u.False,
+				FullscreenEnabled: u.True,
 			},
 		},
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},

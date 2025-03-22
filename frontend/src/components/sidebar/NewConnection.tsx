@@ -27,6 +27,7 @@ const RestTestAfterSuccessMS = 3000;
 interface NewConnectionForm {
   uri: string;
   name: string;
+  apiKey?: string;
 }
 
 export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
@@ -41,13 +42,18 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
   } = useForm<NewConnectionForm>({});
   const saveConnection = useConnectionStore((state) => state.save);
 
-  const save: SubmitHandler<NewConnectionForm> = async ({ name, uri }) => {
+  const save: SubmitHandler<NewConnectionForm> = async ({
+    name,
+    uri,
+    apiKey,
+  }) => {
     try {
       await saveConnection({
         name,
         uri,
         status: ConnectionStatus.Disconnected,
         favorite: false,
+        api_key: apiKey,
       });
       setOpen(false);
       reset();
@@ -68,7 +74,10 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
     setTestLoading(true);
 
     try {
-      await TestConnection(getValues("uri"));
+      await TestConnection({
+        URI: getValues("uri"),
+        ApiKey: getValues("apiKey"),
+      });
 
       setTestSuccess(true);
 
@@ -133,6 +142,19 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
                 id="uri"
                 {...register("uri", { required: true })}
                 placeholder="e.g. http://localhost:8080"
+                className="col-span-2"
+              />
+              <FieldError
+                show={Boolean(errors.uri)}
+                message={errors.uri?.message}
+              />
+            </div>
+            <div className="grid grid-rows-4 items-center">
+              <Label>Api Key</Label>
+              <Input
+                id="apiKey"
+                type="password"
+                {...register("apiKey")}
                 className="col-span-2"
               />
               <FieldError

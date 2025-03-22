@@ -51,17 +51,15 @@ const Main = () => {
   };
 
   return (
-    <div className="flex flex-col flex-5 overflow-y-hidden">
-      <Tabs
-        type="editable-card"
-        items={tabs}
-        removeIcon={<X size="1.2em" />}
-        onChange={onChange}
-        onEdit={onEdit}
-        activeKey={activeTab}
-        className="bg-gray-100"
-      />
-    </div>
+    <Tabs
+      type="editable-card"
+      items={tabs}
+      removeIcon={<X size="1.2em" />}
+      onChange={onChange}
+      onEdit={onEdit}
+      activeKey={activeTab}
+      className="bg-gray-100"
+    />
   );
 };
 

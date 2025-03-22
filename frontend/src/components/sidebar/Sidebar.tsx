@@ -38,7 +38,7 @@ const Sidebar: React.FC = () => {
   }, 300);
 
   return (
-    <div className="h-screen min-w-64 bg-gray-100 border-r border-gray-200 text-gray-700 left-0 top-0 flex-1 flex-col">
+    <>
       <div className="p-4 border-b border-gray-200 flex justify-center">
         <img
           src={logo}
@@ -46,36 +46,34 @@ const Sidebar: React.FC = () => {
           alt="Weaviate log"
         />
       </div>
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-4">
-          <div className="flex flex-column justify-between items-center">
-            <h2 className="text-sm font-semibold text-gray-500 my-3">
-              Connections ({connections.length})
-            </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-full hover:bg-gray-200"
-              onClick={() => setOpenConnection(true)}
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-          <Input
-            type="search"
-            placeholder="Search connections"
-            autoComplete="off"
-            defaultValue={search}
-            className="p4 rounded-none bg-white"
-            onChange={(e) => handleSearch(e.target.value)}
-          />
+      <div className="p-4">
+        <div className="flex flex-column justify-between items-center">
+          <h2 className="text-sm font-semibold text-gray-500 my-3">
+            Connections ({connections.length})
+          </h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-full hover:bg-gray-200"
+            onClick={() => setOpenConnection(true)}
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
         </div>
-        {filteredList.map((connection) => (
-          <Connection key={connection.id} connection={connection} />
-        ))}
-        <NewConnection open={openNewConnection} setOpen={setOpenConnection} />
+        <Input
+          type="search"
+          placeholder="Search connections"
+          autoComplete="off"
+          defaultValue={search}
+          className="p4 rounded-none bg-white"
+          onChange={(e) => handleSearch(e.target.value)}
+        />
       </div>
-    </div>
+      {filteredList.map((connection) => (
+        <Connection key={connection.id} connection={connection} />
+      ))}
+      <NewConnection open={openNewConnection} setOpen={setOpenConnection} />
+    </>
   );
 };
 

@@ -30,7 +30,8 @@ var connectionTable = `CREATE TABLE IF NOT EXISTS connections (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	name TEXT NOT NULL,
 	uri TEXT NOT NULL,
-	favorite BOOLEAN DEFAULT FALSE
+	favorite BOOLEAN DEFAULT FALSE,
+	api_key TEXT
 );`
 
 func InitStorage(db *sqlx.DB) error {
@@ -52,6 +53,8 @@ func InitStorage(db *sqlx.DB) error {
 func GetStorageSource() string {
 	cacheDir, _ := os.UserCacheDir()
 	dataDir := filepath.Join(cacheDir, "weaviate-gui")
+
+	fmt.Println(dataDir)
 
 	if err := os.MkdirAll(dataDir, os.FileMode(0755)); err != nil {
 		return dbFile
@@ -81,8 +84,8 @@ func (s *Storage) SaveConnection(c models.Connection) (int64, error) {
 	defer cancel()
 
 	q := `
-		INSERT INTO connections (name, uri)
-		VALUES (:name, :uri)
+		INSERT INTO connections (name, uri, api_key)
+		VALUES (:name, :uri, :api_key)
 		RETURNING id;
 	`
 
@@ -132,4 +135,16 @@ func (s *Storage) UpdateFavorite(id int64, favorite bool) error {
 	}
 
 	return nil
+}
+
+func (s *Storage) GetConnection(id int64) (*models.Connection, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var connection models.Connection
+	if err := s.db.GetContext(ctx, &connection, "SELECT * FROM connections WHERE id = ?", id); err != nil {
+		return nil, fmt.Errorf("failed getting connection: %w", err)
+	}
+
+	return &connection, nil
 }
