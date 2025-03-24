@@ -130,7 +130,7 @@
   border: none !important;
   margin: 0 !important;
   opacity: 0.65; /* Faint effect */
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.2s ease-in-out;
   @apply gap-2;
 }
 
@@ -140,5 +140,5 @@
 
 .ant-tabs-nav {
   margin: 0 !important;
-  height: 50px;
+  height: 40px;
 }

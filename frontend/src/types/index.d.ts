@@ -3,10 +3,15 @@ import { Tab as TabComponent } from "rc-tabs/lib/interface";
 
 export interface Connection extends models.Connection {
   status?: ConnectionStatus;
-  collections?: string[];
+  collections?: Collection[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Tab extends TabComponent {
-  // will be added later
+  // which connection relates to this tab if so.
+  connectionID?: number;
+}
+
+export interface Collection {
+  name: string;
+  connectionID: number;
 }

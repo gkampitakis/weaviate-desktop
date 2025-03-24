@@ -55,7 +55,9 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
           ? {
               ...c,
               status: ConnectionStatus.Connected,
-              collections: collectionNames.sort(sortCollectionNames),
+              collections: collectionNames
+                .sort(sortCollectionNames)
+                .map((name) => ({ name: name, connectionID: id })),
             }
           : c
       ),

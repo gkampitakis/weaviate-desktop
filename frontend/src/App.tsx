@@ -1,6 +1,6 @@
 import React from "react";
 import Sidebar from "./components/sidebar/Sidebar";
-import Main from "./main/Main";
+import Main from "./components/tabs/Main";
 import {
   ResizableHandle,
   ResizablePanel,
