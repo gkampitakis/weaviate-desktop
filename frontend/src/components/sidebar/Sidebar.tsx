@@ -69,9 +69,11 @@ const Sidebar: React.FC = () => {
           onChange={(e) => handleSearch(e.target.value)}
         />
       </div>
-      {filteredList.map((connection) => (
-        <Connection key={connection.id} connection={connection} />
-      ))}
+      <div className="overflow-y-auto flex-1">
+        {filteredList.map((connection) => (
+          <Connection key={connection.id} connection={connection} />
+        ))}
+      </div>
       <NewConnection open={openNewConnection} setOpen={setOpenConnection} />
     </>
   );

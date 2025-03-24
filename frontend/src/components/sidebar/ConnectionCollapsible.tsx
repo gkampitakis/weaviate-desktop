@@ -28,13 +28,11 @@ export const ConnectionCollapsibleTrigger: React.FC<{
 export const ConnectionCollapsibleContent: React.FC<{
   collections?: Collection[];
 }> = ({ collections }) => {
-  const { updateActiveTab, add, nextIndex, setActiveTab, tabs } = useTabStore(
+  const { updateActiveTab, add, tabs } = useTabStore(
     useShallow((state) => ({
       updateActiveTab: state.updateActiveTab,
       add: state.add,
       tabs: state.tabs,
-      nextIndex: state.nextIndex,
-      setActiveTab: state.setActive,
     }))
   );
 
@@ -49,15 +47,10 @@ export const ConnectionCollapsibleContent: React.FC<{
       return;
     }
 
-    const newTabIndex = nextIndex().toString();
-
     add({
       label: <TabLabel>{name}</TabLabel>,
-      key: newTabIndex,
       children: <div>Content of new collection {name}</div>,
     });
-
-    setActiveTab(newTabIndex);
   };
 
   return (

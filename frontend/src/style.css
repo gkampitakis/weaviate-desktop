@@ -142,3 +142,26 @@
   margin: 0 !important;
   height: 40px;
 }
+
+.ant-tabs-content-holder {
+  flex: 80 1 0px !important;
+  display: flex;
+}
+
+.ant-tabs-content {
+  flex: 80 1 0px;
+  display: flex;
+}
+
+.ant-tabs-tabpane {
+  flex: 80 1 0px;
+  display: flex;
+}
+
+a {
+  color: #00a142;
+
+  &:hover {
+    color: #00a142;
+  }
+}

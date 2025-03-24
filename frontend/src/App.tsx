@@ -16,8 +16,8 @@ const App: React.FC = () => {
       <ResizablePanel
         minSize={10}
         defaultSize={20}
-        maxSize={35}
-        className="h-screen min-w-64 bg-gray-100 border-r border-gray-200 text-gray-700 left-0 top-0 flex-1 flex-col"
+        maxSize={45}
+        className="flex h-screen min-w-64 bg-gray-100 border-r border-gray-200 text-gray-700 left-0 top-0 flex-1 flex-col"
       >
       <Sidebar />
       </ResizablePanel>

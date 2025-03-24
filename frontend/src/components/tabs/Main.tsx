@@ -8,14 +8,13 @@ import TabLabel from "@/components/tabs/TabLabel";
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
 const Main = () => {
-  const { add, remove, setActiveTab, nextIndex, tabs, activeTab } = useTabStore(
+  const { addNewTab, remove, setActiveTab, tabs, activeTab } = useTabStore(
     useShallow((state) => ({
-      add: state.add,
+      addNewTab: state.add,
       remove: state.remove,
       tabs: state.tabs,
       setActiveTab: state.setActive,
       activeTab: state.active,
-      nextIndex: state.nextIndex,
     }))
   );
 
@@ -24,15 +23,10 @@ const Main = () => {
   };
 
   const newTab = () => {
-    const newTabIndex = nextIndex();
-
-    add({
-      key: newTabIndex.toString(),
+    addNewTab({
       label: <TabLabel>New Tab</TabLabel>,
-      children: <div>Content of new Tab {newTabIndex}</div>,
+      children: <div>Content of new Tab</div>,
     });
-
-    setActiveTab(newTabIndex.toString());
   };
 
   const removeTab = (key?: TargetKey) => {
@@ -53,7 +47,7 @@ const Main = () => {
       onChange={onChange}
       onEdit={onEdit}
       activeKey={activeTab}
-      className="bg-gray-100"
+      className="bg-gray-100 flex-1"
     />
   );
 };

@@ -8,17 +8,20 @@ let globalIdx = 1;
 interface TabStore {
   tabs: Tab[];
   active?: string;
-  add: (tab: Tab) => void;
+  add: (tab: Omit<Tab, "key">) => void;
   remove: (key: string) => void;
   setActive: (key?: string) => void;
   updateActiveTab(tab: Omit<Tab, "key">): void;
   removeByConnection(id: number): void;
-  nextIndex(): number;
 }
 
 export const useTabStore = create<TabStore>((set) => ({
-  nextIndex: () => globalIdx++,
-  add: (tab) => set((state) => ({ tabs: [...state.tabs, tab] })),
+  add: (tab) => {
+    return set((state) => {
+      const key = (globalIdx++).toString();
+      return { tabs: [...state.tabs, { ...tab, key }], active: key };
+    });
+  },
   remove: (key) => {
     return set((state) => {
       const tabs = state.tabs.filter((t) => t.key !== key);
