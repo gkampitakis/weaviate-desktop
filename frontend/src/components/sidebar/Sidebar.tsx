@@ -27,11 +27,11 @@ const Sidebar: React.FC = () => {
   const [openNewConnection, setOpenConnection] = useState(false);
 
   const filteredList = useFuzzySearchList({
-    list: connections.sort(sortConnections),
+    list: connections,
     queryText: search,
     getText: (item) => [item.name],
     mapResultItem: ({ item }) => item,
-  });
+  }).sort(sortConnections);
 
   const handleSearch = useDebouncedCallback((value: string) => {
     setSearch(value);

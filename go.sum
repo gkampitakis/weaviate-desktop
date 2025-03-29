@@ -216,8 +216,8 @@ github.com/wailsapp/mimetype v1.4.1 h1:pQN9ycO7uo4vsUUuPeHEYoUkLVkaRntMnHJxVwYhw
 github.com/wailsapp/mimetype v1.4.1/go.mod h1:9aV5k31bBOv5z6u+QP8TltzvNGJPmNJD4XlAL3U+j3o=
 github.com/wailsapp/wails/v2 v2.10.1 h1:QWHvWMXII2nI/nXz77gpPG8P3ehl6zKe+u4su5BWIns=
 github.com/wailsapp/wails/v2 v2.10.1/go.mod h1:zrebnFV6MQf9kx8HI4iAv63vsR5v67oS7GTEZ7Pz1TY=
-github.com/weaviate/weaviate v1.29.0 h1:bVPZlUqlsa7qp1LazxR0r1cJNrddm6xKVXPlMEEXi6E=
-github.com/weaviate/weaviate v1.29.0/go.mod h1:UsnbM1Kmm5Om+UPU6DTo421SDeMD8SqCJqsBs/nwgcI=
+github.com/weaviate/weaviate v1.29.1 h1:DdZALJEZcuf9YdBJ8A9IbvYPtGV/vJm1xPc7n9YCrqE=
+github.com/weaviate/weaviate v1.29.1/go.mod h1:4qhTeWJ0bqDHlljfrL1KB3N7f6jPc1VYNEsJQwhzFqo=
 github.com/weaviate/weaviate-go-client/v5 v5.0.2 h1:aptmTJy6d4OxGHBTGnqHheJe0WDbzH2SVmQkvy7+EGY=
 github.com/weaviate/weaviate-go-client/v5 v5.0.2/go.mod h1:CwZehIL4s3VfkzTu12Wy8VAUtELRtQFUt2ZniBF/lQM=
 github.com/xdg-go/pbkdf2 v1.0.0/go.mod h1:jrpuAogTd400dnrH08LKmI/xc1MbPOebTwRqcT5RDeI=

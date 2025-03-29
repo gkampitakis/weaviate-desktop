@@ -11,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/leaanthony/u"
 	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
@@ -47,6 +48,7 @@ func main() {
 		DragAndDrop: &options.DragAndDrop{
 			DisableWebViewDrop: true,
 		},
+		LogLevel: logger.INFO,
 		Mac: &mac.Options{
 			Preferences: &mac.Preferences{
 				FullscreenEnabled: u.True,

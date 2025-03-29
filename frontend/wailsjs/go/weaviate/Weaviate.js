@@ -10,8 +10,20 @@ export function Disconnect(arg1) {
   return window['go']['weaviate']['Weaviate']['Disconnect'](arg1);
 }
 
-export function GetCollectionNames(arg1) {
-  return window['go']['weaviate']['Weaviate']['GetCollectionNames'](arg1);
+export function GetCollections(arg1) {
+  return window['go']['weaviate']['Weaviate']['GetCollections'](arg1);
+}
+
+export function GetObjectsPaginated(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['weaviate']['Weaviate']['GetObjectsPaginated'](arg1, arg2, arg3, arg4, arg5);
+}
+
+export function GetTenants(arg1, arg2) {
+  return window['go']['weaviate']['Weaviate']['GetTenants'](arg1, arg2);
+}
+
+export function GetTotalObjects(arg1, arg2, arg3) {
+  return window['go']['weaviate']['Weaviate']['GetTotalObjects'](arg1, arg2, arg3);
 }
 
 export function TestConnection(arg1) {

@@ -1,4 +1,4 @@
-import type { Connection } from "@/types";
+import type { Collection, Connection } from "@/types";
 import { create } from "zustand";
 import {
   GetConnections,
@@ -10,7 +10,7 @@ import { models } from "wailsjs/go/models";
 import {
   Connect,
   Disconnect,
-  GetCollectionNames,
+  GetCollections,
 } from "wailsjs/go/weaviate/Weaviate";
 import { ConnectionStatus } from "@/types/enums";
 
@@ -47,7 +47,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
   },
   connect: async (id: number) => {
     await Connect(id);
-    const collectionNames = await GetCollectionNames(id);
+    const collections = await GetCollections(id);
 
     set((state) => ({
       connections: state.connections.map((c) =>
@@ -55,9 +55,13 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
           ? {
               ...c,
               status: ConnectionStatus.Connected,
-              collections: collectionNames
-                .sort(sortCollectionNames)
-                .map((name) => ({ name: name, connectionID: id })),
+              collections: collections
+                .map((collection) => ({
+                  name: collection.class!,
+                  multiTenancyConfig: collection.multiTenancyConfig,
+                  connectionID: id,
+                }))
+                .sort(sortCollections),
             }
           : c
       ),
@@ -91,5 +95,5 @@ GetConnections().then((connections) =>
   })
 );
 
-const sortCollectionNames = (a: string, b: string) =>
-  a.localeCompare(b, undefined, { numeric: true });
+const sortCollections = (a: Collection, b: Collection) =>
+  a.name.localeCompare(b.name, undefined, { numeric: true });

@@ -6,6 +6,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/leaanthony/u v1.1.1
 	github.com/wailsapp/wails/v2 v2.10.1
+	github.com/weaviate/weaviate v1.29.1
 	github.com/weaviate/weaviate-go-client/v5 v5.0.2
 	modernc.org/sqlite v1.36.0
 )
@@ -51,7 +52,6 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/wailsapp/go-webview2 v1.0.19 // indirect
 	github.com/wailsapp/mimetype v1.4.1 // indirect
-	github.com/weaviate/weaviate v1.29.0 // indirect
 	go.mongodb.org/mongo-driver v1.14.0 // indirect
 	golang.org/x/crypto v0.33.0 // indirect
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa // indirect

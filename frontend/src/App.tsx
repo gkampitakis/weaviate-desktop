@@ -22,7 +22,7 @@ const App: React.FC = () => {
       <Sidebar />
       </ResizablePanel>
       <ResizableHandle />
-      <ResizablePanel className="flex flex-col flex-5 overflow-y-hidden">
+      <ResizablePanel className="flex flex-col flex-5">
       <Main />
       </ResizablePanel>
     </ResizablePanelGroup>

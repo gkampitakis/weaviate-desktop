@@ -8,6 +8,7 @@ import { ChevronRight, Database } from "lucide-react";
 import TabLabel from "../tabs/TabLabel";
 import type { Collection } from "@/types";
 import { useShallow } from "zustand/shallow";
+import CollectionTab from "../tabs/GeneralCollection";
 
 export const ConnectionCollapsibleTrigger: React.FC<{
   connected: boolean;
@@ -36,20 +37,21 @@ export const ConnectionCollapsibleContent: React.FC<{
     }))
   );
 
-  const handleClick = ({ name, connectionID }: Collection) => {
+  const handleClick = (collection: Collection) => {
     if (tabs.length) {
       updateActiveTab({
-        label: <TabLabel>{name}</TabLabel>,
-        children: <div>Content of new collection {name}</div>,
-        connectionID,
+        label: <TabLabel>{collection.name}</TabLabel>,
+        connectionID: collection.connectionID,
+        children: <CollectionTab collection={collection} />,
       });
 
       return;
     }
 
     add({
-      label: <TabLabel>{name}</TabLabel>,
-      children: <div>Content of new collection {name}</div>,
+      label: <TabLabel>{collection.name}</TabLabel>,
+      connectionID: collection.connectionID,
+      children: <CollectionTab collection={collection} />,
     });
   };
 

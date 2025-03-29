@@ -14,4 +14,5 @@ export interface Tab extends TabComponent {
 export interface Collection {
   name: string;
   connectionID: number;
+  multiTenancyConfig?: models.MultiTenancyConfig;
 }
