@@ -1,7 +1,7 @@
 import type { Tab } from "@/types";
 import { create } from "zustand";
 import Welcome from "@/components/tabs/Welcome";
-import TabLabel from "@/components/tabs/TabLabel";
+import TabLabel from "@/components/tabs/components/TabLabel";
 
 let globalIdx = 1;
 

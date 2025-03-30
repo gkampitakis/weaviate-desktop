@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
@@ -51,14 +50,11 @@ const Sidebar: React.FC = () => {
           <h2 className="text-sm font-semibold text-gray-500 my-3">
             Connections ({connections.length})
           </h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="rounded-full hover:bg-gray-200"
+          <Plus
+            size={"1.6em"}
+            className="cursor-pointer p-1 rounded-full hover:bg-gray-200 transition"
             onClick={() => setOpenConnection(true)}
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
+          />
         </div>
         <Input
           type="search"

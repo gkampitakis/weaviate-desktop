@@ -1,6 +1,6 @@
 import React from "react";
 import Sidebar from "./components/sidebar/Sidebar";
-import Main from "./components/tabs/Main";
+import Tabs from "./components/tabs/Tabs";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -23,7 +23,7 @@ const App: React.FC = () => {
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel className="flex flex-col flex-5">
-      <Main />
+        <Tabs />
       </ResizablePanel>
     </ResizablePanelGroup>
   );

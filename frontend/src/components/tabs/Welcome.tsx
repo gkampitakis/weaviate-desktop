@@ -1,4 +1,4 @@
-import TabContainer from "./TabContainer";
+import TabContainer from "./components/TabContainer";
 import SearchImage from "@/assets/images/file_search.svg";
 
 const Welcome = () => {

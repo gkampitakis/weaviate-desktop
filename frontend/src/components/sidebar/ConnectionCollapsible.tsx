@@ -5,10 +5,10 @@ import {
 } from "@/components/ui/collapsible";
 import { useTabStore } from "@/store/tab-store";
 import { ChevronRight, Database } from "lucide-react";
-import TabLabel from "../tabs/TabLabel";
+import TabLabel from "../tabs/components/TabLabel";
 import type { Collection } from "@/types";
 import { useShallow } from "zustand/shallow";
-import CollectionTab from "../tabs/GeneralCollection";
+import CollectionTab from "../tabs/Collection/HOCollection";
 
 export const ConnectionCollapsibleTrigger: React.FC<{
   connected: boolean;

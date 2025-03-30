@@ -1,13 +1,13 @@
 import React from "react";
-import { Tabs } from "antd";
+import { Tabs as AntdTabs } from "antd";
 import { useTabStore } from "@/store/tab-store";
 import { useShallow } from "zustand/shallow";
 import { X } from "lucide-react";
-import TabLabel from "@/components/tabs/TabLabel";
+import TabLabel from "@/components/tabs/components/TabLabel";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
-const Main = () => {
+const Tabs = () => {
   const { addNewTab, remove, setActiveTab, tabs, activeTab } = useTabStore(
     useShallow((state) => ({
       addNewTab: state.add,
@@ -40,7 +40,7 @@ const Main = () => {
   };
 
   return (
-    <Tabs
+    <AntdTabs
       type="editable-card"
       items={tabs}
       removeIcon={<X size="1.2em" />}
@@ -52,4 +52,4 @@ const Main = () => {
   );
 };
 
-export default Main;
+export default Tabs;

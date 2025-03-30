@@ -1,47 +1,18 @@
-import { useEffect, useState } from "react";
 import { models } from "wailsjs/go/models";
-import { GetObjectsPaginated } from "wailsjs/go/weaviate/Weaviate";
 import JsonView from "@uiw/react-json-view";
 import { Check, Copy } from "lucide-react";
+import { useState } from "react";
 
 interface Props {
-  connectionID: number;
-  name: string;
-  tenant?: string;
+  objects: models.Object[];
 }
 
-const pageSize = 25;
-
-const ObjectsList: React.FC<Props> = ({ connectionID, name, tenant = "" }) => {
-  const [objects, setObjects] = useState<models.Object[]>([]);
-  const [cursor, setCursor] = useState("");
-
-  useEffect(() => {
-    const effect = async () => {
-      try {
-        const { Objects: objects } = await GetObjectsPaginated(
-          connectionID,
-          pageSize,
-          name,
-          cursor,
-          tenant
-        );
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        setObjects(objects.map(({ class: _, ...object }) => object));
-        setCursor(objects.at(-1)?.id || "");
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    effect();
-  }, [connectionID, name, tenant]);
-
+const ObjectsList: React.FC<Props> = ({ objects }) => {
   return (
-    <div className="overflow-y-auto" style={{ height: "calc(100vh - 150px)" }}>
-      {objects &&
-        objects.map((object, id) => <Object key={id} object={object} />)}
+    <div className="overflow-y-auto" style={{ height: "calc(100vh - 120px)" }}>
+      {objects.map((object, id) => (
+        <Object key={id} object={object} />
+      ))}
     </div>
   );
 };
