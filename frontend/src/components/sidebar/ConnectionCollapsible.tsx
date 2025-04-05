@@ -4,7 +4,7 @@ import {
   CollapsibleContent,
 } from "@/components/ui/collapsible";
 import { useTabStore } from "@/store/tab-store";
-import { ChevronRight, Database } from "lucide-react";
+import { Box, Boxes, ChevronRight } from "lucide-react";
 import TabLabel from "../tabs/components/TabLabel";
 import type { Collection } from "@/types";
 import { useShallow } from "zustand/shallow";
@@ -63,7 +63,11 @@ export const ConnectionCollapsibleContent: React.FC<{
           className="text-xs pl-13 py-2 flex flex-row cursor-pointer hover:bg-gray-200"
           onClick={() => handleClick(collection)}
         >
-          <Database size="1.1em" className="mr-2 flex-shrink-0" />
+          {collection.multiTenancyConfig?.enabled ? (
+            <Boxes size="1.1em" className="mr-2 flex-shrink-0" />
+          ) : (
+            <Box size="1.1em" className="mr-2 flex-shrink-0" />
+          )}
           {collection.name}
         </div>
       ))}

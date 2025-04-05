@@ -11,11 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "../ui/label";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { TestConnection } from "wailsjs/go/weaviate/Weaviate";
-import { toast } from "sonner";
 import { useState } from "react";
 import { Check, LoaderCircle } from "lucide-react";
 import { useConnectionStore } from "@/store/connection-store";
 import { ConnectionStatus } from "@/types/enums";
+import { errorReporting } from "@/lib/utils";
 
 interface Props {
   open: boolean;
@@ -58,12 +58,7 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
       setOpen(false);
       reset();
     } catch (error) {
-      console.error(error);
-      toast.error(String(error), {
-        dismissible: true,
-        duration: 5000,
-        closeButton: true,
-      });
+      errorReporting(error);
     }
   };
 
@@ -85,11 +80,7 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
         setTestSuccess(false);
       }, RestTestAfterSuccessMS);
     } catch (error) {
-      toast.error(String(error), {
-        dismissible: true,
-        duration: 5000,
-        closeButton: true,
-      });
+      errorReporting(error);
     }
 
     setTestLoading(false);

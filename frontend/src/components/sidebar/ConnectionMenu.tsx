@@ -8,8 +8,8 @@ import {
 import { Ellipsis, Link2Off, Pencil, Star, Trash2 } from "lucide-react";
 import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
-import { toast } from "sonner";
 import { useTabStore } from "@/store/tab-store";
+import { errorReporting } from "@/lib/utils";
 
 interface Props {
   connection: Connection;
@@ -42,11 +42,7 @@ export const ConnectionMenu: React.FC<Props> = ({
       setIsCollapsibleOpen(false);
       removeTabsByConnectionID(id);
     } catch (error) {
-      toast.error(String(error), {
-        dismissible: true,
-        duration: 5000,
-        closeButton: true,
-      });
+      errorReporting(error);
     }
   };
 
@@ -54,13 +50,7 @@ export const ConnectionMenu: React.FC<Props> = ({
     try {
       await removeConnection(id);
     } catch (error) {
-      console.error(error);
-
-      toast.error(String(error), {
-        dismissible: true,
-        duration: 5000,
-        closeButton: true,
-      });
+      errorReporting(error);
     }
   };
 
@@ -68,13 +58,7 @@ export const ConnectionMenu: React.FC<Props> = ({
     try {
       await setFavoriteConnection(id, !favorite);
     } catch (error) {
-      console.error(error);
-
-      toast.error(String(error), {
-        dismissible: true,
-        duration: 5000,
-        closeButton: true,
-      });
+      errorReporting(error);
     }
   };
 

@@ -13,6 +13,7 @@ import {
   ConnectionCollapsibleContent,
   ConnectionCollapsibleTrigger,
 } from "./ConnectionCollapsible";
+import { errorReporting } from "@/lib/utils";
 
 interface Props {
   connection: ConnectionI;
@@ -48,11 +49,7 @@ export const Connection: React.FC<Props> = ({ connection }) => {
     } catch (error) {
       toast.dismiss(loadingId);
 
-      toast.error(String(error), {
-        dismissible: true,
-        duration: 5000,
-        closeButton: true,
-      });
+      errorReporting(error);
     }
   };
 

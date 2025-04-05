@@ -34,26 +34,30 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
 
         setTotalObjects(totalObjects);
       } catch (error) {
-        console.error(error);
+        reportError(error);
       } finally {
         setLoading(false);
       }
     };
 
-    // resets cursor history
+    // resets
     setCursorHistory([]);
+    setTotalObjects(0);
+    setPageSize(25);
+    setObjects([]);
+
     effect();
   }, [connectionID, name]);
 
   // Retrieve objects
   useEffect(() => {
-    retrieveObjects("", "next");
+    retrieveObjects("", "first");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectionID, pageSize, name]);
 
   const retrieveObjects = async (
     cursor: string,
-    action: "next" | "previous"
+    action: "next" | "previous" | "first"
   ) => {
     try {
       setLoading(true);
@@ -69,6 +73,9 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       setObjects(objects.map(({ class: _, ...object }) => object));
 
+      if (action === "first" && objects.length > 0) {
+        setCursorHistory([objects.at(-1)!.id!]);
+      }
       if (action === "next" && objects.length > 0) {
         setCursorHistory((state) => [...state, objects.at(-1)!.id!]);
       }
@@ -76,7 +83,7 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
         setCursorHistory((state) => state.slice(0, -1));
       }
     } catch (error) {
-      console.error(error);
+      reportError(error);
     } finally {
       setLoading(false);
     }
@@ -90,7 +97,7 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
   };
 
   const handlePrevious = async () => {
-    if (cursorHistory.length === 1) {
+    if (cursorHistory.length <= 1) {
       return;
     }
     await retrieveObjects(cursorHistory.at(-3) || "", "previous");

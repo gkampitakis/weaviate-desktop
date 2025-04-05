@@ -4,6 +4,7 @@ import { useTabStore } from "@/store/tab-store";
 import { useShallow } from "zustand/shallow";
 import { X } from "lucide-react";
 import TabLabel from "@/components/tabs/components/TabLabel";
+import Welcome from "./Welcome";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
@@ -23,6 +24,14 @@ const Tabs = () => {
   };
 
   const newTab = () => {
+    if (tabs.length === 0) {
+      addNewTab({
+        label: <TabLabel>Welcome</TabLabel>,
+        children: <Welcome />,
+      });
+      return;
+    }
+
     addNewTab({
       label: <TabLabel>New Tab</TabLabel>,
       children: <div>Content of new Tab</div>,

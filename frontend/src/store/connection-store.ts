@@ -35,7 +35,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
       })
     );
     set((state) => ({
-      connections: [...state.connections, { ...c, id }],
+      connections: [...state.connections, { ...c, id }].sort(sortConnections),
     }));
   },
   remove: async (id: number) => {
@@ -91,9 +91,23 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
 
 GetConnections().then((connections) =>
   useConnectionStore.setState({
-    connections: connections || [],
+    connections: connections.sort(sortConnections) || [],
   })
 );
 
 const sortCollections = (a: Collection, b: Collection) =>
-  a.name.localeCompare(b.name, undefined, { numeric: true });
+  a.name.localeCompare(b.name, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+
+const sortConnections = (a: Connection, b: Connection) => {
+  if (a.favorite && !b.favorite) {
+    return -1;
+  }
+  if (!a.favorite && b.favorite) {
+    return 1;
+  }
+
+  return a.name.localeCompare(b.name, undefined, { numeric: true });
+};

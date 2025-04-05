@@ -2,35 +2,44 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
-import { useFuzzySearchList } from "@nozbe/microfuzz/react";
 import { NewConnection } from "./NewConnection";
 import { useConnectionStore } from "@/store/connection-store";
 import { Connection } from "./Connection";
-import type { Connection as ConnectionI } from "@/types";
 import logo from "@/assets/images/weaviate-logo.png";
-
-const sortConnections = (a: ConnectionI, b: ConnectionI) => {
-  if (a.favorite && !b.favorite) {
-    return -1;
-  }
-  if (!a.favorite && b.favorite) {
-    return 1;
-  }
-
-  return a.name.localeCompare(b.name, undefined, { numeric: true });
-};
+import Fuse from "fuse.js";
 
 const Sidebar: React.FC = () => {
   const connections = useConnectionStore((state) => state.connections);
   const [search, setSearch] = useState("");
   const [openNewConnection, setOpenConnection] = useState(false);
 
-  const filteredList = useFuzzySearchList({
-    list: connections,
-    queryText: search,
-    getText: (item) => [item.name],
-    mapResultItem: ({ item }) => item,
-  }).sort(sortConnections);
+  const fuse = new Fuse(connections, {
+    keys: ["name", "collections.name"],
+    threshold: 0.3, // Adjust for sensitivity
+  });
+
+  const filteredList = !search
+    ? connections
+    : fuse.search(search).map(({ item }) => {
+        if (!item.collections) {
+          return item;
+        }
+
+        // Filter collections to only include matching ones
+        const collectionFuse = new Fuse(item.collections, {
+          keys: ["name"],
+          threshold: 0.3,
+        });
+
+        const filteredCollections = collectionFuse
+          .search(search)
+          .map((res) => res.item);
+
+        return {
+          ...item,
+          collections: filteredCollections, // Replace with filtered collections
+        };
+      });
 
   const handleSearch = useDebouncedCallback((value: string) => {
     setSearch(value);

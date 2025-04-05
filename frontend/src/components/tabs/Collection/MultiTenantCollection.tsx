@@ -44,18 +44,24 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
           })
         );
 
-        if (tenants.length > 0) {
-          setSelectedTenant(tenants[0].name!);
+        if (tenants.length === 0) {
+          setLoading(false);
+          return;
         }
 
+        setSelectedTenant(tenants[0].name!);
         setTenants(tenants);
       } catch (error) {
-        console.error(error);
+        reportError(error);
       }
     };
 
-    // resets cursor history
+    // resets
     setCursorHistory([]);
+    setTotalObjects(0);
+    setPageSize(25);
+    setObjects([]);
+
     effect();
   }, [connectionID, name]);
 
@@ -75,7 +81,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
 
         setTotalObjects(totalObjects);
       } catch (error) {
-        console.error(error);
+        reportError(error);
       }
     };
 
@@ -119,7 +125,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
         setCursorHistory((state) => state.slice(0, -1));
       }
     } catch (error) {
-      console.error(error);
+      reportError(error);
     } finally {
       setLoading(false);
     }
@@ -133,7 +139,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
   };
 
   const handlePrevious = async () => {
-    if (cursorHistory.length === 1) {
+    if (cursorHistory.length <= 1) {
       return;
     }
     await retrieveObjects(cursorHistory.at(-3) || "", "previous");
