@@ -1,14 +1,15 @@
 import type { Collection as SingleTenantCollection } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   GetObjectsPaginated,
   GetTotalObjects,
 } from "wailsjs/go/weaviate/Weaviate";
 import TabContainer from "../components/TabContainer";
 import ObjectsList from "./components/ObjectsList";
-import { models } from "wailsjs/go/models";
 import Pagination from "./components/Pagination";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { errorReporting } from "@/lib/utils";
 
 interface Props {
   collection: SingleTenantCollection;
@@ -16,91 +17,89 @@ interface Props {
 
 const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
   const { connectionID, name } = collection;
+  const queryClient = useQueryClient();
 
-  const [totalObjects, setTotalObjects] = useState(0);
-  const [objects, setObjects] = useState<models.Object[]>([]);
   const [pageSize, setPageSize] = useState(25);
   const [cursorHistory, setCursorHistory] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+
+  // Fetch total objects count
+  const {
+    data: totalObjects,
+    isLoading: loadingTotal,
+    refetch: refetchTotal,
+  } = useQuery({
+    queryKey: ["totalObjects", connectionID, name],
+    initialData: 0,
+    queryFn: async () => {
+      try {
+        const total = await GetTotalObjects(connectionID, name, "");
+
+        // reset cursor history and page size
+        setCursorHistory([]);
+        setPageSize(25);
+
+        return total;
+      } catch (error) {
+        errorReporting(error);
+        throw error;
+      }
+    },
+  });
 
   const totalPages = Math.ceil(totalObjects / pageSize);
 
-  // Retrieve total objects
-  useEffect(() => {
-    const effect = async () => {
-      try {
-        setLoading(true);
-        const totalObjects = await GetTotalObjects(connectionID, name, "");
-
-        setTotalObjects(totalObjects);
-      } catch (error) {
-        reportError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // resets
-    setCursorHistory([]);
-    setTotalObjects(0);
-    setPageSize(25);
-    setObjects([]);
-
-    effect();
-  }, [connectionID, name]);
-
   // Retrieve objects
-  useEffect(() => {
-    retrieveObjects("", "first");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connectionID, pageSize, name]);
+  const {
+    data: objects = [],
+    isLoading: loadingObject,
+    refetch: refetchObjects,
+  } = useQuery({
+    queryKey: ["objects", connectionID, name, pageSize, cursorHistory.at(-1)],
+    queryFn: async () => {
+      try {
+        const { Objects: objects } = await GetObjectsPaginated(
+          connectionID,
+          pageSize,
+          name,
+          cursorHistory.at(-1) || "",
+          ""
+        );
 
-  const retrieveObjects = async (
-    cursor: string,
-    action: "next" | "previous" | "first"
-  ) => {
-    try {
-      setLoading(true);
-
-      const { Objects: objects } = await GetObjectsPaginated(
-        connectionID,
-        pageSize,
-        name,
-        cursor,
-        ""
-      );
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      setObjects(objects.map(({ class: _, ...object }) => object));
-
-      if (action === "first" && objects.length > 0) {
-        setCursorHistory([objects.at(-1)!.id!]);
+        return objects;
+      } catch (error) {
+        errorReporting(error);
+        throw error;
       }
-      if (action === "next" && objects.length > 0) {
-        setCursorHistory((state) => [...state, objects.at(-1)!.id!]);
-      }
-      if (action === "previous") {
-        setCursorHistory((state) => state.slice(0, -1));
-      }
-    } catch (error) {
-      reportError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
   const handleNext = async () => {
-    if (cursorHistory.length === totalPages) {
+    if (cursorHistory.length + 1 === totalPages || loadingObject) {
       return;
     }
-    await retrieveObjects(cursorHistory.at(-1) || "", "next");
+
+    setCursorHistory((state) => [...state, objects.at(-1)!.id!]);
+
+    await queryClient.invalidateQueries({
+      queryKey: ["objects", connectionID, name, pageSize],
+    });
+  };
+
+  const refetch = () => {
+    refetchObjects();
+    refetchTotal();
   };
 
   const handlePrevious = async () => {
-    if (cursorHistory.length <= 1) {
+    if (cursorHistory.length <= 0 || loadingObject) {
       return;
     }
-    await retrieveObjects(cursorHistory.at(-3) || "", "previous");
+
+    setCursorHistory((state) => state.slice(0, -1));
+
+    await queryClient.invalidateQueries({
+      queryKey: ["objects", connectionID, name, pageSize],
+    });
   };
 
   const handlePageSizeChange = (p: number) => {
@@ -138,14 +137,18 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
               setPageSize={handlePageSizeChange}
               next={handleNext}
               previous={handlePrevious}
-              currentPage={cursorHistory.length}
+              currentPage={cursorHistory.length + 1}
               totalPages={totalPages}
-              loading={loading}
+              loading={loadingTotal || loadingObject}
             />
           </div>
         </div>
         <TabsContent value="objects">
-          <ObjectsList objects={objects} />
+          <ObjectsList
+            objects={objects}
+            connectionID={connectionID}
+            refetch={refetch}
+          />
         </TabsContent>
         <TabsContent value="indexes">Not yet implemented</TabsContent>
         <TabsContent value="schema">Not yet implemented</TabsContent>

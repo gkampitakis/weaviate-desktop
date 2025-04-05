@@ -1,6 +1,6 @@
 import type { Collection } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   GetObjectsPaginated,
   GetTenants,
@@ -8,9 +8,10 @@ import {
 } from "wailsjs/go/weaviate/Weaviate";
 import TabContainer from "../components/TabContainer";
 import ObjectsList from "./components/ObjectsList";
-import { models } from "wailsjs/go/models";
 import TenantList from "./components/TenantList";
 import Pagination from "./components/Pagination";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { errorReporting } from "@/lib/utils";
 
 interface Props {
   collection: Collection;
@@ -18,25 +19,25 @@ interface Props {
 
 const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
   const { connectionID, name } = collection;
+  const queryClient = useQueryClient();
 
-  const [totalObjects, setTotalObjects] = useState(0);
-  const [objects, setObjects] = useState<models.Object[]>([]);
   const [pageSize, setPageSize] = useState(25);
   const [cursorHistory, setCursorHistory] = useState<string[]>([]);
-  const [tenants, setTenants] = useState<models.Tenant[]>();
   const [selectedTenant, setSelectedTenant] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const totalPages = Math.ceil(totalObjects / pageSize);
+  const selectTenant = (tenant: string) => {
+    setSelectedTenant(tenant);
+    // reset cursor history when changing tenant
+    setCursorHistory([]);
+  };
 
-  // Retrieve list of tenants
-  useEffect(() => {
-    const effect = async () => {
+  // Fetch tenants
+  const { data: tenants } = useQuery({
+    queryKey: ["tenants", connectionID, name],
+    initialData: [],
+    queryFn: async () => {
       try {
-        setLoading(true);
-
         const tenants = await GetTenants(connectionID, name);
-
         tenants.sort((a, b) =>
           a.name!.localeCompare(b.name!, undefined, {
             numeric: true,
@@ -44,105 +45,103 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
           })
         );
 
-        if (tenants.length === 0) {
-          setLoading(false);
-          return;
-        }
+        setSelectedTenant(tenants.length > 0 ? tenants[0].name! : "");
+        setCursorHistory([]);
+        setPageSize(25);
 
-        setSelectedTenant(tenants[0].name!);
-        setTenants(tenants);
+        return tenants;
       } catch (error) {
-        reportError(error);
+        errorReporting(error);
+        throw error;
       }
-    };
+    },
+  });
 
-    // resets
-    setCursorHistory([]);
-    setTotalObjects(0);
-    setPageSize(25);
-    setObjects([]);
-
-    effect();
-  }, [connectionID, name]);
-
-  // After retrieve total objects
-  useEffect(() => {
-    if (!selectedTenant) {
-      return;
-    }
-
-    const effect = async () => {
+  // Fetch total objects count
+  const {
+    data: totalObjects,
+    isLoading: loadingTotal,
+    refetch: refetchTotal,
+  } = useQuery({
+    queryKey: ["totalObjects", connectionID, name, selectedTenant],
+    initialData: 0,
+    queryFn: async () => {
       try {
-        const totalObjects = await GetTotalObjects(
+        const total = await GetTotalObjects(connectionID, name, selectedTenant);
+
+        return total;
+      } catch (error) {
+        errorReporting(error);
+        throw error;
+      }
+    },
+    // when changing page we need to make sure we have fetched the tenants again
+    enabled: !!selectedTenant && !!tenants.length,
+  });
+
+  const totalPages = Math.ceil(totalObjects / pageSize);
+
+  // Retrieve objects
+  const {
+    data: objects = [],
+    isLoading: loadingObject,
+    refetch: refetchObjects,
+  } = useQuery({
+    queryKey: [
+      "objects",
+      connectionID,
+      name,
+      pageSize,
+      selectedTenant,
+      cursorHistory.at(-1),
+    ],
+    queryFn: async () => {
+      try {
+        const { Objects: objects } = await GetObjectsPaginated(
           connectionID,
+          pageSize,
           name,
+          cursorHistory.at(-1) || "",
           selectedTenant
         );
 
-        setTotalObjects(totalObjects);
+        return objects;
       } catch (error) {
-        reportError(error);
+        errorReporting(error);
+        throw error;
       }
-    };
+    },
+    // when changing page we need to make sure we have fetched the tenants again
+    enabled: !!selectedTenant && !!tenants.length,
+  });
 
-    // resets cursor history
-    setCursorHistory([]);
-    effect();
-  }, [connectionID, name, selectedTenant]);
-
-  // Finally retrieve objects
-  useEffect(() => {
-    if (!selectedTenant) {
-      return;
-    }
-
-    retrieveObjects("", "next");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connectionID, name, pageSize, selectedTenant]);
-
-  const retrieveObjects = async (
-    cursor: string,
-    action: "next" | "previous"
-  ) => {
-    try {
-      setLoading(true);
-
-      const { Objects: objects } = await GetObjectsPaginated(
-        connectionID,
-        pageSize,
-        name,
-        cursor,
-        selectedTenant
-      );
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      setObjects(objects.map(({ class: _, ...object }) => object));
-
-      if (action === "next" && objects.length > 0) {
-        setCursorHistory((state) => [...state, objects.at(-1)!.id!]);
-      }
-      if (action === "previous") {
-        setCursorHistory((state) => state.slice(0, -1));
-      }
-    } catch (error) {
-      reportError(error);
-    } finally {
-      setLoading(false);
-    }
+  const refetch = () => {
+    refetchObjects();
+    refetchTotal();
   };
 
   const handleNext = async () => {
-    if (cursorHistory.length === totalPages) {
+    if (cursorHistory.length + 1 === totalPages || loadingObject) {
       return;
     }
-    await retrieveObjects(cursorHistory.at(-1) || "", "next");
+
+    setCursorHistory((state) => [...state, objects.at(-1)!.id!]);
+
+    await queryClient.invalidateQueries({
+      queryKey: ["objects", connectionID, name, pageSize, selectedTenant],
+    });
   };
 
   const handlePrevious = async () => {
-    if (cursorHistory.length <= 1) {
+    if (cursorHistory.length <= 0 || loadingObject) {
       return;
     }
-    await retrieveObjects(cursorHistory.at(-3) || "", "previous");
+
+    setCursorHistory((state) => state.slice(0, -1));
+
+    await queryClient.invalidateQueries({
+      queryKey: ["objects", connectionID, name, pageSize, selectedTenant],
+    });
   };
 
   const handlePageSizeChange = (p: number) => {
@@ -177,7 +176,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
           <div className="flex flex-row flex-2 justify-between">
             <TenantList
               selected={selectedTenant}
-              setTenant={setSelectedTenant}
+              setTenant={selectTenant}
               tenants={tenants}
             />
             <Pagination
@@ -185,14 +184,19 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
               setPageSize={handlePageSizeChange}
               next={handleNext}
               previous={handlePrevious}
-              currentPage={cursorHistory.length}
+              currentPage={cursorHistory.length + 1}
               totalPages={totalPages}
-              loading={loading}
+              loading={loadingTotal || loadingObject}
             />
           </div>
         </div>
         <TabsContent value="objects">
-          <ObjectsList objects={objects} />
+          <ObjectsList
+            objects={objects}
+            tenant={selectedTenant}
+            connectionID={connectionID}
+            refetch={refetch}
+          />
         </TabsContent>
         <TabsContent value="indexes">Not yet implemented</TabsContent>
         <TabsContent value="schema">Not yet implemented</TabsContent>

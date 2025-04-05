@@ -6,6 +6,10 @@ export function Connect(arg1) {
   return window['go']['weaviate']['Weaviate']['Connect'](arg1);
 }
 
+export function DeleteObject(arg1, arg2, arg3, arg4) {
+  return window['go']['weaviate']['Weaviate']['DeleteObject'](arg1, arg2, arg3, arg4);
+}
+
 export function Disconnect(arg1) {
   return window['go']['weaviate']['Weaviate']['Disconnect'](arg1);
 }

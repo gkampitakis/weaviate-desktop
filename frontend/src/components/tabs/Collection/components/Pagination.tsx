@@ -45,7 +45,7 @@ const Pagination: React.FC<Props> = ({
         }}
       >
         <span className="min-w-[20px]">
-          {currentPage} of {totalPages}
+          {totalPages === 0 ? "0 of 0" : `${currentPage} of ${totalPages}`}
         </span>
         <ChevronLeft
           className={`p-1 rounded-full transition ${

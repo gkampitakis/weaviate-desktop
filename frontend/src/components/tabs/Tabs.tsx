@@ -28,6 +28,7 @@ const Tabs = () => {
       addNewTab({
         label: <TabLabel>Welcome</TabLabel>,
         children: <Welcome />,
+        name: "Welcome",
       });
       return;
     }
@@ -35,6 +36,7 @@ const Tabs = () => {
     addNewTab({
       label: <TabLabel>New Tab</TabLabel>,
       children: <div>Content of new Tab</div>,
+      name: "New Tab",
     });
   };
 

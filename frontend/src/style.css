@@ -143,6 +143,10 @@
   height: 40px;
 }
 
+ant-tabs-tab-btn {
+  overflow: hidden !important;
+}
+
 .ant-tabs-content-holder {
   flex: 80 1 0px !important;
   display: flex;

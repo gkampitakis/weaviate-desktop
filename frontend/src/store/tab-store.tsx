@@ -13,14 +13,21 @@ interface TabStore {
   setActive: (key?: string) => void;
   updateActiveTab(tab: Omit<Tab, "key">): void;
   removeByConnection(id: number): void;
+  getActiveTab(): Tab | undefined;
 }
 
-export const useTabStore = create<TabStore>((set) => ({
+export const useTabStore = create<TabStore>((set, get) => ({
   add: (tab) => {
     return set((state) => {
       const key = (globalIdx++).toString();
       return { tabs: [...state.tabs, { ...tab, key }], active: key };
     });
+  },
+  getActiveTab: () => {
+    const { active, tabs } = get();
+    if (!active) return undefined;
+    const tab = tabs.find((t) => t.key === active);
+    return tab;
   },
   remove: (key) => {
     return set((state) => {
@@ -67,6 +74,7 @@ export const useTabStore = create<TabStore>((set) => ({
     {
       key: "0",
       label: <TabLabel>Welcome</TabLabel>,
+      name: "Welcome",
       children: <Welcome />,
     },
   ],

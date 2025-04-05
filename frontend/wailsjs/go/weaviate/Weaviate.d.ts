@@ -5,6 +5,8 @@ import {weaviate} from '../models';
 
 export function Connect(arg1:number):Promise<void>;
 
+export function DeleteObject(arg1:number,arg2:string,arg3:string,arg4:string):Promise<void>;
+
 export function Disconnect(arg1:number):Promise<void>;
 
 export function GetCollections(arg1:number):Promise<Array<models.Class>>;

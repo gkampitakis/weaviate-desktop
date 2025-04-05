@@ -152,6 +152,23 @@ func (w *Weaviate) GetTotalObjects(connectionID int64, collection, tenant string
 	return int64(result.Data["Aggregate"].(map[string]any)[collection].([]any)[0].(map[string]any)["meta"].(map[string]any)["count"].(float64)), nil
 }
 
+func (w *Weaviate) DeleteObject(connectionID int64, collection, id, tenant string) error {
+	client, exists := w.clients[connectionID]
+	if !exists {
+		return fmt.Errorf("connection doesn't exist %d", connectionID)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	delete := client.Data().Deleter().WithClassName(collection).WithID(id)
+	if tenant != "" {
+		delete = delete.WithTenant(tenant)
+	}
+
+	return delete.Do(ctx)
+}
+
 type PaginatedObjectResponse struct {
 	Objects      []weaviate_models.Object
 	TotalResults int

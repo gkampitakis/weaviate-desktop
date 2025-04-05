@@ -9,6 +9,7 @@ export interface Connection extends models.Connection {
 export interface Tab extends TabComponent {
   // which connection relates to this tab if so.
   connectionID?: number;
+  name: string;
 }
 
 export interface Collection {

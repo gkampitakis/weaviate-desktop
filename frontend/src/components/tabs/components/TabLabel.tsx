@@ -10,7 +10,7 @@ const TabLabel: React.FC<PropsWithChildren> = ({ children }) => {
       className="flex flex-row gap-2"
     >
       <img className="w-[15px]" src={logo} />
-      <div className="flex-1 overflow-x-auto max-w-[100px] text-ellipsis">
+      <div className="flex-1 overflow-x-hidden max-w-[100px] text-ellipsis">
         {children}
       </div>
     </div>

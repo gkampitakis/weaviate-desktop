@@ -9,6 +9,7 @@ import TabLabel from "../tabs/components/TabLabel";
 import type { Collection } from "@/types";
 import { useShallow } from "zustand/shallow";
 import CollectionTab from "../tabs/Collection/HOCollection";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const ConnectionCollapsibleTrigger: React.FC<{
   connected: boolean;
@@ -29,20 +30,38 @@ export const ConnectionCollapsibleTrigger: React.FC<{
 export const ConnectionCollapsibleContent: React.FC<{
   collections?: Collection[];
 }> = ({ collections }) => {
-  const { updateActiveTab, add, tabs } = useTabStore(
+  const queryClient = useQueryClient();
+  const { updateActiveTab, add, getActiveTab, tabs } = useTabStore(
     useShallow((state) => ({
       updateActiveTab: state.updateActiveTab,
       add: state.add,
       tabs: state.tabs,
+      getActiveTab: state.getActiveTab,
     }))
   );
 
-  const handleClick = (collection: Collection) => {
+  const handleClick = async (collection: Collection) => {
     if (tabs.length) {
+      const tab = getActiveTab()!;
+
+      if (
+        tab.connectionID === collection.connectionID &&
+        tab.name === collection.name
+      ) {
+        return;
+      }
+
+      if (collection.multiTenancyConfig?.enabled) {
+        queryClient.resetQueries({
+          queryKey: ["tenants", tab.connectionID, tab.name],
+        });
+      }
+
       updateActiveTab({
         label: <TabLabel>{collection.name}</TabLabel>,
         connectionID: collection.connectionID,
         children: <CollectionTab collection={collection} />,
+        name: collection.name,
       });
 
       return;
@@ -52,6 +71,7 @@ export const ConnectionCollapsibleContent: React.FC<{
       label: <TabLabel>{collection.name}</TabLabel>,
       connectionID: collection.connectionID,
       children: <CollectionTab collection={collection} />,
+      name: collection.name,
     });
   };
 
