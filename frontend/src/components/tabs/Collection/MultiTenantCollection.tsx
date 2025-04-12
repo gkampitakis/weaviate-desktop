@@ -10,7 +10,7 @@ import TabContainer from "../components/TabContainer";
 import ObjectsList from "./components/ObjectsList";
 import TenantList from "./components/TenantList";
 import Pagination from "./components/Pagination";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { errorReporting } from "@/lib/utils";
 
 interface Props {
@@ -18,8 +18,7 @@ interface Props {
 }
 
 const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
-  const { connectionID, name } = collection;
-  const queryClient = useQueryClient();
+  const { connection, name } = collection;
 
   const [pageSize, setPageSize] = useState(25);
   const [cursorHistory, setCursorHistory] = useState<string[]>([]);
@@ -33,11 +32,11 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
 
   // Fetch tenants
   const { data: tenants } = useQuery({
-    queryKey: ["tenants", connectionID, name],
+    queryKey: ["tenants", connection.id, name],
     initialData: [],
     queryFn: async () => {
       try {
-        const tenants = await GetTenants(connectionID, name);
+        const tenants = await GetTenants(connection.id, name);
         tenants.sort((a, b) =>
           a.name!.localeCompare(b.name!, undefined, {
             numeric: true,
@@ -63,11 +62,15 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
     isLoading: loadingTotal,
     refetch: refetchTotal,
   } = useQuery({
-    queryKey: ["totalObjects", connectionID, name, selectedTenant],
+    queryKey: ["totalObjects", connection.id, name, selectedTenant],
     initialData: 0,
     queryFn: async () => {
       try {
-        const total = await GetTotalObjects(connectionID, name, selectedTenant);
+        const total = await GetTotalObjects(
+          connection.id,
+          name,
+          selectedTenant
+        );
 
         return total;
       } catch (error) {
@@ -83,13 +86,15 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
 
   // Retrieve objects
   const {
-    data: objects = [],
+    data: objects,
     isLoading: loadingObject,
+    isPlaceholderData,
     refetch: refetchObjects,
   } = useQuery({
+    placeholderData: keepPreviousData,
     queryKey: [
       "objects",
-      connectionID,
+      connection.id,
       name,
       pageSize,
       selectedTenant,
@@ -98,7 +103,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
     queryFn: async () => {
       try {
         const { Objects: objects } = await GetObjectsPaginated(
-          connectionID,
+          connection.id,
           pageSize,
           name,
           cursorHistory.at(-1) || "",
@@ -121,27 +126,23 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
   };
 
   const handleNext = async () => {
-    if (cursorHistory.length + 1 === totalPages || loadingObject) {
+    if (
+      cursorHistory.length + 1 === totalPages ||
+      loadingObject ||
+      isPlaceholderData
+    ) {
       return;
     }
 
-    setCursorHistory((state) => [...state, objects.at(-1)!.id!]);
-
-    await queryClient.invalidateQueries({
-      queryKey: ["objects", connectionID, name, pageSize, selectedTenant],
-    });
+    setCursorHistory((state) => [...state, objects!.at(-1)!.id!]);
   };
 
   const handlePrevious = async () => {
-    if (cursorHistory.length <= 0 || loadingObject) {
+    if (cursorHistory.length <= 0 || loadingObject || isPlaceholderData) {
       return;
     }
 
     setCursorHistory((state) => state.slice(0, -1));
-
-    await queryClient.invalidateQueries({
-      queryKey: ["objects", connectionID, name, pageSize, selectedTenant],
-    });
   };
 
   const handlePageSizeChange = (p: number) => {
@@ -186,15 +187,15 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
               previous={handlePrevious}
               currentPage={cursorHistory.length + 1}
               totalPages={totalPages}
-              loading={loadingTotal || loadingObject}
+              loading={loadingTotal || loadingObject || isPlaceholderData}
             />
           </div>
         </div>
         <TabsContent value="objects">
           <ObjectsList
-            objects={objects}
+            objects={objects || []}
             tenant={selectedTenant}
-            connectionID={connectionID}
+            connectionID={connection.id}
             refetch={refetch}
           />
         </TabsContent>

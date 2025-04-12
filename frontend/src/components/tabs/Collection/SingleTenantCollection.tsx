@@ -8,7 +8,7 @@ import {
 import TabContainer from "../components/TabContainer";
 import ObjectsList from "./components/ObjectsList";
 import Pagination from "./components/Pagination";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { errorReporting } from "@/lib/utils";
 
 interface Props {
@@ -16,8 +16,7 @@ interface Props {
 }
 
 const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
-  const { connectionID, name } = collection;
-  const queryClient = useQueryClient();
+  const { connection, name } = collection;
 
   const [pageSize, setPageSize] = useState(25);
   const [cursorHistory, setCursorHistory] = useState<string[]>([]);
@@ -28,11 +27,11 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
     isLoading: loadingTotal,
     refetch: refetchTotal,
   } = useQuery({
-    queryKey: ["totalObjects", connectionID, name],
+    queryKey: ["totalObjects", connection.id, name],
     initialData: 0,
     queryFn: async () => {
       try {
-        const total = await GetTotalObjects(connectionID, name, "");
+        const total = await GetTotalObjects(connection.id, name, "");
 
         // reset cursor history and page size
         setCursorHistory([]);
@@ -50,15 +49,16 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
 
   // Retrieve objects
   const {
-    data: objects = [],
+    data: objects,
     isLoading: loadingObject,
     refetch: refetchObjects,
   } = useQuery({
-    queryKey: ["objects", connectionID, name, pageSize, cursorHistory.at(-1)],
+    placeholderData: keepPreviousData,
+    queryKey: ["objects", connection.id, name, pageSize, cursorHistory.at(-1)],
     queryFn: async () => {
       try {
         const { Objects: objects } = await GetObjectsPaginated(
-          connectionID,
+          connection.id,
           pageSize,
           name,
           cursorHistory.at(-1) || "",
@@ -78,11 +78,7 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
       return;
     }
 
-    setCursorHistory((state) => [...state, objects.at(-1)!.id!]);
-
-    await queryClient.invalidateQueries({
-      queryKey: ["objects", connectionID, name, pageSize],
-    });
+    setCursorHistory((state) => [...state, objects!.at(-1)!.id!]);
   };
 
   const refetch = () => {
@@ -96,10 +92,6 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
     }
 
     setCursorHistory((state) => state.slice(0, -1));
-
-    await queryClient.invalidateQueries({
-      queryKey: ["objects", connectionID, name, pageSize],
-    });
   };
 
   const handlePageSizeChange = (p: number) => {
@@ -145,8 +137,8 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
         </div>
         <TabsContent value="objects">
           <ObjectsList
-            objects={objects}
-            connectionID={connectionID}
+            objects={objects || []}
+            connectionID={connection.id}
             refetch={refetch}
           />
         </TabsContent>

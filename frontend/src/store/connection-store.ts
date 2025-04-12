@@ -58,8 +58,11 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
               collections: collections
                 .map((collection) => ({
                   name: collection.class!,
+                  connection: {
+                    id: c.id,
+                    name: c.name,
+                  },
                   multiTenancyConfig: collection.multiTenancyConfig,
-                  connectionID: id,
                 }))
                 .sort(sortCollections),
             }
@@ -82,9 +85,9 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
     await UpdateFavorite(id, favorite);
 
     set((state) => ({
-      connections: state.connections.map((c) =>
-        c.id === id ? { ...c, favorite } : c
-      ),
+      connections: state.connections
+        .map((c) => (c.id === id ? { ...c, favorite } : c))
+        .sort(sortConnections),
     }));
   },
 }));

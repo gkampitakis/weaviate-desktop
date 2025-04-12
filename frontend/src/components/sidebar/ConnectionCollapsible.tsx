@@ -10,6 +10,8 @@ import type { Collection } from "@/types";
 import { useShallow } from "zustand/shallow";
 import CollectionTab from "../tabs/Collection/HOCollection";
 import { useQueryClient } from "@tanstack/react-query";
+import { WelcomeName } from "../tabs/Welcome";
+import { NewTabName } from "../tabs/NewTab";
 
 export const ConnectionCollapsibleTrigger: React.FC<{
   connected: boolean;
@@ -42,24 +44,33 @@ export const ConnectionCollapsibleContent: React.FC<{
 
   const handleClick = async (collection: Collection) => {
     if (tabs.length) {
-      const tab = getActiveTab()!;
+      const activeTab = getActiveTab()!;
 
       if (
-        tab.connectionID === collection.connectionID &&
-        tab.name === collection.name
+        activeTab.connection?.id === collection.connection.id &&
+        activeTab.name === collection.name
       ) {
         return;
       }
 
-      if (collection.multiTenancyConfig?.enabled) {
+      if (
+        collection.multiTenancyConfig?.enabled &&
+        ![WelcomeName, NewTabName].includes(activeTab.name)
+      ) {
         queryClient.resetQueries({
-          queryKey: ["tenants", tab.connectionID, tab.name],
+          queryKey: ["tenants", activeTab.connection!.id, activeTab.name],
         });
       }
 
       updateActiveTab({
-        label: <TabLabel>{collection.name}</TabLabel>,
-        connectionID: collection.connectionID,
+        label: (
+          <TabLabel
+            name={collection.name}
+            connectionName={collection.connection.name}
+            tooltip
+          />
+        ),
+        connection: collection.connection,
         children: <CollectionTab collection={collection} />,
         name: collection.name,
       });
@@ -68,8 +79,14 @@ export const ConnectionCollapsibleContent: React.FC<{
     }
 
     add({
-      label: <TabLabel>{collection.name}</TabLabel>,
-      connectionID: collection.connectionID,
+      label: (
+        <TabLabel
+          name={collection.name}
+          connectionName={collection.connection.name}
+          tooltip
+        />
+      ),
+      connection: collection.connection,
       children: <CollectionTab collection={collection} />,
       name: collection.name,
     });

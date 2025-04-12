@@ -19,7 +19,7 @@ const App: React.FC = () => {
         maxSize={45}
         className="flex h-screen min-w-64 bg-gray-100 border-r border-gray-200 text-gray-700 left-0 top-0 flex-1 flex-col"
       >
-      <Sidebar />
+        <Sidebar />
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel className="flex flex-col flex-5">

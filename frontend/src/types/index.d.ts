@@ -8,12 +8,18 @@ export interface Connection extends models.Connection {
 
 export interface Tab extends TabComponent {
   // which connection relates to this tab if so.
-  connectionID?: number;
+  connection?: {
+    id: number;
+    name: string;
+  };
   name: string;
 }
 
 export interface Collection {
   name: string;
-  connectionID: number;
+  connection: {
+    id: number;
+    name: string;
+  };
   multiTenancyConfig?: models.MultiTenancyConfig;
 }

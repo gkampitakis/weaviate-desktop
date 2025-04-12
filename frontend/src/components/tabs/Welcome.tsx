@@ -1,6 +1,8 @@
 import TabContainer from "./components/TabContainer";
 import SearchImage from "@/assets/images/file_search.svg";
 
+export const WelcomeName = "Welcome";
+
 const Welcome = () => {
   return (
     <TabContainer className="flex items-center justify-center">

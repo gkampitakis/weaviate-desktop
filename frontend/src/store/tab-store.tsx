@@ -1,6 +1,6 @@
 import type { Tab } from "@/types";
 import { create } from "zustand";
-import Welcome from "@/components/tabs/Welcome";
+import Welcome, { WelcomeName } from "@/components/tabs/Welcome";
 import TabLabel from "@/components/tabs/components/TabLabel";
 
 let globalIdx = 1;
@@ -46,7 +46,9 @@ export const useTabStore = create<TabStore>((set, get) => ({
   removeByConnection: (id) => {
     return set((state) => {
       // filter out all tabs that are not part of the connection
-      const tabs = state.tabs.filter(({ connectionID }) => connectionID !== id);
+      const tabs = state.tabs.filter(
+        ({ connection = {} }) => connection.id !== id
+      );
       // if from the remaining tabs none of them are the active ones
       // we need to find an active one
       if (tabs.findIndex((t) => t.key === state.active) === -1) {
@@ -73,8 +75,8 @@ export const useTabStore = create<TabStore>((set, get) => ({
   tabs: [
     {
       key: "0",
-      label: <TabLabel>Welcome</TabLabel>,
-      name: "Welcome",
+      label: <TabLabel name={WelcomeName} />,
+      name: WelcomeName,
       children: <Welcome />,
     },
   ],
