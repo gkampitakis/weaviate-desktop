@@ -1,4 +1,4 @@
-.PHONY: install-tools lint test test-verbose format help dev
+.PHONY: install-tools lint test test-verbose format help dev release
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -23,3 +23,6 @@ test-verbose: ## Run tests with verbose output
 
 dev: ## Run wails dev server
 	wails dev
+
+release: ## Run commit-and-tag-version
+	(cd frontend && npm run release)
