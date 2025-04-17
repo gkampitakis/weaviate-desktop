@@ -1,6 +1,12 @@
+# on:
+#   release:
+#     types: [published]
+
+# Testing release trigger
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
