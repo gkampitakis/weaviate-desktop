@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
-## 0.0.0 (2025-04-17)
+## 0.0.1 (2025-04-17)
 
 
 ### Features
@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file. See [commit
 
 ### Chores
 
+* **release:** 0.0.0 ([538a881](https://github.com/gkampitakis/weaviate-gui/commit/538a88161f0728ee3c397ed62c270068df37abc7))
 * add commit-and-tag-version for releasing ([cd180f5](https://github.com/gkampitakis/weaviate-gui/commit/cd180f5fe9e85bebb334e753b127c3b9de966ea2))
 * don't fail fast ([507bc51](https://github.com/gkampitakis/weaviate-gui/commit/507bc51831669a3e842e6f3994df6ae9d2f94dcc))
 * one more test ([f7faed3](https://github.com/gkampitakis/weaviate-gui/commit/f7faed3eef6489fd38441caa451b6c10926dadec))
