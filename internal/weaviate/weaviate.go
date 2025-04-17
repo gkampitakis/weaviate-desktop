@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"weaviate-gui/internal/models"
 
 	"github.com/weaviate/weaviate-go-client/v5/weaviate"
@@ -73,7 +74,11 @@ func (w *Weaviate) updateClusterStatus(d time.Duration) {
 		for id, cl := range w.clients {
 			cl.healthy, err = cl.cl.Misc().LiveChecker().Do(context.Background())
 			if err != nil {
-				slog.Error("failed querying status", slog.Int64("connectionID", id), slog.Any("error", err))
+				slog.Error(
+					"failed querying status",
+					slog.Int64("connectionID", id),
+					slog.Any("error", err),
+				)
 			}
 		}
 	}
@@ -183,7 +188,9 @@ func (w *Weaviate) GetTotalObjects(connectionID int64, collection, tenant string
 		return -1, errors.New(err.String())
 	}
 
-	return int64(result.Data["Aggregate"].(map[string]any)[collection].([]any)[0].(map[string]any)["meta"].(map[string]any)["count"].(float64)), nil
+	return int64(
+		result.Data["Aggregate"].(map[string]any)[collection].([]any)[0].(map[string]any)["meta"].(map[string]any)["count"].(float64),
+	), nil
 }
 
 func (w *Weaviate) DeleteObject(connectionID int64, collection, id, tenant string) error {
@@ -208,7 +215,11 @@ type PaginatedObjectResponse struct {
 	TotalResults int
 }
 
-func (w *Weaviate) GetObjectsPaginated(connectionID int64, pageSize int, collection, cursor, tenant string) (*PaginatedObjectResponse, error) {
+func (w *Weaviate) GetObjectsPaginated(
+	connectionID int64,
+	pageSize int,
+	collection, cursor, tenant string,
+) (*PaginatedObjectResponse, error) {
 	connection, err := w.storage.GetConnection(connectionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed retrieving connection %d: %w", connectionID, err)
@@ -262,7 +273,12 @@ func (w *Weaviate) GetObjectsPaginated(connectionID int64, pageSize int, collect
 			errMessage = errResponse.Error[0].Message
 		}
 
-		return nil, fmt.Errorf("weaviate return non successful http status code %s for %s: %s", resp.Status, u.String(), errMessage)
+		return nil, fmt.Errorf(
+			"weaviate return non successful http status code %s for %s: %s",
+			resp.Status,
+			u.String(),
+			errMessage,
+		)
 	}
 
 	var paginatedResult PaginatedObjectResponse
@@ -273,7 +289,10 @@ func (w *Weaviate) GetObjectsPaginated(connectionID int64, pageSize int, collect
 	return &paginatedResult, nil
 }
 
-func (w *Weaviate) GetTenants(connectionID int64, collection string) ([]weaviate_models.Tenant, error) {
+func (w *Weaviate) GetTenants(
+	connectionID int64,
+	collection string,
+) ([]weaviate_models.Tenant, error) {
 	c, exists := w.clients[connectionID]
 	if !exists {
 		return nil, fmt.Errorf("connection doesn't exist %d", connectionID)

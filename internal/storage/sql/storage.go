@@ -56,7 +56,7 @@ func GetStorageSource() string {
 
 	fmt.Println(dataDir)
 
-	if err := os.MkdirAll(dataDir, os.FileMode(0755)); err != nil {
+	if err := os.MkdirAll(dataDir, os.FileMode(0o755)); err != nil {
 		return dbFile
 	}
 
@@ -121,7 +121,12 @@ func (s *Storage) UpdateFavorite(id int64, favorite bool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	result, err := s.db.ExecContext(ctx, "UPDATE connections SET favorite = ? WHERE id = ?", favorite, id)
+	result, err := s.db.ExecContext(
+		ctx,
+		"UPDATE connections SET favorite = ? WHERE id = ?",
+		favorite,
+		id,
+	)
 	if err != nil {
 		return fmt.Errorf("failed updating favorite: %w", err)
 	}
