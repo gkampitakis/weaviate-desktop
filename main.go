@@ -4,6 +4,9 @@ import (
 	"context"
 	"embed"
 	"log"
+	"log/slog"
+	"os"
+	"time"
 
 	"weaviate-gui/internal/storage/sql"
 	"weaviate-gui/internal/weaviate"
@@ -21,6 +24,10 @@ import (
 var assets embed.FS
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})))
+
 	db, err := sqlx.Open("sqlite", sql.GetStorageSource())
 	if err != nil {
 		log.Fatalf("failed opening sqlite: %v", err)
@@ -30,7 +37,9 @@ func main() {
 	}
 
 	sqlStorage := sql.NewStorage(db)
-	w := weaviate.New(sqlStorage)
+	w := weaviate.New(sqlStorage, weaviate.Configuration{
+		StatusUpdateInterval: 30 * time.Second,
+	})
 
 	// Create application with options
 	if err := wails.Run(&options.App{

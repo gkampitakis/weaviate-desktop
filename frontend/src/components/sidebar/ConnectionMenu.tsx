@@ -3,13 +3,18 @@ import { ConnectionStatus } from "@/types/enums";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Ellipsis, Link2Off, Pencil, Star, Trash2 } from "lucide-react";
+import { Ellipsis, Info, Link2Off, Pencil, Star, Trash2 } from "lucide-react";
 import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
 import { useTabStore } from "@/store/tab-store";
 import { errorReporting } from "@/lib/utils";
+import TabLabel from "../tabs/components/TabLabel";
+import ClusterInformation, {
+  ClusterInformationName,
+} from "../tabs/ClusterInformation";
 
 interface Props {
   connection: Connection;
@@ -21,6 +26,7 @@ export const ConnectionMenu: React.FC<Props> = ({
   setIsCollapsibleOpen,
 }) => {
   const { favorite, status, id } = connection;
+  const addTab = useTabStore(useShallow((state) => state.add));
   const { removeConnection, setFavoriteConnection, disconnect } =
     useConnectionStore(
       useShallow((state) => ({
@@ -62,12 +68,26 @@ export const ConnectionMenu: React.FC<Props> = ({
     }
   };
 
+  const handleClusterInformation = () => {
+    addTab({
+      label: <TabLabel name={"Cluster Information" + id.toString()} />,
+      name: ClusterInformationName,
+      children: <ClusterInformation connectionID={id} />,
+    });
+  };
+
   return (
     <DropdownMenuContent align="end">
       {status === ConnectionStatus.Connected && (
-        <DropdownMenuItem onClick={handleDisconnect}>
-          <Link2Off /> Disconnect
-        </DropdownMenuItem>
+        <>
+          <DropdownMenuItem onClick={handleDisconnect}>
+            <Link2Off /> Disconnect
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleClusterInformation}>
+            <Info /> Cluster Information
+          </DropdownMenuItem>
+        </>
       )}
       <DropdownMenuItem>
         <Pencil /> Edit
@@ -76,6 +96,7 @@ export const ConnectionMenu: React.FC<Props> = ({
         <Star />
         {favorite ? "Unfavorite" : "Favorite"}
       </DropdownMenuItem>
+      <DropdownMenuSeparator />
       <DropdownMenuItem onClick={deleteConnection} variant="destructive">
         <Trash2 /> Delete
       </DropdownMenuItem>

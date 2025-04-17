@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -19,8 +20,13 @@ import (
 	weaviate_models "github.com/weaviate/weaviate/entities/models"
 )
 
+type WClient struct {
+	cl      *weaviate.Client
+	healthy bool
+}
+
 type Weaviate struct {
-	clients    map[int64]*weaviate.Client
+	clients    map[int64]*WClient
 	storage    Storage
 	httpClient *http.Client
 }
@@ -41,11 +47,35 @@ func customHttpClient() *http.Client {
 	return cl
 }
 
-func New(s Storage) *Weaviate {
-	return &Weaviate{
+type Configuration struct {
+	StatusUpdateInterval time.Duration
+}
+
+func New(s Storage, c Configuration) *Weaviate {
+	w := &Weaviate{
 		storage:    s,
-		clients:    map[int64]*weaviate.Client{},
+		clients:    map[int64]*WClient{},
 		httpClient: customHttpClient(),
+	}
+
+	go w.updateClusterStatus(c.StatusUpdateInterval)
+
+	return w
+}
+
+func (w *Weaviate) updateClusterStatus(d time.Duration) {
+	ticker := time.NewTicker(d)
+	var err error
+
+	for range ticker.C {
+		slog.Debug("running status updater", slog.Int("clientsConnected", len(w.clients)))
+
+		for id, cl := range w.clients {
+			cl.healthy, err = cl.cl.Misc().LiveChecker().Do(context.Background())
+			if err != nil {
+				slog.Error("failed querying status", slog.Int64("connectionID", id), slog.Any("error", err))
+			}
+		}
 	}
 }
 
@@ -55,7 +85,7 @@ type TestConnectionInput struct {
 }
 
 func (w Weaviate) TestConnection(i TestConnectionInput) error {
-	client, err := w.getClientFromConnection(&models.Connection{
+	c, err := w.getClientFromConnection(&models.Connection{
 		URI:    i.URI,
 		ApiKey: i.ApiKey,
 	})
@@ -66,11 +96,12 @@ func (w Weaviate) TestConnection(i TestConnectionInput) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err = client.Misc().ReadyChecker().Do(ctx)
+	_, err = c.cl.Misc().MetaGetter().Do(ctx)
+
 	return err
 }
 
-func (w *Weaviate) getClientFromConnection(c *models.Connection) (*weaviate.Client, error) {
+func (w *Weaviate) getClientFromConnection(c *models.Connection) (*WClient, error) {
 	u, err := url.Parse(c.URI)
 	if err != nil {
 		return nil, fmt.Errorf("failed parsing connection URI: %w", err)
@@ -89,7 +120,10 @@ func (w *Weaviate) getClientFromConnection(c *models.Connection) (*weaviate.Clie
 		return nil, fmt.Errorf("failed creating client: %w", err)
 	}
 
-	return client, nil
+	return &WClient{
+		healthy: true,
+		cl:      client,
+	}, nil
 }
 
 func (w *Weaviate) Connect(id int64) error {
@@ -112,7 +146,7 @@ func (w *Weaviate) Connect(id int64) error {
 
 // NOTE: better error handling
 func (w *Weaviate) GetTotalObjects(connectionID int64, collection, tenant string) (int64, error) {
-	client, exists := w.clients[connectionID]
+	c, exists := w.clients[connectionID]
 	if !exists {
 		return -1, fmt.Errorf("connection doesn't exist %d", connectionID)
 	}
@@ -126,7 +160,7 @@ func (w *Weaviate) GetTotalObjects(connectionID int64, collection, tenant string
 		},
 	}
 
-	get := client.GraphQL().Aggregate().
+	get := c.cl.GraphQL().Aggregate().
 		WithClassName(collection).
 		WithFields(meta)
 
@@ -153,7 +187,7 @@ func (w *Weaviate) GetTotalObjects(connectionID int64, collection, tenant string
 }
 
 func (w *Weaviate) DeleteObject(connectionID int64, collection, id, tenant string) error {
-	client, exists := w.clients[connectionID]
+	c, exists := w.clients[connectionID]
 	if !exists {
 		return fmt.Errorf("connection doesn't exist %d", connectionID)
 	}
@@ -161,7 +195,7 @@ func (w *Weaviate) DeleteObject(connectionID int64, collection, id, tenant strin
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	delete := client.Data().Deleter().WithClassName(collection).WithID(id)
+	delete := c.cl.Data().Deleter().WithClassName(collection).WithID(id)
 	if tenant != "" {
 		delete = delete.WithTenant(tenant)
 	}
@@ -240,7 +274,7 @@ func (w *Weaviate) GetObjectsPaginated(connectionID int64, pageSize int, collect
 }
 
 func (w *Weaviate) GetTenants(connectionID int64, collection string) ([]weaviate_models.Tenant, error) {
-	client, exists := w.clients[connectionID]
+	c, exists := w.clients[connectionID]
 	if !exists {
 		return nil, fmt.Errorf("connection doesn't exist %d", connectionID)
 	}
@@ -248,11 +282,37 @@ func (w *Weaviate) GetTenants(connectionID int64, collection string) ([]weaviate
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	return client.Schema().TenantsGetter().WithClassName(collection).Do(ctx)
+	return c.cl.Schema().TenantsGetter().WithClassName(collection).Do(ctx)
+}
+
+func (w *Weaviate) NodesStatus(connectionID int64) (*weaviate_models.NodesStatusResponse, error) {
+	c, exists := w.clients[connectionID]
+	if !exists {
+		return nil, fmt.Errorf("connection doesn't exist %d", connectionID)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	res, err := c.cl.Cluster().NodesStatusGetter().WithOutput("verbose").Do(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed querying node status: %w", err)
+	}
+
+	return res, nil
+}
+
+func (w *Weaviate) ClusterStatus(connectionID int64) (bool, error) {
+	c, exists := w.clients[connectionID]
+	if !exists {
+		return false, fmt.Errorf("connection doesn't exist %d", connectionID)
+	}
+
+	return c.healthy, nil
 }
 
 func (w *Weaviate) GetCollections(connectionID int64) ([]*weaviate_models.Class, error) {
-	client, exists := w.clients[connectionID]
+	c, exists := w.clients[connectionID]
 	if !exists {
 		return nil, fmt.Errorf("connection doesn't exist %d", connectionID)
 	}
@@ -260,7 +320,7 @@ func (w *Weaviate) GetCollections(connectionID int64) ([]*weaviate_models.Class,
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	s, err := client.Schema().Getter().Do(ctx)
+	s, err := c.cl.Schema().Getter().Do(ctx)
 	if err != nil {
 		return nil, err
 	}

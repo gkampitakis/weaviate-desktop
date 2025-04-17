@@ -4,14 +4,29 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useQuery } from "@tanstack/react-query";
+import { ClusterStatus } from "wailsjs/go/weaviate/Weaviate";
 
-interface Props {
-  name: string;
-  connectionName?: string;
-  tooltip?: boolean;
-}
+type Props =
+  | {
+      name: string;
+      tooltip: true;
+      connectionName: string;
+      connectionID: number;
+    }
+  | {
+      name: string;
+      tooltip?: false | undefined;
+      connectionName?: undefined;
+      connectionID?: undefined;
+    };
 
-const TabLabel: React.FC<Props> = ({ name, tooltip, connectionName }) => {
+const TabLabel: React.FC<Props> = ({
+  name,
+  tooltip,
+  connectionName,
+  connectionID,
+}) => {
   const content = (
     <div
       style={{
@@ -20,11 +35,21 @@ const TabLabel: React.FC<Props> = ({ name, tooltip, connectionName }) => {
       className="flex flex-row"
     >
       <img className="w-[15px] mr-2 flex-shrink-0" src={logo} />
-      <div className="flex-1 overflow-x-hidden max-w-[120px] text-ellipsis">
+      <div className="flex-1 overflow-x-hidden max-w-sm text-ellipsis">
         {name}
       </div>
     </div>
   );
+
+  const { data: status } = useQuery({
+    queryFn: async () => {
+      const data = await ClusterStatus(connectionID!);
+      return data;
+    },
+    queryKey: ["status", connectionName],
+    enabled: tooltip,
+    refetchInterval: 10000,
+  });
 
   if (!tooltip) {
     return content;
@@ -36,6 +61,7 @@ const TabLabel: React.FC<Props> = ({ name, tooltip, connectionName }) => {
       <TooltipContent align="start">
         <p className="text-xs">Connection: {connectionName}</p>
         <p className="text-xs">Collection: {name}</p>
+        <p className="text-xs">Status: {status ? "Healthy" : "Unhealthy"}</p>
       </TooltipContent>
     </Tooltip>
   );

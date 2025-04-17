@@ -31,9 +31,8 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
   };
 
   // Fetch tenants
-  const { data: tenants } = useQuery({
+  const { data: tenants, isLoading: loadingTenant } = useQuery({
     queryKey: ["tenants", connection.id, name],
-    initialData: [],
     queryFn: async () => {
       try {
         const tenants = await GetTenants(connection.id, name);
@@ -79,7 +78,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
       }
     },
     // when changing page we need to make sure we have fetched the tenants again
-    enabled: !!selectedTenant && !!tenants.length,
+    enabled: !!selectedTenant && !!tenants?.length,
   });
 
   const totalPages = Math.ceil(totalObjects / pageSize);
@@ -117,8 +116,11 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
       }
     },
     // when changing page we need to make sure we have fetched the tenants again
-    enabled: !!selectedTenant && !!tenants.length,
+    enabled: !!selectedTenant && !!tenants?.length,
   });
+
+  const loading =
+    loadingTenant || loadingObject || isPlaceholderData || loadingTotal;
 
   const refetch = () => {
     refetchObjects();
@@ -126,11 +128,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
   };
 
   const handleNext = async () => {
-    if (
-      cursorHistory.length + 1 === totalPages ||
-      loadingObject ||
-      isPlaceholderData
-    ) {
+    if (cursorHistory.length + 1 === totalPages || loading) {
       return;
     }
 
@@ -138,7 +136,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
   };
 
   const handlePrevious = async () => {
-    if (cursorHistory.length <= 0 || loadingObject || isPlaceholderData) {
+    if (cursorHistory.length <= 0 || loading) {
       return;
     }
 
@@ -153,7 +151,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
   return (
     <TabContainer>
       <Tabs defaultValue="objects">
-        <div className="flex flex-row gap-2">
+        <div className="flex flex-row gap-2 items-center">
           <TabsList className="h-[30px] flex-3">
             <TabsTrigger
               value="objects"
@@ -174,7 +172,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
               Schema
             </TabsTrigger>
           </TabsList>
-          <div className="flex flex-row flex-2 justify-between">
+          <div className="flex flex-row flex-2 justify-between items-center">
             <TenantList
               selected={selectedTenant}
               setTenant={selectTenant}
@@ -187,7 +185,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
               previous={handlePrevious}
               currentPage={cursorHistory.length + 1}
               totalPages={totalPages}
-              loading={loadingTotal || loadingObject || isPlaceholderData}
+              loading={loading}
             />
           </div>
         </div>
@@ -196,6 +194,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
             objects={objects || []}
             tenant={selectedTenant}
             connectionID={connection.id}
+            loading={loading}
             refetch={refetch}
           />
         </TabsContent>

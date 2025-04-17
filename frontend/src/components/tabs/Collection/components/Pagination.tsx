@@ -29,6 +29,11 @@ const Pagination: React.FC<Props> = ({
   totalPages,
   loading,
 }) => {
+  const disabledNext =
+    loading || totalPages === 0 || currentPage === totalPages;
+
+  const disabledPrevious = loading || totalPages === 0 || currentPage === 1;
+
   return (
     <div
       className={`flex flex-row gap-1 items-center ${
@@ -36,7 +41,7 @@ const Pagination: React.FC<Props> = ({
       }`}
     >
       {loading && (
-        <LoaderCircle size={"1.3em"} className="animate-spin text-green-600" />
+        <LoaderCircle size="1.3em" className="animate-spin text-green-600" />
       )}
       <Select
         value={pageSize.toString()}
@@ -44,24 +49,30 @@ const Pagination: React.FC<Props> = ({
           setPageSize(Number(e));
         }}
       >
-        <span className="min-w-[20px]">
+        <span className="flex text-center">
           {totalPages === 0 ? "0 of 0" : `${currentPage} of ${totalPages}`}
         </span>
         <ChevronLeft
           className={`p-1 rounded-full transition ${
-            loading || currentPage === 1
+            disabledPrevious
               ? "opacity-50 cursor-not-allowed"
               : "cursor-pointer hover:bg-gray-200"
           }`}
-          onClick={previous}
+          onClick={() => {
+            if (disabledPrevious) return;
+            previous();
+          }}
         />
         <ChevronRight
           className={`p-1 rounded-full transition ${
-            loading || currentPage === totalPages
+            disabledNext
               ? "opacity-50 cursor-not-allowed"
               : "cursor-pointer hover:bg-gray-200"
           }`}
-          onClick={next}
+          onClick={() => {
+            if (disabledNext) return;
+            next();
+          }}
         />
         <SelectTrigger size="sm" className="pl-2 pr-1" disabled={loading}>
           <SelectValue placeholder="Select page size" />

@@ -12,6 +12,7 @@ import CollectionTab from "../tabs/Collection/HOCollection";
 import { useQueryClient } from "@tanstack/react-query";
 import { WelcomeName } from "../tabs/Welcome";
 import { NewTabName } from "../tabs/NewTab";
+import { ClusterInformationName } from "../tabs/ClusterInformation";
 
 export const ConnectionCollapsibleTrigger: React.FC<{
   connected: boolean;
@@ -55,10 +56,17 @@ export const ConnectionCollapsibleContent: React.FC<{
 
       if (
         collection.multiTenancyConfig?.enabled &&
-        ![WelcomeName, NewTabName].includes(activeTab.name)
+        // NOTE: don't like this pattern we should update it
+        ![WelcomeName, NewTabName, ClusterInformationName].includes(
+          activeTab.name
+        )
       ) {
-        queryClient.resetQueries({
+        await queryClient.resetQueries({
           queryKey: ["tenants", activeTab.connection!.id, activeTab.name],
+        });
+
+        await queryClient.resetQueries({
+          queryKey: ["objects", activeTab.connection!.id, activeTab.name],
         });
       }
 
@@ -67,6 +75,7 @@ export const ConnectionCollapsibleContent: React.FC<{
           <TabLabel
             name={collection.name}
             connectionName={collection.connection.name}
+            connectionID={collection.connection.id}
             tooltip
           />
         ),
@@ -83,6 +92,7 @@ export const ConnectionCollapsibleContent: React.FC<{
         <TabLabel
           name={collection.name}
           connectionName={collection.connection.name}
+          connectionID={collection.connection.id}
           tooltip
         />
       ),
@@ -105,7 +115,7 @@ export const ConnectionCollapsibleContent: React.FC<{
           ) : (
             <Box size="1.1em" className="mr-2 flex-shrink-0" />
           )}
-          {collection.name}
+          <span className="truncate">{collection.name}</span>
         </div>
       ))}
     </CollapsibleContent>

@@ -51,6 +51,7 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
   const {
     data: objects,
     isLoading: loadingObject,
+    isPlaceholderData,
     refetch: refetchObjects,
   } = useQuery({
     placeholderData: keepPreviousData,
@@ -73,8 +74,10 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
     },
   });
 
+  const loading = loadingTotal || loadingObject || isPlaceholderData;
+
   const handleNext = async () => {
-    if (cursorHistory.length + 1 === totalPages || loadingObject) {
+    if (cursorHistory.length + 1 === totalPages || loading) {
       return;
     }
 
@@ -87,7 +90,7 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
   };
 
   const handlePrevious = async () => {
-    if (cursorHistory.length <= 0 || loadingObject) {
+    if (cursorHistory.length <= 0 || loading) {
       return;
     }
 
@@ -102,7 +105,7 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
   return (
     <TabContainer>
       <Tabs defaultValue="objects">
-        <div className="flex flex-row gap-2">
+        <div className="flex flex-row gap-2 items-center">
           <TabsList className="h-[30px] flex-3">
             <TabsTrigger
               value="objects"
@@ -123,7 +126,7 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
               Schema
             </TabsTrigger>
           </TabsList>
-          <div className="flex flex-row flex-2 justify-end">
+          <div className="flex flex-row flex-2 justify-end items-center">
             <Pagination
               pageSize={pageSize}
               setPageSize={handlePageSizeChange}
@@ -131,12 +134,13 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
               previous={handlePrevious}
               currentPage={cursorHistory.length + 1}
               totalPages={totalPages}
-              loading={loadingTotal || loadingObject}
+              loading={loading}
             />
           </div>
         </div>
         <TabsContent value="objects">
           <ObjectsList
+            loading={loading}
             objects={objects || []}
             connectionID={connection.id}
             refetch={refetch}

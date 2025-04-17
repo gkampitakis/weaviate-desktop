@@ -14,6 +14,20 @@ export namespace models {
 	        this.k1 = source["k1"];
 	    }
 	}
+	export class BatchStats {
+	    queueLength?: number;
+	    ratePerSecond: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new BatchStats(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.queueLength = source["queueLength"];
+	        this.ratePerSecond = source["ratePerSecond"];
+	    }
+	}
 	export class VectorConfig {
 	    vectorIndexConfig?: any;
 	    vectorIndexType?: string;
@@ -285,6 +299,116 @@ export namespace models {
 	
 	
 	
+	export class NodeShardStatus {
+	    class: string;
+	    compressed: boolean;
+	    loaded: boolean;
+	    name: string;
+	    objectCount: number;
+	    vectorIndexingStatus: string;
+	    vectorQueueLength: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new NodeShardStatus(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.class = source["class"];
+	        this.compressed = source["compressed"];
+	        this.loaded = source["loaded"];
+	        this.name = source["name"];
+	        this.objectCount = source["objectCount"];
+	        this.vectorIndexingStatus = source["vectorIndexingStatus"];
+	        this.vectorQueueLength = source["vectorQueueLength"];
+	    }
+	}
+	export class NodeStats {
+	    objectCount: number;
+	    shardCount: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new NodeStats(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.objectCount = source["objectCount"];
+	        this.shardCount = source["shardCount"];
+	    }
+	}
+	export class NodeStatus {
+	    batchStats?: BatchStats;
+	    gitHash?: string;
+	    name?: string;
+	    shards: NodeShardStatus[];
+	    stats?: NodeStats;
+	    status?: string;
+	    version?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new NodeStatus(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.batchStats = this.convertValues(source["batchStats"], BatchStats);
+	        this.gitHash = source["gitHash"];
+	        this.name = source["name"];
+	        this.shards = this.convertValues(source["shards"], NodeShardStatus);
+	        this.stats = this.convertValues(source["stats"], NodeStats);
+	        this.status = source["status"];
+	        this.version = source["version"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class NodesStatusResponse {
+	    nodes: NodeStatus[];
+	
+	    static createFrom(source: any = {}) {
+	        return new NodesStatusResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.nodes = this.convertValues(source["nodes"], NodeStatus);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class Object {
 	    additional?: Record<string, any>;
 	    class?: string;

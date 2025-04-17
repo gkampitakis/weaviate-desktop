@@ -9,15 +9,14 @@ const Welcome = () => {
       <div className="flex flex-row">
         <img
           src={SearchImage}
-          className="w-[400px] select-none pointer-events-none"
+          className="w-[250px] select-none pointer-events-none"
           alt="Search Image"
         />
-
-        <div className="flex-1 ">
-          <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+        <div className="flex-1 m-2">
+          <h1 className="scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-5xl">
             Welcome to Weaviate GUI
           </h1>
-          <div className="flex flex-col py-10">
+          <div className="flex flex-col py-4">
             <span>
               You can get started on{" "}
               <a

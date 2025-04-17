@@ -1,6 +1,6 @@
 import { models } from "wailsjs/go/models";
 import JsonView from "@uiw/react-json-view";
-import { Check, Copy, Trash2 } from "lucide-react";
+import { Check, Copy, LoaderCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
 import {
   Dialog,
@@ -13,20 +13,48 @@ import {
 import { Button } from "@/components/ui/button";
 import { DeleteObject } from "wailsjs/go/weaviate/Weaviate";
 import { errorReporting } from "@/lib/utils";
+import logo from "@/assets/images/no-data.svg";
 
 interface Props {
   objects: models.Object[];
   tenant?: string;
   connectionID: number;
   refetch: () => void;
+  loading: boolean;
 }
 
 const ObjectsList: React.FC<Props> = ({
   objects,
   tenant,
   connectionID,
+  loading,
   refetch,
 }) => {
+  if (!objects.length) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center item-center"
+        style={{ height: "70vh" }}
+      >
+        {loading ? (
+          <LoaderCircle size="1.3em" className="animate-spin text-green-600" />
+        ) : (
+          <>
+            <img
+              className="w-[200px] select-none pointer-events-none"
+              alt="No Data Image"
+              src={logo}
+            />
+            <h2 className="text-primary mt-10 scroll-m-20 pb-2 text-2xl font-semibold tracking-tight transition-colors first:mt-0">
+              This collection has no data
+            </h2>
+            <p className="text-primary">You can import data with ....</p>
+          </>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-y-auto" style={{ height: "calc(100vh - 120px)" }}>
       {objects.map((object, id) => (
