@@ -13,14 +13,14 @@ runs:
       shell: bash
       working-directory: build/bin
       run: |
-        zip -r ${{ inputs.file-name }}-linux.zip *
+        zip -r ${{ inputs.file-name }}.linux.zip *
     - if: runner.os == 'Windows'
       shell: pwsh
       working-directory: build/bin
       run: |
-        Compress-Archive -Path * -Destination "${{ inputs.file-name }}-windows.zip"
+        Compress-Archive -Path * -Destination "${{ inputs.file-name }}.windows.zip"
     - if: runner.os == 'macOs'
       shell: bash
       working-directory: build/bin
       run: |
-        zip -r ${{ inputs.file-name }}-macos.zip *
+        zip -r ${{ inputs.file-name }}.macos.zip *
