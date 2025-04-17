@@ -11,14 +11,14 @@ export function DeleteObject(arg1:number,arg2:string,arg3:string,arg4:string):Pr
 
 export function Disconnect(arg1:number):Promise<void>;
 
-export function GetCollections(arg1:number):Promise<Array<models.Class>>;
+export function GetCollections(arg1:number):Promise<Array<models.w_Class>>;
 
-export function GetObjectsPaginated(arg1:number,arg2:number,arg3:string,arg4:string,arg5:string):Promise<weaviate.PaginatedObjectResponse>;
+export function GetObjectsPaginated(arg1:number,arg2:number,arg3:string,arg4:string,arg5:string):Promise<weaviate.w_PaginatedObjectResponse>;
 
-export function GetTenants(arg1:number,arg2:string):Promise<Array<models.Tenant>>;
+export function GetTenants(arg1:number,arg2:string):Promise<Array<models.w_Tenant>>;
 
 export function GetTotalObjects(arg1:number,arg2:string,arg3:string):Promise<number>;
 
-export function NodesStatus(arg1:number):Promise<models.NodesStatusResponse>;
+export function NodesStatus(arg1:number):Promise<models.w_NodesStatusResponse>;
 
-export function TestConnection(arg1:weaviate.TestConnectionInput):Promise<void>;
+export function TestConnection(arg1:weaviate.w_TestConnectionInput):Promise<void>;

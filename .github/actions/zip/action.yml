@@ -1,0 +1,26 @@
+name: "Compress"
+description: "Compress built files"
+
+inputs:
+  file-name:
+    description: "zip file name"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - if: runner.os == 'Linux'
+      shell: bash
+      working-directory: build/bin
+      run: |
+        zip -r ${{ inputs.file-name }}-linux.zip *
+    - if: runner.os == 'Windows'
+      shell: pwsh
+      working-directory: build/bin
+      run: |
+        Compress-Archive -Path * -Destination "${{ inputs.file-name }}-windows.zip"
+    - if: runner.os == 'macOs'
+      shell: bash
+      working-directory: build/bin
+      run: |
+        zip -r ${{ inputs.file-name }}-macos.zip *

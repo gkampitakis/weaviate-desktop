@@ -1,11 +1,11 @@
 export namespace models {
 	
-	export class BM25Config {
+	export class w_BM25Config {
 	    b?: number;
 	    k1?: number;
 	
 	    static createFrom(source: any = {}) {
-	        return new BM25Config(source);
+	        return new w_BM25Config(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -14,12 +14,12 @@ export namespace models {
 	        this.k1 = source["k1"];
 	    }
 	}
-	export class BatchStats {
+	export class w_BatchStats {
 	    queueLength?: number;
 	    ratePerSecond: number;
 	
 	    static createFrom(source: any = {}) {
-	        return new BatchStats(source);
+	        return new w_BatchStats(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -28,13 +28,13 @@ export namespace models {
 	        this.ratePerSecond = source["ratePerSecond"];
 	    }
 	}
-	export class VectorConfig {
+	export class w_VectorConfig {
 	    vectorIndexConfig?: any;
 	    vectorIndexType?: string;
 	    vectorizer?: any;
 	
 	    static createFrom(source: any = {}) {
-	        return new VectorConfig(source);
+	        return new w_VectorConfig(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -44,13 +44,13 @@ export namespace models {
 	        this.vectorizer = source["vectorizer"];
 	    }
 	}
-	export class ReplicationConfig {
+	export class w_ReplicationConfig {
 	    asyncEnabled: boolean;
 	    deletionStrategy?: string;
 	    factor?: number;
 	
 	    static createFrom(source: any = {}) {
-	        return new ReplicationConfig(source);
+	        return new w_ReplicationConfig(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -60,18 +60,18 @@ export namespace models {
 	        this.factor = source["factor"];
 	    }
 	}
-	export class NestedProperty {
+	export class w_NestedProperty {
 	    dataType: string[];
 	    description?: string;
 	    indexFilterable?: boolean;
 	    indexRangeFilters?: boolean;
 	    indexSearchable?: boolean;
 	    name?: string;
-	    nestedProperties?: NestedProperty[];
+	    nestedProperties?: w_NestedProperty[];
 	    tokenization?: string;
 	
 	    static createFrom(source: any = {}) {
-	        return new NestedProperty(source);
+	        return new w_NestedProperty(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -82,7 +82,7 @@ export namespace models {
 	        this.indexRangeFilters = source["indexRangeFilters"];
 	        this.indexSearchable = source["indexSearchable"];
 	        this.name = source["name"];
-	        this.nestedProperties = this.convertValues(source["nestedProperties"], NestedProperty);
+	        this.nestedProperties = this.convertValues(source["nestedProperties"], w_NestedProperty);
 	        this.tokenization = source["tokenization"];
 	    }
 	
@@ -104,7 +104,7 @@ export namespace models {
 		    return a;
 		}
 	}
-	export class Property {
+	export class w_Property {
 	    dataType: string[];
 	    description?: string;
 	    indexFilterable?: boolean;
@@ -113,11 +113,11 @@ export namespace models {
 	    indexSearchable?: boolean;
 	    moduleConfig?: any;
 	    name?: string;
-	    nestedProperties?: NestedProperty[];
+	    nestedProperties?: w_NestedProperty[];
 	    tokenization?: string;
 	
 	    static createFrom(source: any = {}) {
-	        return new Property(source);
+	        return new w_Property(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -130,7 +130,7 @@ export namespace models {
 	        this.indexSearchable = source["indexSearchable"];
 	        this.moduleConfig = source["moduleConfig"];
 	        this.name = source["name"];
-	        this.nestedProperties = this.convertValues(source["nestedProperties"], NestedProperty);
+	        this.nestedProperties = this.convertValues(source["nestedProperties"], w_NestedProperty);
 	        this.tokenization = source["tokenization"];
 	    }
 	
@@ -152,13 +152,13 @@ export namespace models {
 		    return a;
 		}
 	}
-	export class MultiTenancyConfig {
+	export class w_MultiTenancyConfig {
 	    autoTenantActivation: boolean;
 	    autoTenantCreation: boolean;
 	    enabled: boolean;
 	
 	    static createFrom(source: any = {}) {
-	        return new MultiTenancyConfig(source);
+	        return new w_MultiTenancyConfig(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -168,13 +168,13 @@ export namespace models {
 	        this.enabled = source["enabled"];
 	    }
 	}
-	export class StopwordConfig {
+	export class w_StopwordConfig {
 	    additions: string[];
 	    preset?: string;
 	    removals: string[];
 	
 	    static createFrom(source: any = {}) {
-	        return new StopwordConfig(source);
+	        return new w_StopwordConfig(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -184,26 +184,26 @@ export namespace models {
 	        this.removals = source["removals"];
 	    }
 	}
-	export class InvertedIndexConfig {
-	    bm25?: BM25Config;
+	export class w_InvertedIndexConfig {
+	    bm25?: w_BM25Config;
 	    cleanupIntervalSeconds?: number;
 	    indexNullState?: boolean;
 	    indexPropertyLength?: boolean;
 	    indexTimestamps?: boolean;
-	    stopwords?: StopwordConfig;
+	    stopwords?: w_StopwordConfig;
 	
 	    static createFrom(source: any = {}) {
-	        return new InvertedIndexConfig(source);
+	        return new w_InvertedIndexConfig(source);
 	    }
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.bm25 = this.convertValues(source["bm25"], BM25Config);
+	        this.bm25 = this.convertValues(source["bm25"], w_BM25Config);
 	        this.cleanupIntervalSeconds = source["cleanupIntervalSeconds"];
 	        this.indexNullState = source["indexNullState"];
 	        this.indexPropertyLength = source["indexPropertyLength"];
 	        this.indexTimestamps = source["indexTimestamps"];
-	        this.stopwords = this.convertValues(source["stopwords"], StopwordConfig);
+	        this.stopwords = this.convertValues(source["stopwords"], w_StopwordConfig);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -224,14 +224,14 @@ export namespace models {
 		    return a;
 		}
 	}
-	export class Class {
+	export class w_Class {
 	    class?: string;
 	    description?: string;
-	    invertedIndexConfig?: InvertedIndexConfig;
+	    invertedIndexConfig?: w_InvertedIndexConfig;
 	    moduleConfig?: any;
-	    multiTenancyConfig?: MultiTenancyConfig;
-	    properties: Property[];
-	    replicationConfig?: ReplicationConfig;
+	    multiTenancyConfig?: w_MultiTenancyConfig;
+	    properties: w_Property[];
+	    replicationConfig?: w_ReplicationConfig;
 	    shardingConfig?: any;
 	    vectorConfig?: Record<string, VectorConfig>;
 	    vectorIndexConfig?: any;
@@ -239,20 +239,20 @@ export namespace models {
 	    vectorizer?: string;
 	
 	    static createFrom(source: any = {}) {
-	        return new Class(source);
+	        return new w_Class(source);
 	    }
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.class = source["class"];
 	        this.description = source["description"];
-	        this.invertedIndexConfig = this.convertValues(source["invertedIndexConfig"], InvertedIndexConfig);
+	        this.invertedIndexConfig = this.convertValues(source["invertedIndexConfig"], w_InvertedIndexConfig);
 	        this.moduleConfig = source["moduleConfig"];
-	        this.multiTenancyConfig = this.convertValues(source["multiTenancyConfig"], MultiTenancyConfig);
-	        this.properties = this.convertValues(source["properties"], Property);
-	        this.replicationConfig = this.convertValues(source["replicationConfig"], ReplicationConfig);
+	        this.multiTenancyConfig = this.convertValues(source["multiTenancyConfig"], w_MultiTenancyConfig);
+	        this.properties = this.convertValues(source["properties"], w_Property);
+	        this.replicationConfig = this.convertValues(source["replicationConfig"], w_ReplicationConfig);
 	        this.shardingConfig = source["shardingConfig"];
-	        this.vectorConfig = this.convertValues(source["vectorConfig"], VectorConfig, true);
+	        this.vectorConfig = this.convertValues(source["vectorConfig"], w_VectorConfig, true);
 	        this.vectorIndexConfig = source["vectorIndexConfig"];
 	        this.vectorIndexType = source["vectorIndexType"];
 	        this.vectorizer = source["vectorizer"];
@@ -276,7 +276,7 @@ export namespace models {
 		    return a;
 		}
 	}
-	export class Connection {
+	export class w_Connection {
 	    id: number;
 	    uri: string;
 	    name: string;
@@ -284,7 +284,7 @@ export namespace models {
 	    api_key?: string;
 	
 	    static createFrom(source: any = {}) {
-	        return new Connection(source);
+	        return new w_Connection(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -299,7 +299,7 @@ export namespace models {
 	
 	
 	
-	export class NodeShardStatus {
+	export class w_NodeShardStatus {
 	    class: string;
 	    compressed: boolean;
 	    loaded: boolean;
@@ -309,7 +309,7 @@ export namespace models {
 	    vectorQueueLength: number;
 	
 	    static createFrom(source: any = {}) {
-	        return new NodeShardStatus(source);
+	        return new w_NodeShardStatus(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -323,12 +323,12 @@ export namespace models {
 	        this.vectorQueueLength = source["vectorQueueLength"];
 	    }
 	}
-	export class NodeStats {
+	export class w_NodeStats {
 	    objectCount: number;
 	    shardCount: number;
 	
 	    static createFrom(source: any = {}) {
-	        return new NodeStats(source);
+	        return new w_NodeStats(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -337,26 +337,26 @@ export namespace models {
 	        this.shardCount = source["shardCount"];
 	    }
 	}
-	export class NodeStatus {
-	    batchStats?: BatchStats;
+	export class w_NodeStatus {
+	    batchStats?: w_BatchStats;
 	    gitHash?: string;
 	    name?: string;
-	    shards: NodeShardStatus[];
-	    stats?: NodeStats;
+	    shards: w_NodeShardStatus[];
+	    stats?: w_NodeStats;
 	    status?: string;
 	    version?: string;
 	
 	    static createFrom(source: any = {}) {
-	        return new NodeStatus(source);
+	        return new w_NodeStatus(source);
 	    }
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.batchStats = this.convertValues(source["batchStats"], BatchStats);
+	        this.batchStats = this.convertValues(source["batchStats"], w_BatchStats);
 	        this.gitHash = source["gitHash"];
 	        this.name = source["name"];
-	        this.shards = this.convertValues(source["shards"], NodeShardStatus);
-	        this.stats = this.convertValues(source["stats"], NodeStats);
+	        this.shards = this.convertValues(source["shards"], w_NodeShardStatus);
+	        this.stats = this.convertValues(source["stats"], w_NodeStats);
 	        this.status = source["status"];
 	        this.version = source["version"];
 	    }
@@ -379,16 +379,16 @@ export namespace models {
 		    return a;
 		}
 	}
-	export class NodesStatusResponse {
-	    nodes: NodeStatus[];
+	export class w_NodesStatusResponse {
+	    nodes: w_NodeStatus[];
 	
 	    static createFrom(source: any = {}) {
-	        return new NodesStatusResponse(source);
+	        return new w_NodesStatusResponse(source);
 	    }
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.nodes = this.convertValues(source["nodes"], NodeStatus);
+	        this.nodes = this.convertValues(source["nodes"], w_NodeStatus);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -409,7 +409,7 @@ export namespace models {
 		    return a;
 		}
 	}
-	export class Object {
+	export class w_Object {
 	    additional?: Record<string, any>;
 	    class?: string;
 	    creationTimeUnix?: number;
@@ -422,7 +422,7 @@ export namespace models {
 	    vectors?: Record<string, any>;
 	
 	    static createFrom(source: any = {}) {
-	        return new Object(source);
+	        return new w_Object(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -442,12 +442,12 @@ export namespace models {
 	
 	
 	
-	export class Tenant {
+	export class w_Tenant {
 	    activityStatus?: string;
 	    name?: string;
 	
 	    static createFrom(source: any = {}) {
-	        return new Tenant(source);
+	        return new w_Tenant(source);
 	    }
 	
 	    constructor(source: any = {}) {
@@ -461,17 +461,17 @@ export namespace models {
 
 export namespace weaviate {
 	
-	export class PaginatedObjectResponse {
-	    Objects: models.Object[];
+	export class w_PaginatedObjectResponse {
+	    Objects: w_models.Object[];
 	    TotalResults: number;
 	
 	    static createFrom(source: any = {}) {
-	        return new PaginatedObjectResponse(source);
+	        return new w_PaginatedObjectResponse(source);
 	    }
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Objects = this.convertValues(source["Objects"], models.Object);
+	        this.Objects = this.convertValues(source["Objects"], w_models.Object);
 	        this.TotalResults = source["TotalResults"];
 	    }
 	
@@ -493,12 +493,12 @@ export namespace weaviate {
 		    return a;
 		}
 	}
-	export class TestConnectionInput {
+	export class w_TestConnectionInput {
 	    URI: string;
 	    ApiKey?: string;
 	
 	    static createFrom(source: any = {}) {
-	        return new TestConnectionInput(source);
+	        return new w_TestConnectionInput(source);
 	    }
 	
 	    constructor(source: any = {}) {

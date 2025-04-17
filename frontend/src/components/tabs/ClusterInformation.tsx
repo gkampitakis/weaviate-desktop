@@ -90,7 +90,11 @@ function sentenceCase(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
 
-const VersionToolTip = ({ nodeStatus }: { nodeStatus: models.NodeStatus }) => {
+const VersionToolTip = ({
+  nodeStatus,
+}: {
+  nodeStatus: models.w_NodeStatus;
+}) => {
   const [copySuccess, setCopySuccess] = useState(false);
   const Icon = copySuccess ? Check : Copy;
 

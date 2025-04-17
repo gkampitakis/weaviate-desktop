@@ -1,7 +1,7 @@
 import { models } from "wailsjs/go/models";
 import { Tab as TabComponent } from "rc-tabs/lib/interface";
 
-export interface Connection extends models.Connection {
+export interface Connection extends models.w_Connection {
   status?: ConnectionStatus;
   collections?: Collection[];
 }
