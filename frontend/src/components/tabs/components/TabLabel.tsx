@@ -34,8 +34,8 @@ const TabLabel: React.FC<Props> = ({
       }}
       className="flex flex-row"
     >
-      <img className="w-[15px] mr-2 flex-shrink-0" src={logo} />
-      <div className="flex-1 overflow-x-hidden max-w-sm text-ellipsis">
+      <img className="mr-2 w-[15px] flex-shrink-0" src={logo} />
+      <div className="max-w-sm flex-1 overflow-x-hidden text-ellipsis">
         {name}
       </div>
     </div>

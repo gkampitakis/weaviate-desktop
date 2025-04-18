@@ -154,7 +154,7 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
               />
             </div>
             <DialogFooter>
-              <div className="flex justify-between min-w-full">
+              <div className="flex min-w-full justify-between">
                 <div>
                   <Button variant="secondary" type="reset" onClick={OnCancel}>
                     Cancel

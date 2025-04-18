@@ -59,7 +59,7 @@ const Tabs = () => {
       onChange={onChange}
       onEdit={onEdit}
       activeKey={activeTab}
-      className="bg-gray-100 flex-1"
+      className="flex-1 bg-gray-100"
     />
   );
 };

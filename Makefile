@@ -10,10 +10,12 @@ install-tools: ## Install linting tools
 
 lint: ## Run golangci linter
 	golangci-lint run -c ./golangci.yml ./...
+	(cd frontend && npm run lint)
 
 format: ## Format code
 	gofumpt -l -w -extra .
 	golines . -w
+	(cd frontend && npm run format)
 
 test: ## Run tests
 	go test -race -count=10 -shuffle on -cover ./...

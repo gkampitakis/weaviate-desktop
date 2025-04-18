@@ -27,7 +27,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
   connections: [],
   save: async (c) => {
     const id = await SaveConnection(
-      new models.Connection({
+      new models.w_Connection({
         uri: c.uri,
         name: c.name,
         favorite: c.favorite,

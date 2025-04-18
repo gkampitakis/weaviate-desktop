@@ -73,7 +73,7 @@ const StatusIndicator = ({ status }: { status?: string }) => {
       <TooltipTrigger>
         <div className="flex items-center gap-2">
           <span
-            className={`w-4 h-4 rounded-full ${
+            className={`h-4 w-4 rounded-full ${
               status ? statusColors[status] : "bg-gray-400"
             }`}
           />
@@ -119,7 +119,7 @@ const VersionToolTip = ({
       <TooltipTrigger>
         <span>{nodeStatus.version}</span>
       </TooltipTrigger>
-      <TooltipContent className="bg-[oklch(0.21_0.006_285.885)] fill-[oklch(0.21_0.006_285.885)] text-[oklch(0.985_0_0)] flex flex-row items-center gap-2">
+      <TooltipContent className="flex flex-row items-center gap-2 bg-[oklch(0.21_0.006_285.885)] fill-[oklch(0.21_0.006_285.885)] text-[oklch(0.985_0_0)]">
         {nodeStatus.gitHash}
         <Icon size="1em" className="cursor-pointer" onClick={handleCopy} />
       </TooltipContent>
