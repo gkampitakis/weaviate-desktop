@@ -1,3 +1,4 @@
+import { WLink } from "@/components/ui/wLink";
 import TabContainer from "./components/TabContainer";
 import SearchImage from "@/assets/images/file_search.svg";
 
@@ -19,23 +20,17 @@ const Welcome = () => {
           <div className="flex flex-col py-4">
             <span>
               You can get started on{" "}
-              <a
-                href="https://weaviate.io/developers/weaviate/quickstart"
-                target="_blank"
-                rel="noreferrer"
+              <WLink
+                href={"https://weaviate.io/developers/weaviate/quickstart"}
               >
                 Weaviate Console
-              </a>
+              </WLink>
             </span>
             <span>
               or{" "}
-              <a
-                href="https://weaviate.io/developers/weaviate/quickstart/local"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <WLink href="https://weaviate.io/developers/weaviate/quickstart/local">
                 locally
-              </a>
+              </WLink>
               .
             </span>
           </div>
