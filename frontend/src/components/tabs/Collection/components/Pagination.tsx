@@ -36,7 +36,7 @@ const Pagination: React.FC<Props> = ({
 
   return (
     <div
-      className={`flex flex-row gap-1 items-center ${
+      className={`flex flex-row items-center gap-1 ${
         className ? className : ""
       }`}
     >
@@ -53,9 +53,9 @@ const Pagination: React.FC<Props> = ({
           {totalPages === 0 ? "0 of 0" : `${currentPage} of ${totalPages}`}
         </span>
         <ChevronLeft
-          className={`p-1 rounded-full transition ${
+          className={`rounded-full p-1 transition ${
             disabledPrevious
-              ? "opacity-50 cursor-not-allowed"
+              ? "cursor-not-allowed opacity-50"
               : "cursor-pointer hover:bg-gray-200"
           }`}
           onClick={() => {
@@ -64,9 +64,9 @@ const Pagination: React.FC<Props> = ({
           }}
         />
         <ChevronRight
-          className={`p-1 rounded-full transition ${
+          className={`rounded-full p-1 transition ${
             disabledNext
-              ? "opacity-50 cursor-not-allowed"
+              ? "cursor-not-allowed opacity-50"
               : "cursor-pointer hover:bg-gray-200"
           }`}
           onClick={() => {
@@ -74,7 +74,7 @@ const Pagination: React.FC<Props> = ({
             next();
           }}
         />
-        <SelectTrigger size="sm" className="pl-2 pr-1" disabled={loading}>
+        <SelectTrigger size="sm" className="pr-1 pl-2" disabled={loading}>
           <SelectValue placeholder="Select page size" />
         </SelectTrigger>
         <SelectContent>

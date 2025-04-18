@@ -33,7 +33,7 @@ const ObjectsList: React.FC<Props> = ({
   if (!objects.length) {
     return (
       <div
-        className="flex flex-col items-center justify-center item-center"
+        className="item-center flex flex-col items-center justify-center"
         style={{ height: "70vh" }}
       >
         {loading ? (
@@ -41,7 +41,7 @@ const ObjectsList: React.FC<Props> = ({
         ) : (
           <>
             <img
-              className="w-[200px] select-none pointer-events-none"
+              className="pointer-events-none w-[200px] select-none"
               alt="No Data Image"
               src={logo}
             />
@@ -132,7 +132,7 @@ const Object: React.FC<ObjectActionsProps> = ({
         </DialogContent>
       </Dialog>
       <div
-        className="bg-gray-100/80 my-2 rounded-md border-red-200 flex flex-row justify-between"
+        className="my-2 flex flex-row justify-between rounded-md border-red-200 bg-gray-100/80"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -147,7 +147,7 @@ const Object: React.FC<ObjectActionsProps> = ({
           highlightUpdates={false}
         />
         <div
-          className="px-10 py-4 flex flex-row transform opacity-0 transition-opacity ease-in-out gap-2"
+          className="flex transform flex-row gap-2 px-10 py-4 opacity-0 transition-opacity ease-in-out"
           style={{ opacity: isHovered ? 1 : 0 }}
         >
           <Icon

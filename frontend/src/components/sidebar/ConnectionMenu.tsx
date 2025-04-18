@@ -109,10 +109,10 @@ export const ConnectionMenuTrigger: React.FC<{
 }> = ({ hovered }) => (
   <DropdownMenuTrigger>
     <div
-      className="cursor-pointer hover:bg-gray-200 transform opacity-0 transition-opacity duration-300 ease-in-out rounded-full"
+      className="transform cursor-pointer rounded-full opacity-0 transition-opacity duration-300 ease-in-out hover:bg-gray-200"
       style={{ opacity: hovered ? 1 : 0 }}
     >
-      <Ellipsis className="w-4 h-4" />
+      <Ellipsis className="h-4 w-4" />
     </div>
   </DropdownMenuTrigger>
 );

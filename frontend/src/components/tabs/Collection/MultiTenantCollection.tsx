@@ -151,7 +151,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
   return (
     <TabContainer>
       <Tabs defaultValue="objects">
-        <div className="flex flex-row gap-2 items-center">
+        <div className="flex flex-row items-center gap-2">
           <TabsList className="h-[30px] flex-3">
             <TabsTrigger
               value="objects"
@@ -172,7 +172,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
               Schema
             </TabsTrigger>
           </TabsList>
-          <div className="flex flex-row flex-2 justify-between items-center">
+          <div className="flex flex-2 flex-row items-center justify-between">
             <TenantList
               selected={selectedTenant}
               setTenant={selectTenant}

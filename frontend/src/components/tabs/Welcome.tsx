@@ -9,10 +9,10 @@ const Welcome = () => {
       <div className="flex flex-row">
         <img
           src={SearchImage}
-          className="w-[250px] select-none pointer-events-none"
+          className="pointer-events-none w-[250px] select-none"
           alt="Search Image"
         />
-        <div className="flex-1 m-2">
+        <div className="m-2 flex-1">
           <h1 className="scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-5xl">
             Welcome to Weaviate GUI
           </h1>
@@ -22,6 +22,7 @@ const Welcome = () => {
               <a
                 href="https://weaviate.io/developers/weaviate/quickstart"
                 target="_blank"
+                rel="noreferrer"
               >
                 Weaviate Console
               </a>
@@ -31,6 +32,7 @@ const Welcome = () => {
               <a
                 href="https://weaviate.io/developers/weaviate/quickstart/local"
                 target="_blank"
+                rel="noreferrer"
               >
                 locally
               </a>

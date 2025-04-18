@@ -107,7 +107,7 @@ export const ConnectionCollapsibleContent: React.FC<{
       {collections?.map((collection, idx) => (
         <div
           key={idx}
-          className="text-xs pl-13 py-2 flex flex-row cursor-pointer hover:bg-gray-200"
+          className="flex cursor-pointer flex-row py-2 pl-13 text-xs hover:bg-gray-200"
           onClick={() => handleClick(collection)}
         >
           {collection.multiTenancyConfig?.enabled ? (

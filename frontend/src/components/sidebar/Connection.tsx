@@ -57,7 +57,7 @@ export const Connection: React.FC<Props> = ({ connection }) => {
     <Collapsible open={isCollapsibleOpen} onOpenChange={setIsCollapsibleOpen}>
       <DropdownMenu>
         <div
-          className={`flex items-center justify-between pr-3 bg-gray-100 relative hover:bg-gray-200 ${
+          className={`relative flex items-center justify-between bg-gray-100 pr-3 hover:bg-gray-200 ${
             !isConnected ? "opacity-70" : "font-bold"
           }`}
           onMouseEnter={() => setIsHovered(true)}
@@ -71,17 +71,17 @@ export const Connection: React.FC<Props> = ({ connection }) => {
             {favorite ? (
               <Star
                 size="1.1em"
-                className="mr-2 text-yellow-400 flex-shrink-0"
+                className="mr-2 flex-shrink-0 text-yellow-400"
                 fill="currentColor"
               />
             ) : (
               <Layers3 size="1.1em" className="mr-2 flex-shrink-0" />
             )}
-            <span className="text-xs truncate">{name}</span>
+            <span className="truncate text-xs">{name}</span>
           </div>
           {!isConnected && (
             <Button
-              className="absolute end-10 transform opacity-0 transition-opacity duration-300 ease-in-out !bg-white !text-black"
+              className="absolute end-10 transform !bg-white !text-black opacity-0 transition-opacity duration-300 ease-in-out"
               style={{ opacity: isHovered ? 1 : 0 }}
               size="sm"
               onClick={handleConnect}

@@ -47,21 +47,21 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-      <div className="p-4 border-b border-gray-200 flex justify-center">
+      <div className="flex justify-center border-b border-gray-200 p-4">
         <img
           src={logo}
-          className="w-[200px] select-none pointer-events-none"
+          className="pointer-events-none w-[200px] select-none"
           alt="Weaviate log"
         />
       </div>
       <div className="p-4">
-        <div className="flex flex-column justify-between items-center">
-          <h2 className="text-sm font-semibold text-gray-500 my-3">
+        <div className="flex-column flex items-center justify-between">
+          <h2 className="my-3 text-sm font-semibold text-gray-500">
             Connections ({connections.length})
           </h2>
           <Plus
             size={"1.6em"}
-            className="cursor-pointer p-1 rounded-full hover:bg-gray-200 transition"
+            className="cursor-pointer rounded-full p-1 transition hover:bg-gray-200"
             onClick={() => setOpenConnection(true)}
           />
         </div>
@@ -74,7 +74,7 @@ const Sidebar: React.FC = () => {
           onChange={(e) => handleSearch(e.target.value)}
         />
       </div>
-      <div className="overflow-y-auto flex-1">
+      <div className="flex-1 overflow-y-auto">
         {filteredList.map((connection) => (
           <Connection key={connection.id} connection={connection} />
         ))}
