@@ -14,15 +14,13 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const dbFile = "weaviate-gui.db"
-
 type Storage struct {
 	db *sqlx.DB
 }
 
 type SqlDB interface {
-	SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
-	NamedExecContext(ctx context.Context, query string, arg interface{})
+	SelectContext(ctx context.Context, dest any, query string, args ...any) error
+	NamedExecContext(ctx context.Context, query string, arg any)
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 }
 
@@ -50,17 +48,19 @@ func InitStorage(db *sqlx.DB) error {
 	return nil
 }
 
-func GetStorageSource() string {
-	cacheDir, _ := os.UserCacheDir()
-	dataDir := filepath.Join(cacheDir, "weaviate-gui")
+func getDbFile(fileName string) string {
+	return fileName + ".db"
+}
 
-	fmt.Println(dataDir)
+func GetStorageSource(fileName string) string {
+	cacheDir, _ := os.UserCacheDir()
+	dataDir := filepath.Join(cacheDir, fileName)
 
 	if err := os.MkdirAll(dataDir, os.FileMode(0o755)); err != nil {
-		return dbFile
+		return getDbFile(fileName)
 	}
 
-	return filepath.Join(dataDir, dbFile)
+	return filepath.Join(dataDir, getDbFile(fileName))
 }
 
 func NewStorage(db *sqlx.DB) *Storage {

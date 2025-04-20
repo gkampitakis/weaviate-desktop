@@ -6,39 +6,16 @@ import { NewConnection } from "./NewConnection";
 import { useConnectionStore } from "@/store/connection-store";
 import { Connection } from "./Connection";
 import logo from "@/assets/images/weaviate-logo.png";
-import Fuse from "fuse.js";
+import { connectionSearch } from "@/lib/connection-search";
 
 const Sidebar: React.FC = () => {
-  const connections = useConnectionStore((state) => state.connections);
   const [search, setSearch] = useState("");
   const [openNewConnection, setOpenConnection] = useState(false);
+  const connections = connectionSearch(
+    useConnectionStore((state) => state.connections),
+    search
+  );
 
-  const fuse = new Fuse(connections, {
-    keys: ["name", "collections.name"],
-    threshold: 0.3, // Adjust for sensitivity
-  });
-
-  const filteredList = !search
-    ? connections
-    : fuse.search(search).map(({ item }) => {
-        if (!item.collections) {
-          return item;
-        }
-
-        // Filter collections to only include matching ones
-        const collectionFuse = new Fuse(item.collections, {
-          keys: ["name"],
-          threshold: 0.3,
-        });
-
-        const filteredCollections = collectionFuse
-          .search(search)
-          .map((res) => res.item);
-
-        return {
-          ...item,
-          collections: filteredCollections, // Replace with filtered collections
-        };
       });
 
   const handleSearch = useDebouncedCallback((value: string) => {
@@ -75,7 +52,7 @@ const Sidebar: React.FC = () => {
         />
       </div>
       <div className="flex-1 overflow-y-auto">
-        {filteredList.map((connection) => (
+        {connections.map((connection) => (
           <Connection key={connection.id} connection={connection} />
         ))}
       </div>

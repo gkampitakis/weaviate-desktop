@@ -24,7 +24,7 @@ test-verbose: ## Run tests with verbose output
 	go test -race -count=10 -shuffle on -v -cover ./...
 
 dev: ## Run wails dev server
-	wails dev
+	wails dev -browser
 
 release: ## Run commit-and-tag-version
 	(cd frontend && npm run release)

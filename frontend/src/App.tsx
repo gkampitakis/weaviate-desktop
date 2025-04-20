@@ -11,18 +11,18 @@ const App: React.FC = () => {
   return (
     <ResizablePanelGroup
       direction="horizontal"
-      className="flex flex-row h-screen"
+      className="flex h-screen flex-row"
     >
       <ResizablePanel
         minSize={10}
         defaultSize={20}
         maxSize={45}
-        className="flex h-screen min-w-64 bg-gray-100 border-r border-gray-200 text-gray-700 left-0 top-0 flex-1 flex-col"
+        className="top-0 left-0 flex h-screen min-w-64 flex-1 flex-col border-r border-gray-200 bg-gray-100 text-gray-700"
       >
         <Sidebar />
       </ResizablePanel>
       <ResizableHandle />
-      <ResizablePanel className="flex flex-col flex-5">
+      <ResizablePanel className="flex flex-5 flex-col">
         <Tabs />
       </ResizablePanel>
     </ResizablePanelGroup>

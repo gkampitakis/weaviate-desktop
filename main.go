@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"weaviate-gui/internal/config"
 	"weaviate-gui/internal/storage/sql"
 	"weaviate-gui/internal/weaviate"
 
@@ -18,17 +19,19 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
 
-func main() {
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	})))
+//go:embed wails.json
+var wailsConfig string
 
-	db, err := sqlx.Open("sqlite", sql.GetStorageSource())
+func main() {
+	cfg := config.New(wailsConfig)
+
+	db, err := sqlx.Open("sqlite", sql.GetStorageSource(cfg.FileName))
 	if err != nil {
 		log.Fatalf("failed opening sqlite: %v", err)
 	}
@@ -43,13 +46,25 @@ func main() {
 
 	// Create application with options
 	if err := wails.Run(&options.App{
-		Title:     "weaviate-gui",
+		Title:     cfg.AppName,
 		Width:     1440,
 		Height:    1024,
 		MinHeight: 640,
 		MinWidth:  1024,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
+		},
+		OnStartup: func(ctx context.Context) {
+			envInfo := runtime.Environment(ctx)
+			logLevel := slog.LevelInfo
+
+			if envInfo.BuildType == "dev" {
+				logLevel = slog.LevelDebug
+			}
+
+			slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+				Level: logLevel,
+			})))
 		},
 		OnShutdown: func(_ context.Context) {
 			db.Close()

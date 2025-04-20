@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"weaviate-gui/internal/http_util"
 	"weaviate-gui/internal/models"
 
 	"github.com/weaviate/weaviate-go-client/v5/weaviate"
@@ -36,18 +37,6 @@ type Storage interface {
 	GetConnection(id int64) (*models.Connection, error)
 }
 
-func customHttpClient() *http.Client {
-	cl := http.DefaultClient
-	tr := http.DefaultTransport.(*http.Transport)
-	cl.Transport = tr
-
-	tr.MaxIdleConnsPerHost = 10
-	tr.MaxIdleConns = 100
-	cl.Timeout = 10 * time.Second
-
-	return cl
-}
-
 type Configuration struct {
 	StatusUpdateInterval time.Duration
 }
@@ -56,7 +45,7 @@ func New(s Storage, c Configuration) *Weaviate {
 	w := &Weaviate{
 		storage:    s,
 		clients:    map[int64]*WClient{},
-		httpClient: customHttpClient(),
+		httpClient: http_util.GetClient(30 * time.Second),
 	}
 
 	go w.updateClusterStatus(c.StatusUpdateInterval)
@@ -69,6 +58,10 @@ func (w *Weaviate) updateClusterStatus(d time.Duration) {
 	var err error
 
 	for range ticker.C {
+		if len(w.clients) == 0 {
+			continue
+		}
+
 		slog.Debug("running status updater", slog.Int("clientsConnected", len(w.clients)))
 
 		for id, cl := range w.clients {
