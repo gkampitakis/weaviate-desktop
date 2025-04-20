@@ -1,7 +1,10 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
   "name": "Weaviate GUI",
-  "outputfilename": "Weaviate GUI",
+  "info": {
+    "productVersion": "v0.0.1"
+  },
+  "outputfilename": "weaviate-gui",
   "frontend:install": "npm install",
   "frontend:build": "npm run build",
   "frontend:dev:watcher": "npm run dev",
