@@ -20,7 +20,7 @@ runs:
       run: |
         zip -r ${{ inputs.file-name }}.linux.zip *
         # Sign using keyless mode
-        cosign sign-blob --yes --bundle ${{ inputs.file-name }}.linux.sig ${{ inputs.file-name }}.linux.zip
+        cosign sign-blob --yes --bundle ${{ inputs.file-name }}.linux.sig ${{ inputs.file-name }}.linux.zip --new-bundle-format=true
 
     - if: runner.os == 'Windows'
       shell: pwsh
@@ -28,7 +28,7 @@ runs:
       run: |
         Compress-Archive -Path * -Destination "${{ inputs.file-name }}.windows.zip"
         # Sign using keyless mode
-        cosign sign-blob --yes --bundle ${{ inputs.file-name }}.windows.sig ${{ inputs.file-name }}.windows.zip
+        cosign sign-blob --yes --bundle ${{ inputs.file-name }}.windows.sig ${{ inputs.file-name }}.windows.zip --new-bundle-format=true
 
     - if: runner.os == 'macOs'
       shell: bash
@@ -36,4 +36,4 @@ runs:
       run: |
         zip -r ${{ inputs.file-name }}.macos.zip *
         # Sign using keyless mode
-        cosign sign-blob --yes --bundle ${{ inputs.file-name }}.macos.sig ${{ inputs.file-name }}.macos.zip
+        cosign sign-blob --yes --bundle ${{ inputs.file-name }}.macos.sig ${{ inputs.file-name }}.macos.zip --new-bundle-format=true

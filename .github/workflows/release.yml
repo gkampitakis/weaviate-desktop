@@ -5,7 +5,7 @@ on:
 
 permissions:
   contents: write
-  id-token: write # Required for keyless signing with Sigstore
+  id-token: write # Required for keyless signing with SigStore
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
