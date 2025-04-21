@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.4](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.3...v0.0.4) (2025-04-21)
+
+
+### Bug Fixes
+
+* add id_token permission for signing ([f1a8cf3](https://github.com/gkampitakis/weaviate-gui/commit/f1a8cf3cd5b19932743ace3b8c2c0b9266440106))
+
 ## [0.0.3](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.2...v0.0.3) (2025-04-21)
 
 
