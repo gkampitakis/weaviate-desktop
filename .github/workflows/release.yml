@@ -3,6 +3,10 @@ on:
     tags:
       - "v*.*.*"
 
+permissions:
+  contents: write
+  id-token: write # Required for keyless signing with Sigstore
+
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
 
