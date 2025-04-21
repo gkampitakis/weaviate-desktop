@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.3](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.2...v0.0.3) (2025-04-21)
+
+
+### Bug Fixes
+
+* bad rebase ([430fc4e](https://github.com/gkampitakis/weaviate-gui/commit/430fc4e72791bd608ad84e14a7ce876fde22c88e))
+
 ## 0.0.2 (2025-04-21)
 
 
