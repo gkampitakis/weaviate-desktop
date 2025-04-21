@@ -25,4 +25,5 @@ jobs:
           generate_release_notes: true
           files: |
             build/bin/*.zip
+            build/bin/*.sig
             CHANGELOG.md
