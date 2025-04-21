@@ -191,6 +191,7 @@ export namespace models {
 	    indexPropertyLength?: boolean;
 	    indexTimestamps?: boolean;
 	    stopwords?: w_StopwordConfig;
+	    usingBlockMaxWAND?: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new w_InvertedIndexConfig(source);
@@ -204,6 +205,7 @@ export namespace models {
 	        this.indexPropertyLength = source["indexPropertyLength"];
 	        this.indexTimestamps = source["indexTimestamps"];
 	        this.stopwords = this.convertValues(source["stopwords"], w_StopwordConfig);
+	        this.usingBlockMaxWAND = source["usingBlockMaxWAND"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

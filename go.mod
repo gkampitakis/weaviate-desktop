@@ -3,8 +3,10 @@ module weaviate-gui
 go 1.24
 
 require (
+	github.com/Masterminds/semver v1.5.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/leaanthony/u v1.1.1
+	github.com/tidwall/gjson v1.14.2
 	github.com/wailsapp/wails/v2 v2.10.1
 	github.com/weaviate/weaviate v1.30.1
 	github.com/weaviate/weaviate-go-client/v5 v5.1.0
@@ -49,6 +51,8 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/samber/lo v1.49.1 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tkrajina/go-reflector v0.5.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
@@ -69,7 +73,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250414145226-207652e42e2e // indirect
 	google.golang.org/grpc v1.71.1 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.63.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect

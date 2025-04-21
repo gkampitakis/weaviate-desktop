@@ -16,8 +16,6 @@ const Sidebar: React.FC = () => {
     search
   );
 
-      });
-
   const handleSearch = useDebouncedCallback((value: string) => {
     setSearch(value);
   }, 300);
