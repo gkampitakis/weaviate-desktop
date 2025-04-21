@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.6](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.5...v0.0.6) (2025-04-21)
+
+
+### Bug Fixes
+
+* use cosign version that supports --new-bundle-format ([46e0049](https://github.com/gkampitakis/weaviate-gui/commit/46e004938850f1a061918b984dfb1586efc421ab))
+
 ## [0.0.5](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.4...v0.0.5) (2025-04-21)
 
 
