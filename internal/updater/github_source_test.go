@@ -274,13 +274,17 @@ func TestGithubSource(t *testing.T) {
 				mock.MatchedBy(func(v any) bool {
 					return strings.HasSuffix(
 						v.(string),
-						fmt.Sprintf("/test-app/%s.zip", fmt.Sprintf(getPlatform(), "test-app")),
+						filepath.Clean(
+							fmt.Sprintf("/test-app/%s.zip", fmt.Sprintf(getPlatform(), "test-app")),
+						),
 					)
 				}),
 				mock.MatchedBy(func(v any) bool {
 					return strings.HasSuffix(
 						v.(string),
-						fmt.Sprintf("/test-app/%s.sig", fmt.Sprintf(getPlatform(), "test-app")),
+						filepath.Clean(
+							fmt.Sprintf("/test-app/%s.sig", fmt.Sprintf(getPlatform(), "test-app")),
+						),
 					)
 				}),
 				"v1.2.3",
