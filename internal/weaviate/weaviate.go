@@ -195,12 +195,12 @@ func (w *Weaviate) DeleteObject(connectionID int64, collection, id, tenant strin
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	delete := c.cl.Data().Deleter().WithClassName(collection).WithID(id)
+	deleteObject := c.cl.Data().Deleter().WithClassName(collection).WithID(id)
 	if tenant != "" {
-		delete = delete.WithTenant(tenant)
+		deleteObject = deleteObject.WithTenant(tenant)
 	}
 
-	return delete.Do(ctx)
+	return deleteObject.Do(ctx)
 }
 
 type PaginatedObjectResponse struct {
@@ -337,7 +337,7 @@ func (w *Weaviate) GetCollections(connectionID int64) ([]*weaviate_models.Class,
 		return nil, err
 	}
 
-	return s.Schema.Classes, nil
+	return s.Classes, nil
 }
 
 func (w *Weaviate) Disconnect(id int64) error {

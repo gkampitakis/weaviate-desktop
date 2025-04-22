@@ -1,3 +1,4 @@
+# don't rename this file. File is referenced at internal/updater/github-source.go:29
 on:
   push:
     tags:
@@ -19,6 +20,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - uses: ./.github/actions/build
       - uses: ./.github/actions/zip
         with:
