@@ -11,6 +11,7 @@ import (
 	"weaviate-gui/internal/models"
 
 	"github.com/jmoiron/sqlx"
+	// register sqlite driver
 	_ "modernc.org/sqlite"
 )
 
@@ -20,8 +21,10 @@ type Storage struct {
 
 type SqlDB interface {
 	SelectContext(ctx context.Context, dest any, query string, args ...any) error
-	NamedExecContext(ctx context.Context, query string, arg any)
+	GetContext(ctx context.Context, dest any, query string, args ...any) error
+	NamedExecContext(ctx context.Context, query string, arg any) (sql.Result, error)
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	Exec(query string, args ...any) (sql.Result, error)
 }
 
 var connectionTable = `CREATE TABLE IF NOT EXISTS connections (
@@ -32,7 +35,7 @@ var connectionTable = `CREATE TABLE IF NOT EXISTS connections (
 	api_key TEXT
 );`
 
-func InitStorage(db *sqlx.DB) error {
+func InitStorage(db SqlDB) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

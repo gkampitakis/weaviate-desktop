@@ -461,6 +461,27 @@ export namespace models {
 
 }
 
+export namespace updater {
+	
+	export class w_CheckForUpdatesResponse {
+	    Exists: boolean;
+	    LatestVersion: string;
+	    Size: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_CheckForUpdatesResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Exists = source["Exists"];
+	        this.LatestVersion = source["LatestVersion"];
+	        this.Size = source["Size"];
+	    }
+	}
+
+}
+
 export namespace weaviate {
 	
 	export class w_PaginatedObjectResponse {
