@@ -18,6 +18,13 @@ root.render(
       </TooltipProvider>
     </QueryClientProvider>
     {/* className fixes the issue with dialog being on top of toaster */}
-    <Toaster className="pointer-events-auto" />
+    <Toaster
+      className="pointer-events-auto"
+      toastOptions={{
+        classNames: {
+          closeButton: "!left-[345px]",
+        },
+      }}
+    />
   </React.StrictMode>
 );

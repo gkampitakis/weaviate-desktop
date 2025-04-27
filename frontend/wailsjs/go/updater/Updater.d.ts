@@ -5,12 +5,12 @@ import {context} from '../models';
 
 export function CheckForUpdates():Promise<updater.w_CheckForUpdatesResponse>;
 
-export function Execute():Promise<void>;
-
 export function GetVersion():Promise<string>;
 
 export function ReleaseByTagURL():Promise<string>;
 
 export function Restart():Promise<void>;
+
+export function Run():Promise<void>;
 
 export function SetRuntimeContext(arg1:context.w_Context):Promise<void>;

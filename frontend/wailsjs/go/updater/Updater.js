@@ -6,10 +6,6 @@ export function CheckForUpdates() {
   return window['go']['updater']['Updater']['CheckForUpdates']();
 }
 
-export function Execute() {
-  return window['go']['updater']['Updater']['Execute']();
-}
-
 export function GetVersion() {
   return window['go']['updater']['Updater']['GetVersion']();
 }
@@ -20,6 +16,10 @@ export function ReleaseByTagURL() {
 
 export function Restart() {
   return window['go']['updater']['Updater']['Restart']();
+}
+
+export function Run() {
+  return window['go']['updater']['Updater']['Run']();
 }
 
 export function SetRuntimeContext(arg1) {
