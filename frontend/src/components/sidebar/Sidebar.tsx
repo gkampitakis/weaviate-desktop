@@ -5,6 +5,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { NewConnection } from "./NewConnection";
 import { useConnectionStore } from "@/store/connection-store";
 import { Connection } from "./Connection";
+import { VersionManager } from "./VersionManager";
 import logo from "@/assets/images/weaviate-logo.png";
 import { connectionSearch } from "@/lib/connection-search";
 
@@ -54,6 +55,7 @@ const Sidebar: React.FC = () => {
           <Connection key={connection.id} connection={connection} />
         ))}
       </div>
+      <VersionManager />
       <NewConnection open={openNewConnection} setOpen={setOpenConnection} />
     </>
   );

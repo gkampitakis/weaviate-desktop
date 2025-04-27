@@ -15,7 +15,7 @@ func New(data string) *Config {
 	result := gjson.GetMany(data, "info.productVersion", "name", "outputfilename")
 
 	return &Config{
-		Version:  semver.MustParse(result[0].String()),
+		Version:  semver.MustParse("v" + result[0].String()),
 		AppName:  result[1].String(),
 		FileName: result[2].String(),
 	}
