@@ -142,7 +142,6 @@ func (w *Weaviate) Connect(id int64) error {
 	return nil
 }
 
-// NOTE: better error handling
 func (w *Weaviate) GetTotalObjects(connectionID int64, collection, tenant string) (int64, error) {
 	c, exists := w.clients[connectionID]
 	if !exists {

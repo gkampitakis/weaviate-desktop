@@ -10,6 +10,7 @@ import (
 
 	"weaviate-gui/internal/config"
 	"weaviate-gui/internal/storage/sql"
+	"weaviate-gui/internal/updater"
 	"weaviate-gui/internal/weaviate"
 
 	"github.com/jmoiron/sqlx"
@@ -44,6 +45,13 @@ func main() {
 		StatusUpdateInterval: 30 * time.Second,
 	})
 
+	appUpdater := updater.New(
+		cfg.Version,
+		cfg.FileName,
+		cfg.AppName,
+		"<will drop this when app is public>",
+	)
+
 	// Create application with options
 	if err := wails.Run(&options.App{
 		Title:     cfg.AppName,
@@ -55,6 +63,7 @@ func main() {
 			Assets: assets,
 		},
 		OnStartup: func(ctx context.Context) {
+			// Setup logger
 			envInfo := runtime.Environment(ctx)
 			logLevel := slog.LevelInfo
 
@@ -65,6 +74,9 @@ func main() {
 			slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 				Level: logLevel,
 			})))
+
+			// Pass runtime context to those in need
+			appUpdater.SetRuntimeContext(ctx)
 		},
 		OnShutdown: func(_ context.Context) {
 			db.Close()
@@ -82,6 +94,7 @@ func main() {
 		Bind: []any{
 			w,
 			sqlStorage,
+			appUpdater,
 		},
 	}); err != nil {
 		println("Error:", err.Error())
