@@ -1,4 +1,4 @@
-.PHONY: lint test test-verbose format help dev release mocks
+.PHONY: lint test test-verbose format help dev release mocks build
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -26,3 +26,6 @@ release: ## Run commit-and-tag-version
 
 mocks: ## Generate mocks
 	mockery
+
+build: ## Build the project
+	wails build
