@@ -3,9 +3,9 @@ import { Tabs as AntdTabs } from "antd";
 import { useTabStore } from "@/store/tab-store";
 import { useShallow } from "zustand/shallow";
 import { X } from "lucide-react";
-import TabLabel from "@/components/tabs/components/TabLabel";
 import Welcome from "./Welcome";
 import NewTab, { NewTabName } from "./NewTab";
+import GeneralTabLabel from "./components/GeneralTabLabel";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
@@ -27,7 +27,7 @@ const Tabs = () => {
   const newTab = () => {
     if (tabs.length === 0) {
       addNewTab({
-        label: <TabLabel name="Welcome" />,
+        label: <GeneralTabLabel name="Welcome" />,
         children: <Welcome />,
         name: "Welcome",
       });
@@ -35,7 +35,7 @@ const Tabs = () => {
     }
 
     addNewTab({
-      label: <TabLabel name={NewTabName} />,
+      label: <GeneralTabLabel name={NewTabName} />,
       name: NewTabName,
       children: <NewTab />,
     });

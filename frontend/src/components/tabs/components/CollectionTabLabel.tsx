@@ -21,7 +21,7 @@ type Props =
       connectionID?: undefined;
     };
 
-const TabLabel: React.FC<Props> = ({
+const CollectionTabLabel: React.FC<Props> = ({
   name,
   tooltip,
   connectionName,
@@ -67,4 +67,4 @@ const TabLabel: React.FC<Props> = ({
   );
 };
 
-export default TabLabel;
+export default CollectionTabLabel;

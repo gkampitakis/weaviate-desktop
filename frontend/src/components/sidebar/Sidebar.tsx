@@ -8,6 +8,7 @@ import { Connection } from "./Connection";
 import { VersionManager } from "./VersionManager";
 import logo from "@/assets/images/weaviate-logo.png";
 import { connectionSearch } from "@/lib/connection-search";
+import { Button } from "@/components/ui/button";
 
 const Sidebar: React.FC = () => {
   const [search, setSearch] = useState("");
@@ -35,11 +36,14 @@ const Sidebar: React.FC = () => {
           <h2 className="my-3 text-sm font-semibold text-gray-500">
             Connections ({connections.length})
           </h2>
-          <Plus
-            size={"1.6em"}
-            className="cursor-pointer rounded-full p-1 transition hover:bg-gray-200"
+          <Button
+            variant="outline"
+            size="icon"
+            className="br-[10px] h-[24px] w-[24px]"
             onClick={() => setOpenConnection(true)}
-          />
+          >
+            <Plus />
+          </Button>
         </div>
         <Input
           type="search"

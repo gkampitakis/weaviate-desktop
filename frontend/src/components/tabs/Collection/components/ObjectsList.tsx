@@ -16,7 +16,7 @@ import { errorReporting } from "@/lib/utils";
 import logo from "@/assets/images/no-data.svg";
 
 interface Props {
-  objects: models.Object[];
+  objects: models.w_Object[];
   tenant?: string;
   connectionID: number;
   refetch: () => void;
@@ -71,7 +71,7 @@ const ObjectsList: React.FC<Props> = ({
 };
 
 interface ObjectActionsProps {
-  object: models.Object;
+  object: models.w_Object;
   tenant?: string;
   connectionID: number;
   refetch: () => void;

@@ -6,15 +6,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Ellipsis, Info, Link2Off, Pencil, Star, Trash2 } from "lucide-react";
+import {
+  Database,
+  Ellipsis,
+  Info,
+  Link2Off,
+  Pencil,
+  Star,
+  Trash2,
+} from "lucide-react";
 import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
 import { useTabStore } from "@/store/tab-store";
 import { errorReporting } from "@/lib/utils";
-import TabLabel from "../tabs/components/TabLabel";
 import ClusterInformation, {
   ClusterInformationName,
-} from "../tabs/ClusterInformation";
+} from "../tabs/ClusterInformation/ClusterInformation";
+import GeneralTabLabel from "../tabs/components/GeneralTabLabel";
 
 interface Props {
   connection: Connection;
@@ -25,7 +33,7 @@ export const ConnectionMenu: React.FC<Props> = ({
   connection,
   setIsCollapsibleOpen,
 }) => {
-  const { favorite, status, id } = connection;
+  const { favorite, status, id, name } = connection;
   const addTab = useTabStore(useShallow((state) => state.add));
   const { removeConnection, setFavoriteConnection, disconnect } =
     useConnectionStore(
@@ -70,7 +78,13 @@ export const ConnectionMenu: React.FC<Props> = ({
 
   const handleClusterInformation = () => {
     addTab({
-      label: <TabLabel name={"Cluster Information" + id.toString()} />,
+      label: (
+        <GeneralTabLabel
+          icon={Database}
+          name={"Cluster Information for " + name}
+        />
+      ),
+      connection: connection,
       name: ClusterInformationName,
       children: <ClusterInformation connectionID={id} />,
     });

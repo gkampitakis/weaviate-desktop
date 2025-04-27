@@ -5,14 +5,14 @@ import {
 } from "@/components/ui/collapsible";
 import { useTabStore } from "@/store/tab-store";
 import { Box, Boxes, ChevronRight } from "lucide-react";
-import TabLabel from "../tabs/components/TabLabel";
+import CollectionTabLabel from "../tabs/components/CollectionTabLabel";
 import type { Collection } from "@/types";
 import { useShallow } from "zustand/shallow";
 import CollectionTab from "../tabs/Collection/HOCollection";
 import { useQueryClient } from "@tanstack/react-query";
 import { WelcomeName } from "../tabs/Welcome";
 import { NewTabName } from "../tabs/NewTab";
-import { ClusterInformationName } from "../tabs/ClusterInformation";
+import { ClusterInformationName } from "../tabs/ClusterInformation/ClusterInformation";
 
 export const ConnectionCollapsibleTrigger: React.FC<{
   connected: boolean;
@@ -72,7 +72,7 @@ export const ConnectionCollapsibleContent: React.FC<{
 
       updateActiveTab({
         label: (
-          <TabLabel
+          <CollectionTabLabel
             name={collection.name}
             connectionName={collection.connection.name}
             connectionID={collection.connection.id}
@@ -89,7 +89,7 @@ export const ConnectionCollapsibleContent: React.FC<{
 
     add({
       label: (
-        <TabLabel
+        <CollectionTabLabel
           name={collection.name}
           connectionName={collection.connection.name}
           connectionID={collection.connection.id}

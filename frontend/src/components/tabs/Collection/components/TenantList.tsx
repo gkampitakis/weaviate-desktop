@@ -18,7 +18,7 @@ import { useState } from "react";
 import { models } from "wailsjs/go/models";
 
 interface Props {
-  tenants?: models.Tenant[];
+  tenants?: models.w_Tenant[];
   selected: string;
   setTenant: (t: string) => void;
 }

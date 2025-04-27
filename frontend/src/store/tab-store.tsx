@@ -1,7 +1,7 @@
 import type { Tab } from "@/types";
 import { create } from "zustand";
 import Welcome, { WelcomeName } from "@/components/tabs/Welcome";
-import TabLabel from "@/components/tabs/components/TabLabel";
+import GeneralTabLabel from "@/components/tabs/components/GeneralTabLabel";
 
 let globalIdx = 1;
 
@@ -75,7 +75,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
   tabs: [
     {
       key: "0",
-      label: <TabLabel name={WelcomeName} />,
+      label: <GeneralTabLabel name={WelcomeName} />,
       name: WelcomeName,
       children: <Welcome />,
     },
