@@ -61,6 +61,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
                   connection: {
                     id: c.id,
                     name: c.name,
+                    color: c.color,
                   },
                   multiTenancyConfig: collection.multiTenancyConfig,
                 }))

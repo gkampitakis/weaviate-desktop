@@ -4,6 +4,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { borderColor } from "@/lib/dynamic-colors";
 import { useQuery } from "@tanstack/react-query";
 import { ClusterStatus } from "wailsjs/go/weaviate/Weaviate";
 
@@ -13,12 +14,14 @@ type Props =
       tooltip: true;
       connectionName: string;
       connectionID: number;
+      color?: string;
     }
   | {
       name: string;
       tooltip?: false | undefined;
       connectionName?: undefined;
       connectionID?: undefined;
+      color?: undefined;
     };
 
 const CollectionTabLabel: React.FC<Props> = ({
@@ -26,6 +29,7 @@ const CollectionTabLabel: React.FC<Props> = ({
   tooltip,
   connectionName,
   connectionID,
+  color,
 }) => {
   const content = (
     <div
@@ -38,6 +42,11 @@ const CollectionTabLabel: React.FC<Props> = ({
       <div className="max-w-sm flex-1 overflow-x-hidden text-ellipsis">
         {name}
       </div>
+      {color && (
+        <div
+          className={`absolute right-0 bottom-0 left-0 border-b-4 ${borderColor[color]}`}
+        />
+      )}
     </div>
   );
 

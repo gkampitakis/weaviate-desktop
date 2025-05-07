@@ -20,6 +20,7 @@ export interface Collection {
   connection: {
     id: number;
     name: string;
+    color?: string;
   };
   multiTenancyConfig?: models.MultiTenancyConfig;
 }

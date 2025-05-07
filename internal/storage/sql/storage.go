@@ -32,7 +32,8 @@ var connectionTable = `CREATE TABLE IF NOT EXISTS connections (
 	name TEXT NOT NULL,
 	uri TEXT NOT NULL,
 	favorite BOOLEAN DEFAULT FALSE,
-	api_key TEXT
+	api_key TEXT,
+	color TEXT
 );`
 
 func InitStorage(db SqlDB) error {
@@ -87,8 +88,8 @@ func (s *Storage) SaveConnection(c models.Connection) (int64, error) {
 	defer cancel()
 
 	q := `
-		INSERT INTO connections (name, uri, api_key)
-		VALUES (:name, :uri, :api_key)
+		INSERT INTO connections (name, uri, api_key, color)
+		VALUES (:name, :uri, :api_key, :color)
 		RETURNING id;
 	`
 
