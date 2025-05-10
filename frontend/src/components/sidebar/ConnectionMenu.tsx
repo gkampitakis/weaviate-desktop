@@ -15,6 +15,15 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
 import { useTabStore } from "@/store/tab-store";
@@ -23,6 +32,7 @@ import ClusterInformation, {
   ClusterInformationName,
 } from "../tabs/ClusterInformation/ClusterInformation";
 import GeneralTabLabel from "../tabs/components/GeneralTabLabel";
+import { useState } from "react";
 
 interface Props {
   connection: Connection;
@@ -33,6 +43,7 @@ export const ConnectionMenu: React.FC<Props> = ({
   connection,
   setIsCollapsibleOpen,
 }) => {
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const { favorite, status, id, name } = connection;
   const addTab = useTabStore(useShallow((state) => state.add));
   const { removeConnection, setFavoriteConnection, disconnect } =
@@ -92,30 +103,61 @@ export const ConnectionMenu: React.FC<Props> = ({
   };
 
   return (
-    <DropdownMenuContent align="end">
-      {status === ConnectionStatus.Connected && (
-        <>
-          <DropdownMenuItem onClick={handleDisconnect}>
-            <Link2Off /> Disconnect
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleClusterInformation}>
-            <Info /> Cluster Information
-          </DropdownMenuItem>
-        </>
-      )}
-      <DropdownMenuItem>
-        <Pencil /> Edit
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={setFavorite}>
-        <Star />
-        {favorite ? "Unfavorite" : "Favorite"}
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={deleteConnection} variant="destructive">
-        <Trash2 /> Delete
-      </DropdownMenuItem>
-    </DropdownMenuContent>
+    <>
+      <Dialog open={isConfirmationOpen} onOpenChange={setIsConfirmationOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove</DialogTitle>
+            <DialogDescription>
+              This will remove connection "{connection.name}" from your list.
+              This action cannot be undone. Are you sure you want to proceed?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="justify-between!">
+            <Button
+              variant="outline"
+              onClick={() => setIsConfirmationOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={deleteConnection}
+            >
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <DropdownMenuContent align="end">
+        {status === ConnectionStatus.Connected && (
+          <>
+            <DropdownMenuItem onClick={handleDisconnect}>
+              <Link2Off /> Disconnect
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleClusterInformation}>
+              <Info /> Cluster Information
+            </DropdownMenuItem>
+          </>
+        )}
+        <DropdownMenuItem>
+          <Pencil /> Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={setFavorite}>
+          <Star />
+          {favorite ? "Unfavorite" : "Favorite"}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => setIsConfirmationOpen(true)}
+          variant="destructive"
+        >
+          <Trash2 /> Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </>
   );
 };
 
