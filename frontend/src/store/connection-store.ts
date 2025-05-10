@@ -32,6 +32,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
         name: c.name,
         favorite: c.favorite,
         api_key: c.api_key,
+        color: c.color,
       })
     );
     set((state) => ({
@@ -93,11 +94,13 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
   },
 }));
 
-GetConnections().then((connections) =>
-  useConnectionStore.setState({
-    connections: connections.sort(sortConnections) || [],
-  })
-);
+GetConnections(false)
+  .then((connections) =>
+    useConnectionStore.setState({
+      connections: connections.sort(sortConnections) || [],
+    })
+  )
+  .catch(console.error);
 
 const sortCollections = (a: Collection, b: Collection) =>
   a.name.localeCompare(b.name, undefined, {

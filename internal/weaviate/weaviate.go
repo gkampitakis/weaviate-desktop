@@ -34,7 +34,7 @@ type Weaviate struct {
 }
 
 type Storage interface {
-	GetConnection(id int64) (*models.Connection, error)
+	GetConnection(id int64, decrypt bool) (*models.Connection, error)
 }
 
 type Configuration struct {
@@ -129,7 +129,7 @@ func (w *Weaviate) Connect(id int64) error {
 		return nil
 	}
 
-	connection, err := w.storage.GetConnection(id)
+	connection, err := w.storage.GetConnection(id, true)
 	if err != nil {
 		return err
 	}
@@ -212,7 +212,7 @@ func (w *Weaviate) GetObjectsPaginated(
 	pageSize int,
 	collection, cursor, tenant string,
 ) (*PaginatedObjectResponse, error) {
-	connection, err := w.storage.GetConnection(connectionID)
+	connection, err := w.storage.GetConnection(connectionID, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed retrieving connection %d: %w", connectionID, err)
 	}

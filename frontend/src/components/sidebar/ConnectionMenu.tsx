@@ -73,7 +73,7 @@ export const ConnectionMenu: React.FC<Props> = ({
 
   const deleteConnection = async () => {
     try {
-      await removeConnection(id);
+      await Promise.all([handleDisconnect(), removeConnection(id)]);
     } catch (error) {
       errorReporting(error);
     }
@@ -109,8 +109,9 @@ export const ConnectionMenu: React.FC<Props> = ({
           <DialogHeader>
             <DialogTitle>Remove</DialogTitle>
             <DialogDescription>
-              This will remove connection "{connection.name}" from your list.
-              This action cannot be undone. Are you sure you want to proceed?
+              This will remove connection &quot;{connection.name}&quot; from
+              your list. This action cannot be undone. Are you sure you want to
+              proceed?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="justify-between!">
