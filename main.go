@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"weaviate-gui/internal/config"
+	"weaviate-gui/internal/encrypter"
 	"weaviate-gui/internal/storage/sql"
 	"weaviate-gui/internal/updater"
 	"weaviate-gui/internal/weaviate"
@@ -40,7 +41,7 @@ func main() {
 		log.Fatalf("failed initializing storage: %v", err)
 	}
 
-	sqlStorage := sql.NewStorage(db)
+	sqlStorage := sql.NewStorage(db, encrypter.New())
 	w := weaviate.New(sqlStorage, weaviate.Configuration{
 		StatusUpdateInterval: 30 * time.Second,
 	})
