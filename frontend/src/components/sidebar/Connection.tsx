@@ -14,13 +14,17 @@ import {
   ConnectionCollapsibleTrigger,
 } from "./ConnectionCollapsible";
 import { errorReporting } from "@/lib/utils";
+import {
+  connectionColorBgHv,
+  connectionColorBgHvImportant,
+} from "@/lib/dynamic-colors";
 
 interface Props {
   connection: ConnectionI;
 }
 
 export const Connection: React.FC<Props> = ({ connection }) => {
-  const { favorite, name, status, id, collections } = connection;
+  const { favorite, name, status, id, collections, color } = connection;
   const [isHovered, setIsHovered] = useState(false);
   const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(false);
   const { connect } = useConnectionStore(
@@ -57,14 +61,15 @@ export const Connection: React.FC<Props> = ({ connection }) => {
     <Collapsible open={isCollapsibleOpen} onOpenChange={setIsCollapsibleOpen}>
       <DropdownMenu>
         <div
-          className={`relative flex items-center justify-between bg-gray-100 pr-3 hover:bg-gray-200 ${
+          className={`relative flex items-center justify-between pr-3 ${
             !isConnected ? "opacity-70" : "font-bold"
-          }`}
+          } ${connectionColorBgHv[color]}`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
           <div className="flex items-center truncate">
             <ConnectionCollapsibleTrigger
+              color={connectionColorBgHvImportant[color]}
               connected={isConnected}
               open={isCollapsibleOpen}
             />
@@ -89,14 +94,18 @@ export const Connection: React.FC<Props> = ({ connection }) => {
               Connect
             </Button>
           )}
-          <ConnectionMenuTrigger hovered={isHovered} />
+
+          <ConnectionMenuTrigger hovered={isHovered} color={color} />
         </div>
         <ConnectionMenu
           connection={connection}
           setIsCollapsibleOpen={setIsCollapsibleOpen}
         />
       </DropdownMenu>
-      <ConnectionCollapsibleContent collections={collections} />
+      <ConnectionCollapsibleContent
+        collections={collections}
+        color={connectionColorBgHv[color]}
+      />
     </Collapsible>
   );
 };

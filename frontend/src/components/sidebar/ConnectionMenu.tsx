@@ -82,6 +82,7 @@ export const ConnectionMenu: React.FC<Props> = ({
         <GeneralTabLabel
           icon={Database}
           name={"Cluster Information for " + name}
+          color={connection.color}
         />
       ),
       connection: connection,
@@ -120,10 +121,11 @@ export const ConnectionMenu: React.FC<Props> = ({
 
 export const ConnectionMenuTrigger: React.FC<{
   hovered: boolean;
-}> = ({ hovered }) => (
+  color: string;
+}> = ({ hovered, color }) => (
   <DropdownMenuTrigger>
     <div
-      className="transform cursor-pointer rounded-full opacity-0 transition-opacity duration-300 ease-in-out hover:bg-gray-200"
+      className={`transform cursor-pointer rounded-full opacity-0 transition-opacity duration-300 bg-${color}-300`}
       style={{ opacity: hovered ? 1 : 0 }}
     >
       <Ellipsis className="h-4 w-4" />

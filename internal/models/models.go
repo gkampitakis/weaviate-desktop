@@ -6,4 +6,5 @@ type Connection struct {
 	Name     string  `db:"name"     json:"name"`
 	Favorite bool    `db:"favorite" json:"favorite"`
 	ApiKey   *string `db:"api_key"  json:"api_key"`
+	Color    string  `db:"color"    json:"color"`
 }

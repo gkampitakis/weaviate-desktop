@@ -100,16 +100,18 @@ func TestStorage(t *testing.T) {
 			defer db.Close()
 
 			mock.ExpectExec("INSERT INTO connections").
-				WithArgs("Test Connection", "http://localhost", "test-key").
+				WithArgs("Test Connection", "http://localhost", "test-key", "red", true).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
 			storage := NewStorage(sqlxDB)
 
 			connection := models.Connection{
-				Name:   "Test Connection",
-				URI:    "http://localhost",
-				ApiKey: Pointer("test-key"),
+				Name:     "Test Connection",
+				URI:      "http://localhost",
+				ApiKey:   Pointer("test-key"),
+				Color:    "red",
+				Favorite: true,
 			}
 
 			id, err := storage.SaveConnection(connection)
@@ -124,7 +126,7 @@ func TestStorage(t *testing.T) {
 			defer db.Close()
 
 			mock.ExpectExec("INSERT INTO connections").
-				WithArgs("Test Connection", "http://localhost", "test-key").
+				WithArgs("Test Connection", "http://localhost", "test-key", "", false).
 				WillReturnError(errors.New("mock error"))
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")

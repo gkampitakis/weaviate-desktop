@@ -17,9 +17,10 @@ import { ClusterInformationName } from "../tabs/ClusterInformation/ClusterInform
 export const ConnectionCollapsibleTrigger: React.FC<{
   connected: boolean;
   open: boolean;
-}> = ({ connected, open }) => (
+  color: string;
+}> = ({ connected, color, open }) => (
   <CollapsibleTrigger asChild disabled={!connected}>
-    <Button variant="ghost" className="!pr-0" size="sm">
+    <Button variant="ghost" className={`${color} !pr-0`} size="sm">
       <ChevronRight
         size={"1.1em"}
         className={`transition-transform duration-300 ${
@@ -32,7 +33,8 @@ export const ConnectionCollapsibleTrigger: React.FC<{
 
 export const ConnectionCollapsibleContent: React.FC<{
   collections?: Collection[];
-}> = ({ collections }) => {
+  color: string;
+}> = ({ collections, color }) => {
   const queryClient = useQueryClient();
   const { updateActiveTab, add, getActiveTab, tabs } = useTabStore(
     useShallow((state) => ({
@@ -76,6 +78,7 @@ export const ConnectionCollapsibleContent: React.FC<{
             name={collection.name}
             connectionName={collection.connection.name}
             connectionID={collection.connection.id}
+            color={collection.connection.color}
             tooltip
           />
         ),
@@ -93,6 +96,7 @@ export const ConnectionCollapsibleContent: React.FC<{
           name={collection.name}
           connectionName={collection.connection.name}
           connectionID={collection.connection.id}
+          color={collection.connection.color}
           tooltip
         />
       ),
@@ -107,7 +111,7 @@ export const ConnectionCollapsibleContent: React.FC<{
       {collections?.map((collection, idx) => (
         <div
           key={idx}
-          className="flex cursor-pointer flex-row py-2 pl-13 text-xs hover:bg-gray-200"
+          className={`flex cursor-pointer flex-row py-2 pl-13 text-xs ${color}`}
           onClick={() => handleClick(collection)}
         >
           {collection.multiTenancyConfig?.enabled ? (

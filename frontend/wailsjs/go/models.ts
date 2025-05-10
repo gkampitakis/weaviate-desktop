@@ -284,6 +284,7 @@ export namespace models {
 	    name: string;
 	    favorite: boolean;
 	    api_key?: string;
+	    color: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new w_Connection(source);
@@ -296,6 +297,7 @@ export namespace models {
 	        this.name = source["name"];
 	        this.favorite = source["favorite"];
 	        this.api_key = source["api_key"];
+	        this.color = source["color"];
 	    }
 	}
 	
