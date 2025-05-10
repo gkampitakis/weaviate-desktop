@@ -88,8 +88,8 @@ func (s *Storage) SaveConnection(c models.Connection) (int64, error) {
 	defer cancel()
 
 	q := `
-		INSERT INTO connections (name, uri, api_key, color)
-		VALUES (:name, :uri, :api_key, :color)
+		INSERT INTO connections (name, uri, api_key, color, favorite)
+		VALUES (:name, :uri, :api_key, :color, :favorite)
 		RETURNING id;
 	`
 

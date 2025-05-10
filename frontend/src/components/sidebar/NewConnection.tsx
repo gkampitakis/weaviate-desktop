@@ -20,7 +20,7 @@ import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { TestConnection } from "wailsjs/go/weaviate/Weaviate";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
-import { Check, Eye, EyeOff, LoaderCircle } from "lucide-react";
+import { Check, Eye, EyeOff, LoaderCircle, Star } from "lucide-react";
 import { useConnectionStore } from "@/store/connection-store";
 import { ConnectionStatus } from "@/types/enums";
 import { errorReporting } from "@/lib/utils";
@@ -59,7 +59,6 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
     mode: "onChange",
     defaultValues: {
       color: connectionColors[0].value, // Default to "No color"
-      // FIXME:
       favorite: false, // Default favorite to false
     },
   });
@@ -72,6 +71,14 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
     color,
     favorite,
   }) => {
+    console.log("Saving connection", {
+      name,
+      uri,
+      apiKey,
+      color,
+      favorite,
+    });
+
     try {
       await saveConnection({
         name,
@@ -169,7 +176,7 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
               />
               <FieldError message={errors.name?.message} />
             </div>
-            <div className="gap flex flex-1 flex-col gap-1">
+            <div className="gap flex flex-col gap-1">
               <Label>Color</Label>
               <Controller
                 control={control}
@@ -199,6 +206,27 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
                       ))}
                     </SelectContent>
                   </Select>
+                )}
+              />
+            </div>
+            <div className="flex items-center justify-center pt-4">
+              <Controller
+                control={control}
+                name="favorite"
+                render={({ field }) => (
+                  <div
+                    className="flex cursor-pointer items-center"
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    <Star
+                      className={
+                        field.value
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-400"
+                      }
+                      size={22}
+                    />
+                  </div>
                 )}
               />
             </div>
@@ -252,31 +280,31 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
             </div>
             <FieldError message={errors.apiKey?.message} />
           </div>
+          <DialogFooter>
+            <div className="flex min-w-full justify-between">
+              <div>
+                <Button variant="secondary" type="reset" onClick={OnCancel}>
+                  Cancel
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  disabled={!isUriValid()}
+                  variant="secondary"
+                  type="button"
+                  onClick={testConnection}
+                >
+                  Test
+                  {testLoading && <LoaderCircle className="animate-spin" />}
+                  {testSuccess && <Check className="text-green-600" />}
+                </Button>
+                <Button disabled={!isValid || !isDirty} type="submit">
+                  Save
+                </Button>
+              </div>
+            </div>
+          </DialogFooter>
         </form>
-        <DialogFooter>
-          <div className="flex min-w-full justify-between">
-            <div>
-              <Button variant="secondary" type="reset" onClick={OnCancel}>
-                Cancel
-              </Button>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                disabled={!isUriValid()}
-                variant="secondary"
-                type="button"
-                onClick={testConnection}
-              >
-                Test
-                {testLoading && <LoaderCircle className="animate-spin" />}
-                {testSuccess && <Check className="text-green-600" />}
-              </Button>
-              <Button disabled={!isValid || !isDirty} type="submit">
-                Save
-              </Button>
-            </div>
-          </div>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
