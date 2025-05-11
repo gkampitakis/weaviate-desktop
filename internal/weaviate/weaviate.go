@@ -134,11 +134,21 @@ func (w *Weaviate) Connect(id int64) error {
 		return err
 	}
 
-	w.clients[id], err = w.getClientFromConnection(connection)
+	client, err := w.getClientFromConnection(connection)
 	if err != nil {
 		return err
 	}
 
+	// verify connection is healthy
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = client.cl.Misc().MetaGetter().Do(ctx)
+	if err != nil {
+		return fmt.Errorf("failed connecting to %s: %w", connection.URI, err)
+	}
+
+	w.clients[id] = client
 	return nil
 }
 
@@ -341,7 +351,7 @@ func (w *Weaviate) GetCollections(connectionID int64) ([]*weaviate_models.Class,
 
 func (w *Weaviate) Disconnect(id int64) error {
 	_, exists := w.clients[id]
-	if exists {
+	if !exists {
 		return nil
 	}
 

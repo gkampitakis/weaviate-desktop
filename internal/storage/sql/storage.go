@@ -132,6 +132,37 @@ func (s *Storage) SaveConnection(c models.Connection) (int64, error) {
 	return result.LastInsertId()
 }
 
+func (s *Storage) UpdateConnection(c models.Connection) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if c.ApiKey != nil {
+		encrypted, err := s.encr.Encrypt(*c.ApiKey)
+		if err != nil {
+			return fmt.Errorf("failed encrypting api key: %w", err)
+		}
+		c.ApiKey = &encrypted
+	}
+
+	q := `
+		UPDATE connections
+		SET name = :name, uri = :uri, api_key = :api_key, color = :color, favorite = :favorite
+		WHERE id = :id;
+	`
+	result, err := s.db.NamedExecContext(ctx, q, c)
+	if err != nil {
+		return fmt.Errorf("failed updating connection: %w", err)
+	}
+	rowsUpdated, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed updating connection: %w", err)
+	}
+	if rowsUpdated == 0 {
+		return fmt.Errorf("connection with id %d not found", c.ID)
+	}
+	return nil
+}
+
 func (s *Storage) RemoveConnection(id int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

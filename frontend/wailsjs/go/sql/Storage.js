@@ -18,6 +18,10 @@ export function SaveConnection(arg1) {
   return window['go']['sql']['Storage']['SaveConnection'](arg1);
 }
 
+export function UpdateConnection(arg1) {
+  return window['go']['sql']['Storage']['UpdateConnection'](arg1);
+}
+
 export function UpdateFavorite(arg1, arg2) {
   return window['go']['sql']['Storage']['UpdateFavorite'](arg1, arg2);
 }

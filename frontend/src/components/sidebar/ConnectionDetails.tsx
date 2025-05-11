@@ -18,9 +18,9 @@ import {
 } from "@/components/ui/select";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { TestConnection } from "wailsjs/go/weaviate/Weaviate";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Separator } from "@/components/ui/separator";
-import { Check, Eye, EyeOff, LoaderCircle, Star } from "lucide-react";
+import { Check, Eye, EyeOff, LoaderCircle, Star, X } from "lucide-react";
 import { useConnectionStore } from "@/store/connection-store";
 import { ConnectionStatus } from "@/types/enums";
 import { errorReporting } from "@/lib/utils";
@@ -28,13 +28,16 @@ import {
   newConnectionColorBg400,
   connectionColors,
 } from "@/lib/dynamic-colors";
+import { Connection } from "@/types";
+import { useShallow } from "zustand/shallow";
 
 interface Props {
   open: boolean;
   setOpen: (v: boolean) => void;
+  connection?: Connection;
 }
 
-const RestTestAfterSuccessMS = 3000;
+const RestTestAfterMS = 3000;
 
 interface NewConnectionForm {
   uri: string;
@@ -44,10 +47,34 @@ interface NewConnectionForm {
   favorite: boolean;
 }
 
-export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
-  const [testLoading, setTestLoading] = useState(false);
-  const [testSuccess, setTestSuccess] = useState(false);
+export const ConnectionDetails: React.FC<Props> = ({
+  open,
+  connection,
+  setOpen,
+}) => {
+  const [testStatus, setTestStatus] = useState<
+    "success" | "fail" | "loading"
+  >();
   const [showPassword, setShowPassword] = useState(false);
+  // a hacky way to capture the apiKey value
+  const [apiKey, setApiKey] = useState<string | undefined>(undefined);
+  const isEditing = !!connection;
+  const defaultValues = isEditing
+    ? {
+        color: connection.color,
+        favorite: connection.favorite,
+        name: connection.name,
+        uri: connection.uri,
+      }
+    : {
+        color: connectionColors[0].value, // Default to "No color"
+        favorite: false, // Default favorite to false
+      };
+
+  useEffect(() => {
+    reset(defaultValues);
+  }, [connection]);
+
   const {
     register,
     handleSubmit,
@@ -57,12 +84,16 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
     reset,
   } = useForm<NewConnectionForm>({
     mode: "onChange",
-    defaultValues: {
-      color: connectionColors[0].value, // Default to "No color"
-      favorite: false, // Default favorite to false
-    },
+    defaultValues,
   });
-  const saveConnection = useConnectionStore((state) => state.save);
+  const { saveConnection, updateConnection } = useConnectionStore(
+    useShallow((state) => ({
+      saveConnection: state.save,
+      updateConnection: state.update,
+    }))
+  );
+
+  useEffect(() => {}, [connection]);
 
   const save: SubmitHandler<NewConnectionForm> = async ({
     name,
@@ -71,23 +102,27 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
     color,
     favorite,
   }) => {
-    console.log("Saving connection", {
-      name,
-      uri,
-      apiKey,
-      color,
-      favorite,
-    });
-
     try {
-      await saveConnection({
-        name,
-        uri,
-        status: ConnectionStatus.Disconnected,
-        favorite,
-        api_key: apiKey,
-        color: color,
-      });
+      if (isEditing) {
+        await updateConnection({
+          id: connection.id,
+          name,
+          uri,
+          api_key: apiKey ? apiKey : connection.api_key,
+          color,
+          favorite,
+        });
+      } else {
+        await saveConnection({
+          name,
+          uri,
+          status: ConnectionStatus.Disconnected,
+          favorite,
+          api_key: apiKey,
+          color: color,
+        });
+      }
+
       setOpen(false);
       reset();
     } catch (error) {
@@ -96,27 +131,26 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
   };
 
   const testConnection = async () => {
-    if (testSuccess) {
+    if (testStatus) {
       return;
     }
-    setTestLoading(true);
+    setTestStatus("loading");
 
     try {
       await TestConnection({
         URI: getValues("uri"),
-        ApiKey: getValues("apiKey"),
+        ApiKey: getValues("apiKey") ? getValues("apiKey") : connection?.api_key,
       });
 
-      setTestSuccess(true);
-
-      setTimeout(() => {
-        setTestSuccess(false);
-      }, RestTestAfterSuccessMS);
+      setTestStatus("success");
     } catch (error) {
+      setTestStatus("fail");
       errorReporting(error);
     }
 
-    setTestLoading(false);
+    setTimeout(() => {
+      setTestStatus(undefined);
+    }, RestTestAfterMS);
   };
 
   const onOpenChange = (o: boolean) => {
@@ -143,6 +177,9 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
     }
   };
 
+  const disableWhenConnected =
+    isEditing && connection.status === ConnectionStatus.Connected;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -152,9 +189,11 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
         className="sm:max-w-[50vw]"
       >
         <DialogHeader>
-          <DialogTitle>New Connection</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit" : "New"} Connection</DialogTitle>
           <DialogDescription>
-            Create a new Weaviate Connection
+            {isEditing
+              ? `Edit "${connection.name}" connection details`
+              : "Create a new Weaviate Connection"}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -239,6 +278,7 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
               id="uri"
               {...register("uri", {
                 required: "URI is required",
+                disabled: disableWhenConnected,
                 validate: {
                   validUrl: (value) => {
                     try {
@@ -267,12 +307,21 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
             <div className="relative">
               <Input
                 id="apiKey"
-                type={showPassword ? "text" : "password"}
-                {...register("apiKey")}
+                placeholder={isEditing ? obscureApiKey(connection.api_key) : ""}
+                type={
+                  showPassword || (isEditing && !apiKey) ? "text" : "password"
+                }
+                {...register("apiKey", {
+                  disabled: disableWhenConnected,
+                  onChange: () => {
+                    setApiKey(getValues("apiKey"));
+                  },
+                })}
               />
               <button
                 type="button"
                 className="absolute top-0 right-0 h-full cursor-pointer px-3 py-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                disabled={disableWhenConnected}
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -288,16 +337,13 @@ export const NewConnection: React.FC<Props> = ({ open, setOpen }) => {
                 </Button>
               </div>
               <div className="flex gap-2">
-                <Button
-                  disabled={!isUriValid()}
-                  variant="secondary"
-                  type="button"
-                  onClick={testConnection}
-                >
-                  Test
-                  {testLoading && <LoaderCircle className="animate-spin" />}
-                  {testSuccess && <Check className="text-green-600" />}
-                </Button>
+                {!disableWhenConnected && (
+                  <TestConnectionButton
+                    disabled={!isUriValid()}
+                    test={testConnection}
+                    status={testStatus}
+                  />
+                )}
                 <Button disabled={!isValid || !isDirty} type="submit">
                   Save
                 </Button>
@@ -316,4 +362,37 @@ const FieldError = ({ message }: { message?: string }) => {
   }
 
   return <p className="text-xs text-red-500">{message}</p>;
+};
+
+interface TestConnectionButtonProps {
+  test: () => void;
+  disabled: boolean;
+  status: "success" | "fail" | "loading" | undefined;
+}
+
+const TestConnectionButton = ({
+  test,
+  disabled,
+  status,
+}: TestConnectionButtonProps) => {
+  return (
+    <Button
+      disabled={disabled}
+      variant="secondary"
+      type="button"
+      onClick={test}
+    >
+      Test
+      {status === "loading" && <LoaderCircle className="animate-spin" />}
+      {status === "success" && <Check className="text-green-600" />}
+      {status === "fail" && <X className="text-red-600" />}
+    </Button>
+  );
+};
+
+const obscureApiKey = (apiKey?: string) => {
+  if (!apiKey) return "";
+  const length = apiKey.length;
+  if (length <= 3) return apiKey;
+  return `${apiKey.slice(0, 3)}${"*".repeat(length - 3)}`;
 };

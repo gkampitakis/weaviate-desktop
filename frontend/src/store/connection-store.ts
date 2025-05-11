@@ -4,6 +4,7 @@ import {
   GetConnections,
   RemoveConnection,
   SaveConnection,
+  UpdateConnection,
   UpdateFavorite,
 } from "wailsjs/go/sql/Storage";
 import { models } from "wailsjs/go/models";
@@ -17,6 +18,7 @@ import { ConnectionStatus } from "@/types/enums";
 interface ConnectionStore {
   connections: Connection[];
   save: (c: Omit<Connection, "id">) => Promise<void>;
+  update: (c: Connection) => Promise<void>;
   remove: (id: number) => Promise<void>;
   setFavorite: (id: number, favorite: boolean) => Promise<void>;
   connect: (id: number) => Promise<void>;
@@ -37,6 +39,15 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
     );
     set((state) => ({
       connections: [...state.connections, { ...c, id }].sort(sortConnections),
+    }));
+  },
+  update: async (c) => {
+    await UpdateConnection(c);
+
+    set((state) => ({
+      connections: state.connections
+        .map((conn) => (conn.id === c.id ? { ...c } : conn))
+        .sort(sortConnections),
     }));
   },
   remove: async (id: number) => {
@@ -94,7 +105,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
   },
 }));
 
-GetConnections(false)
+GetConnections(true)
   .then((connections) =>
     useConnectionStore.setState({
       connections: connections.sort(sortConnections) || [],

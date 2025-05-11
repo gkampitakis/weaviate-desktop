@@ -25,13 +25,15 @@ Promise.all([GetVersion(), ReleaseByTagURL()]).then(
     useVersionStore.setState({ version, releaseTagURL })
 );
 
-CheckForUpdates().then((newVersion) => {
-  if (newVersion.Exists) {
-    useVersionStore.setState({
-      newVersion: {
-        version: newVersion.LatestVersion,
-        size: newVersion.Size,
-      },
-    });
-  }
-});
+CheckForUpdates()
+  .then((newVersion) => {
+    if (newVersion.Exists) {
+      useVersionStore.setState({
+        newVersion: {
+          version: newVersion.LatestVersion,
+          size: newVersion.Size,
+        },
+      });
+    }
+  })
+  .catch(console.error);

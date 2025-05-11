@@ -33,6 +33,7 @@ import ClusterInformation, {
 } from "../tabs/ClusterInformation/ClusterInformation";
 import GeneralTabLabel from "../tabs/components/GeneralTabLabel";
 import { useState } from "react";
+import { ConnectionDetails } from "./ConnectionDetails";
 
 interface Props {
   connection: Connection;
@@ -44,6 +45,7 @@ export const ConnectionMenu: React.FC<Props> = ({
   setIsCollapsibleOpen,
 }) => {
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [openNewConnection, setOpenConnection] = useState(false);
   const { favorite, status, id, name } = connection;
   const addTab = useTabStore(useShallow((state) => state.add));
   const { removeConnection, setFavoriteConnection, disconnect } =
@@ -104,33 +106,42 @@ export const ConnectionMenu: React.FC<Props> = ({
 
   return (
     <>
-      <Dialog open={isConfirmationOpen} onOpenChange={setIsConfirmationOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Remove</DialogTitle>
-            <DialogDescription>
-              This will remove connection &quot;{connection.name}&quot; from
-              your list. This action cannot be undone. Are you sure you want to
-              proceed?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="justify-between!">
-            <Button
-              variant="outline"
-              onClick={() => setIsConfirmationOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={deleteConnection}
-            >
-              Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {isConfirmationOpen && (
+        <Dialog open={isConfirmationOpen} onOpenChange={setIsConfirmationOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Remove</DialogTitle>
+              <DialogDescription>
+                This will remove connection &quot;{connection.name}&quot; from
+                your list. This action cannot be undone. Are you sure you want
+                to proceed?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="justify-between!">
+              <Button
+                variant="outline"
+                onClick={() => setIsConfirmationOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={deleteConnection}
+              >
+                Confirm
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+      {openNewConnection && (
+        <ConnectionDetails
+          open={openNewConnection}
+          setOpen={setOpenConnection}
+          connection={connection}
+        />
+      )}
       <DropdownMenuContent align="end">
         {status === ConnectionStatus.Connected && (
           <>
@@ -143,7 +154,7 @@ export const ConnectionMenu: React.FC<Props> = ({
             </DropdownMenuItem>
           </>
         )}
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setOpenConnection(true)}>
           <Pencil /> Edit
         </DropdownMenuItem>
         <DropdownMenuItem onClick={setFavorite}>
