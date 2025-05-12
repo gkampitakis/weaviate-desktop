@@ -156,6 +156,7 @@ func TestStorage(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, int64(1), id)
 			assert.NoError(t, mock.ExpectationsWereMet())
+			encrypter.AssertExpectations(t)
 		})
 
 		t.Run("should return error if save fails", func(t *testing.T) {
@@ -183,6 +184,106 @@ func TestStorage(t *testing.T) {
 			id, err := storage.SaveConnection(connection)
 			assert.EqualError(t, err, "failed inserting connection: mock error")
 			assert.Equal(t, int64(0), id)
+			assert.NoError(t, mock.ExpectationsWereMet())
+			encrypter.AssertExpectations(t)
+		})
+	})
+
+	t.Run("UpdateConnection", func(t *testing.T) {
+		t.Run("should update connection successfully", func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			assert.NoError(t, err)
+			defer db.Close()
+
+			encrypter := NewMockEncrypter(t)
+
+			mock.ExpectExec("UPDATE connections").
+				WithArgs("Test Connection", "http://localhost", "encrypted-key", "red", true, 5).
+				WillReturnResult(sqlmock.NewResult(0, 1))
+
+			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
+
+			sqlxDB := sqlx.NewDb(db, "sqlite")
+			storage := NewStorage(sqlxDB, encrypter)
+
+			connection := models.Connection{
+				ID:       5,
+				Name:     "Test Connection",
+				URI:      "http://localhost",
+				ApiKey:   utils.Pointer("test-key"),
+				Color:    "red",
+				Favorite: true,
+			}
+
+			assert.NoError(t, storage.UpdateConnection(connection))
+			assert.NoError(t, mock.ExpectationsWereMet())
+			encrypter.AssertExpectations(t)
+		})
+
+		t.Run("should return error if update fails", func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			assert.NoError(t, err)
+			defer db.Close()
+
+			encrypter := NewMockEncrypter(t)
+
+			mock.ExpectExec("UPDATE connections").
+				WithArgs("Test Connection", "http://localhost", "encrypted-key", "red", true, 5).
+				WillReturnError(errors.New("mock error"))
+
+			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
+
+			sqlxDB := sqlx.NewDb(db, "sqlite")
+			storage := NewStorage(sqlxDB, encrypter)
+
+			connection := models.Connection{
+				ID:       5,
+				Name:     "Test Connection",
+				URI:      "http://localhost",
+				ApiKey:   utils.Pointer("test-key"),
+				Color:    "red",
+				Favorite: true,
+			}
+
+			assert.EqualError(
+				t,
+				storage.UpdateConnection(connection),
+				"failed updating connection: mock error",
+			)
+			assert.NoError(t, mock.ExpectationsWereMet())
+			encrypter.AssertExpectations(t)
+		})
+
+		t.Run("should return error if connection not found", func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			assert.NoError(t, err)
+			defer db.Close()
+
+			encrypter := NewMockEncrypter(t)
+
+			mock.ExpectExec("UPDATE connections").
+				WithArgs("Test Connection", "http://localhost", "encrypted-key", "red", true, 5).
+				WillReturnResult(sqlmock.NewResult(0, 0))
+
+			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
+
+			sqlxDB := sqlx.NewDb(db, "sqlite")
+			storage := NewStorage(sqlxDB, encrypter)
+
+			connection := models.Connection{
+				ID:       5,
+				Name:     "Test Connection",
+				URI:      "http://localhost",
+				ApiKey:   utils.Pointer("test-key"),
+				Color:    "red",
+				Favorite: true,
+			}
+
+			assert.EqualError(
+				t,
+				storage.UpdateConnection(connection),
+				"connection with id 5 not found",
+			)
 			assert.NoError(t, mock.ExpectationsWereMet())
 			encrypter.AssertExpectations(t)
 		})

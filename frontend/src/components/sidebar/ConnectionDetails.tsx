@@ -73,6 +73,7 @@ export const ConnectionDetails: React.FC<Props> = ({
 
   useEffect(() => {
     reset(defaultValues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connection]);
 
   const {

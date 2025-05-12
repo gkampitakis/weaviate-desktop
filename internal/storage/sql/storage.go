@@ -160,6 +160,7 @@ func (s *Storage) UpdateConnection(c models.Connection) error {
 	if rowsUpdated == 0 {
 		return fmt.Errorf("connection with id %d not found", c.ID)
 	}
+
 	return nil
 }
 

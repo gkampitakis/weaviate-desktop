@@ -278,7 +278,7 @@ func (w *Weaviate) GetObjectsPaginated(
 		return nil, fmt.Errorf(
 			"weaviate return non successful http status code %s for %s: %s",
 			resp.Status,
-			u.String(),
+			u.RawQuery,
 			errMessage,
 		)
 	}
