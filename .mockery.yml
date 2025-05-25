@@ -17,3 +17,6 @@ packages:
   weaviate-gui/internal/storage/sql:
     config:
       include-interface-regex: Encrypter
+  weaviate-gui/internal/weaviate:
+    config:
+      all: true

@@ -10,4 +10,6 @@ export function RemoveConnection(arg1:number):Promise<void>;
 
 export function SaveConnection(arg1:models.w_Connection):Promise<number>;
 
+export function UpdateConnection(arg1:models.w_Connection):Promise<void>;
+
 export function UpdateFavorite(arg1:number,arg2:boolean):Promise<void>;

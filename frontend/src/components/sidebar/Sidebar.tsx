@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
-import { NewConnection } from "./NewConnection";
+import { ConnectionDetails } from "./ConnectionDetails";
 import { useConnectionStore } from "@/store/connection-store";
 import { Connection } from "./Connection";
 import { VersionManager } from "./VersionManager";
@@ -60,7 +60,7 @@ const Sidebar: React.FC = () => {
         ))}
       </div>
       <VersionManager />
-      <NewConnection open={openNewConnection} setOpen={setOpenConnection} />
+      <ConnectionDetails open={openNewConnection} setOpen={setOpenConnection} />
     </>
   );
 };
