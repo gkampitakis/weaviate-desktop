@@ -1,0 +1,29 @@
+/* Custom styling for Ant Design tabs to match project's green theme */
+
+.custom-green-tabs .ant-tabs-tab {
+  /* Adjust tab styling */
+  padding: 8px 0;
+  margin-right: 24px !important; /* Force spacing between tabs */
+}
+
+.custom-green-tabs .ant-tabs-tab:hover {
+  /* Hover state */
+  color: #00a142;
+}
+
+.custom-green-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  /* Active tab styling */
+  color: #00a142 !important;
+  font-weight: bold;
+}
+
+.custom-green-tabs .ant-tabs-ink-bar {
+  /* The bottom bar indicator */
+  background-color: #00a142 !important;
+  height: 3px !important;
+}
+
+/* Add more space to tab content */
+.custom-green-tabs .ant-tabs-content {
+  padding-top: 8px;
+}

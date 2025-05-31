@@ -1,4 +1,4 @@
-import { models } from "wailsjs/go/models";
+import { weaviate } from "wailsjs/go/models";
 import JsonView from "@uiw/react-json-view";
 import { Check, Copy, LoaderCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -16,11 +16,12 @@ import { errorReporting } from "@/lib/utils";
 import logo from "@/assets/images/no-data.svg";
 
 interface Props {
-  objects: models.w_Object[];
+  objects: weaviate.w_WeaviateObject[];
   tenant?: string;
   connectionID: number;
   refetch: () => void;
   loading: boolean;
+  isSearch: boolean;
 }
 
 const ObjectsList: React.FC<Props> = ({
@@ -28,14 +29,12 @@ const ObjectsList: React.FC<Props> = ({
   tenant,
   connectionID,
   loading,
+  isSearch,
   refetch,
 }) => {
   if (!objects.length) {
     return (
-      <div
-        className="item-center flex flex-col items-center justify-center"
-        style={{ height: "70vh" }}
-      >
+      <div className="item-center flex h-full w-full flex-col items-center justify-center">
         {loading ? (
           <LoaderCircle size="1.3em" className="animate-spin text-green-600" />
         ) : (
@@ -46,9 +45,13 @@ const ObjectsList: React.FC<Props> = ({
               src={logo}
             />
             <h2 className="text-primary mt-10 scroll-m-20 pb-2 text-2xl font-semibold tracking-tight transition-colors first:mt-0">
-              This collection has no data
+              {isSearch ? "No results" : "This collection has no data"}
             </h2>
-            <p className="text-primary">You can import data with ....</p>
+            <p className="text-primary">
+              {isSearch
+                ? "You can refine your query"
+                : "You can import data with ...."}
+            </p>
           </>
         )}
       </div>
@@ -56,7 +59,7 @@ const ObjectsList: React.FC<Props> = ({
   }
 
   return (
-    <div className="overflow-y-auto" style={{ height: "calc(100vh - 120px)" }}>
+    <div className="h-full flex-1 overflow-y-auto">
       {objects.map((object, id) => (
         <Object
           connectionID={connectionID}
@@ -71,7 +74,7 @@ const ObjectsList: React.FC<Props> = ({
 };
 
 interface ObjectActionsProps {
-  object: models.w_Object;
+  object: weaviate.w_WeaviateObject;
   tenant?: string;
   connectionID: number;
   refetch: () => void;

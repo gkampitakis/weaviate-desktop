@@ -3,6 +3,7 @@ import { create } from "zustand";
 import Welcome, { WelcomeName } from "@/components/tabs/Welcome";
 import GeneralTabLabel from "@/components/tabs/components/GeneralTabLabel";
 import CollectionTabLabel from "@/components/tabs/components/CollectionTabLabel";
+import { arrayMove } from "@dnd-kit/sortable";
 
 let globalIdx = 1;
 
@@ -16,9 +17,18 @@ interface TabStore {
   removeByConnection(id: number): void;
   updateByConnection(id: number, name: string, color: string): void;
   getActiveTab(): Tab | undefined;
+  reorderTabs(activeIndex: string, overIndex: string): void;
 }
 
 export const useTabStore = create<TabStore>((set, get) => ({
+  reorderTabs: (activeId: string, overId: string) => {
+    set((state) => {
+      const activeIndex = state.tabs.findIndex((i) => i.key === activeId);
+      const overIndex = state.tabs.findIndex((i) => i.key === overId);
+
+      return { tabs: arrayMove(state.tabs, activeIndex, overIndex) };
+    });
+  },
   add: (tab) => {
     return set((state) => {
       const key = (globalIdx++).toString();

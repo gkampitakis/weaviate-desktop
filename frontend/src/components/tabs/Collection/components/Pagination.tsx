@@ -16,6 +16,7 @@ interface Props {
   previous: () => void;
   currentPage: number;
   totalPages: number;
+  totalCount: number;
   loading?: boolean;
 }
 
@@ -27,6 +28,7 @@ const Pagination: React.FC<Props> = ({
   previous,
   currentPage,
   totalPages,
+  totalCount,
   loading,
 }) => {
   const disabledNext =
@@ -50,7 +52,9 @@ const Pagination: React.FC<Props> = ({
         }}
       >
         <span className="flex text-center">
-          {totalPages === 0 ? "0 of 0" : `${currentPage} of ${totalPages}`}
+          {totalPages === 0
+            ? "0 of 0"
+            : `${currentPage}-${totalPages} of ${totalCount}`}
         </span>
         <ChevronLeft
           className={`rounded-full p-1 transition ${

@@ -1,25 +1,34 @@
 import type { Collection as SingleTenantCollection } from "@/types";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import {
   GetObjectsPaginated,
   GetTotalObjects,
+  Search,
 } from "wailsjs/go/weaviate/Weaviate";
+import "./components/custom-tabs.css";
 import TabContainer from "../components/TabContainer";
 import ObjectsList from "./components/ObjectsList";
 import Pagination from "./components/Pagination";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { errorReporting } from "@/lib/utils";
+import { useDebouncedCallback } from "use-debounce";
+import { Tabs as AntdTabs } from "antd";
+import type { TabsProps } from "antd";
 
 interface Props {
   collection: SingleTenantCollection;
 }
+
+// TODO: add performance report
+// TODO: should we do pagination for searches maybe inside as options
+// TODO: more functionality for searching, like filtering by class, etc.
 
 const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
   const { connection, name } = collection;
 
   const [pageSize, setPageSize] = useState(25);
   const [cursorHistory, setCursorHistory] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch total objects count
   const {
@@ -43,6 +52,7 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
         throw error;
       }
     },
+    enabled: !searchQuery, // Only run this query if searchQuery is empty
   });
 
   const totalPages = Math.ceil(totalObjects / pageSize);
@@ -72,12 +82,43 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
         throw error;
       }
     },
+    enabled: !searchQuery, // Only run this query if searchQuery is empty
   });
 
-  const loading = loadingTotal || loadingObject || isPlaceholderData;
+  // Retrieve search results
+  const { data: searchResults, isLoading: loadingSearch } = useQuery({
+    queryKey: ["search", connection.id, name, searchQuery],
+    queryFn: async () => {
+      if (!searchQuery) return null;
+      try {
+        const results = await Search(
+          connection.id,
+          // FIXME:
+          pageSize,
+          0,
+          name,
+          "",
+          searchQuery
+        );
+        return results?.Objects || [];
+      } catch (error) {
+        errorReporting(error);
+        throw error;
+      }
+    },
+    enabled: !!searchQuery, // Only run this query if searchQuery is not empty
+  });
 
+  const loading =
+    loadingTotal || loadingObject || isPlaceholderData || loadingSearch;
+
+  // Use search results if available, otherwise use regular objects
+  const displayedObjects = searchQuery ? searchResults : objects;
+
+  // FIXME: to handle searching
   const handleNext = async () => {
-    if (cursorHistory.length + 1 === totalPages || loading) {
+    // If searching, don't allow pagination
+    if (searchQuery || cursorHistory.length + 1 === totalPages || loading) {
       return;
     }
 
@@ -89,8 +130,10 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
     refetchTotal();
   };
 
+  // FIXME: to handle searching
   const handlePrevious = async () => {
-    if (cursorHistory.length <= 0 || loading) {
+    // If searching, don't allow pagination
+    if (searchQuery || cursorHistory.length <= 0 || loading) {
       return;
     }
 
@@ -102,53 +145,81 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
     setCursorHistory([]);
   };
 
-  return (
-    <TabContainer>
-      <Tabs defaultValue="objects">
-        <div className="flex flex-row items-center gap-2">
-          <TabsList className="h-[30px] flex-3">
-            <TabsTrigger
-              value="objects"
-              className="data-[state=active]:text-primary cursor-pointer"
+  const items: TabsProps["items"] = [
+    {
+      key: "1",
+      label: "Objects",
+      children: (
+        <div className="flex h-full w-full flex-col overflow-hidden p-2">
+          <div className="relative mb-4">
+            <input
+              type="text"
+              className="focus:ring-primary w-full rounded-md border py-2 pr-4 pl-10 focus:ring-2 focus:outline-none"
+              placeholder="Search"
+              onChange={useDebouncedCallback((e) => {
+                setSearchQuery(e.target.value);
+              }, 300)}
+            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              Objects ({totalObjects})
-            </TabsTrigger>
-            <TabsTrigger
-              value="indexes"
-              className="data-[state=active]:text-primary cursor-pointer"
-            >
-              Indexes
-            </TabsTrigger>
-            <TabsTrigger
-              value="schema"
-              className="data-[state=active]:text-primary cursor-pointer"
-            >
-              Schema
-            </TabsTrigger>
-          </TabsList>
-          <div className="flex flex-2 flex-row items-center justify-end">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+          <div className="mb-2 flex flex-row items-center justify-end">
             <Pagination
               pageSize={pageSize}
               setPageSize={handlePageSizeChange}
               next={handleNext}
               previous={handlePrevious}
               currentPage={cursorHistory.length + 1}
+              totalCount={totalObjects}
               totalPages={totalPages}
               loading={loading}
             />
           </div>
+          <div className="flex-1 overflow-hidden">
+            <ObjectsList
+              loading={loading}
+              objects={displayedObjects || []}
+              connectionID={connection.id}
+              isSearch={!!searchQuery}
+              refetch={refetch}
+            />
+          </div>
         </div>
-        <TabsContent value="objects">
-          <ObjectsList
-            loading={loading}
-            objects={objects || []}
-            connectionID={connection.id}
-            refetch={refetch}
-          />
-        </TabsContent>
-        <TabsContent value="indexes">Not yet implemented</TabsContent>
-        <TabsContent value="schema">Not yet implemented</TabsContent>
-      </Tabs>
+      ),
+    },
+    {
+      key: "2",
+      label: "Placeholder",
+      children: (
+        <div className="p-4">
+          <p className="text-gray-500">Placeholder</p>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <TabContainer>
+      <AntdTabs
+        defaultActiveKey="1"
+        items={items}
+        className="custom-green-tabs flex h-full flex-col"
+        tabBarStyle={{
+          marginBottom: "16px",
+        }}
+      />
     </TabContainer>
   );
 };

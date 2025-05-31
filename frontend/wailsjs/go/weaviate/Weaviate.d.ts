@@ -21,4 +21,6 @@ export function GetTotalObjects(arg1:number,arg2:string,arg3:string):Promise<num
 
 export function NodesStatus(arg1:number):Promise<models.w_NodesStatusResponse>;
 
+export function Search(arg1:number,arg2:number,arg3:number,arg4:string,arg5:string,arg6:string):Promise<weaviate.w_PaginatedObjectResponse>;
+
 export function TestConnection(arg1:weaviate.w_TestConnectionInput):Promise<void>;
