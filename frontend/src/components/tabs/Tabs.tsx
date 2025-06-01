@@ -19,6 +19,7 @@ import {
   SortableContext,
   useSortable,
 } from "@dnd-kit/sortable";
+import "./drag-tabs.css";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 

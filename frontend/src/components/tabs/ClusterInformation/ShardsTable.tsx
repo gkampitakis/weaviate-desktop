@@ -16,6 +16,8 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
+// BUG: with vertical overflow on single tentant check screenshot
+
 interface Props {
   shards: models.w_NodeShardStatus[];
 }
@@ -31,11 +33,7 @@ export const ShardsTable = ({ shards: shard }: Props) => {
   );
 
   return (
-    <Collapsible
-      open={open}
-      onOpenChange={() => setOpen((prev) => !prev)}
-      className="w-full"
-    >
+    <Collapsible open={open} onOpenChange={setOpen} className="w-full">
       <CollapsibleTrigger asChild>
         <Button variant="ghost" size="sm" className="flex justify-start">
           <span>View Shards</span>
@@ -43,7 +41,7 @@ export const ShardsTable = ({ shards: shard }: Props) => {
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="relative h-[300px] overflow-y-auto">
+        <div className="relative max-h-[300px] overflow-y-auto">
           <Table className="w-full text-left text-xs" scrollable>
             <TableHeader className="sticky top-0 bg-gray-100">
               <TableRow>

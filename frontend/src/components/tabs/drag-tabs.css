@@ -1,0 +1,4 @@
+/* set transition to none when type="editable-card" */
+.ant-tabs-editable > .ant-tabs-nav .ant-tabs-tab {
+  transition: none;
+}
