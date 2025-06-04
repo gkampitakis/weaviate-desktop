@@ -46,7 +46,24 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
 
     set((state) => ({
       connections: state.connections
-        .map((conn) => (conn.id === c.id ? { ...c } : conn))
+        .map((conn) => {
+          if (conn.id !== c.id) return conn;
+          const updatedConn = { ...conn, ...c };
+          if (updatedConn.collections) {
+            updatedConn.collections = updatedConn.collections.map(
+              (collection) => ({
+                ...collection,
+                connection: {
+                  id: updatedConn.id,
+                  name: updatedConn.name,
+                  color: updatedConn.color,
+                },
+              })
+            );
+          }
+
+          return updatedConn;
+        })
         .sort(sortConnections),
     }));
   },
