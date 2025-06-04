@@ -30,6 +30,7 @@ import {
 } from "@/lib/dynamic-colors";
 import { Connection } from "@/types";
 import { useShallow } from "zustand/shallow";
+import { useTabStore } from "@/store/tab-store";
 
 interface Props {
   open: boolean;
@@ -93,8 +94,9 @@ export const ConnectionDetails: React.FC<Props> = ({
       updateConnection: state.update,
     }))
   );
-
-  useEffect(() => {}, [connection]);
+  const updateTabsByConnection = useTabStore(
+    (state) => state.updateByConnection
+  );
 
   const save: SubmitHandler<NewConnectionForm> = async ({
     name,
@@ -108,11 +110,14 @@ export const ConnectionDetails: React.FC<Props> = ({
         await updateConnection({
           id: connection.id,
           name,
-          uri,
+          uri: uri ? uri : connection.uri,
           api_key: apiKey ? apiKey : connection.api_key,
           color,
           favorite,
         });
+        if (connection.color !== color || connection.name !== name) {
+          updateTabsByConnection(connection.id, name, color);
+        }
       } else {
         await saveConnection({
           name,

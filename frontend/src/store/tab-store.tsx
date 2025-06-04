@@ -2,6 +2,7 @@ import type { Tab } from "@/types";
 import { create } from "zustand";
 import Welcome, { WelcomeName } from "@/components/tabs/Welcome";
 import GeneralTabLabel from "@/components/tabs/components/GeneralTabLabel";
+import CollectionTabLabel from "@/components/tabs/components/CollectionTabLabel";
 
 let globalIdx = 1;
 
@@ -13,6 +14,7 @@ interface TabStore {
   setActive: (key?: string) => void;
   updateActiveTab(tab: Omit<Tab, "key">): void;
   removeByConnection(id: number): void;
+  updateByConnection(id: number, name: string, color: string): void;
   getActiveTab(): Tab | undefined;
 }
 
@@ -43,6 +45,28 @@ export const useTabStore = create<TabStore>((set, get) => ({
   },
   active: "0",
   setActive: (key) => set((state) => ({ ...state, active: key })),
+  updateByConnection: (id, name, color) => {
+    return set((state) => {
+      return {
+        tabs: state.tabs.map((t) =>
+          t.connection?.id === id
+            ? {
+                ...t,
+                label: (
+                  <CollectionTabLabel
+                    name={t.name}
+                    connectionName={name}
+                    connectionID={t.connection.id}
+                    color={color}
+                    tooltip
+                  />
+                ),
+              }
+            : t
+        ),
+      };
+    });
+  },
   removeByConnection: (id) => {
     return set((state) => {
       // filter out all tabs that are not part of the connection

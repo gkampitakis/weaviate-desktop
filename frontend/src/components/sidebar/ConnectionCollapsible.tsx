@@ -10,9 +10,7 @@ import type { Collection } from "@/types";
 import { useShallow } from "zustand/shallow";
 import CollectionTab from "../tabs/Collection/HOCollection";
 import { useQueryClient } from "@tanstack/react-query";
-import { WelcomeName } from "../tabs/Welcome";
-import { NewTabName } from "../tabs/NewTab";
-import { ClusterInformationName } from "../tabs/ClusterInformation/ClusterInformation";
+import { isGeneralTab } from "../tabs/util";
 
 export const ConnectionCollapsibleTrigger: React.FC<{
   connected: boolean;
@@ -56,13 +54,7 @@ export const ConnectionCollapsibleContent: React.FC<{
         return;
       }
 
-      if (
-        collection.multiTenancyConfig?.enabled &&
-        // NOTE: don't like this pattern we should update it
-        ![WelcomeName, NewTabName, ClusterInformationName].includes(
-          activeTab.name
-        )
-      ) {
+      if (collection.multiTenancyConfig?.enabled && !isGeneralTab(activeTab)) {
         await queryClient.resetQueries({
           queryKey: ["tenants", activeTab.connection!.id, activeTab.name],
         });
