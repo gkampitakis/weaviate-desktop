@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.7](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.6...v0.0.7) (2025-06-04)
+
+
+### Features
+
+* support editing a collection ([#6](https://github.com/gkampitakis/weaviate-gui/issues/6)) ([f9fccce](https://github.com/gkampitakis/weaviate-gui/commit/f9fccce2239a29dbe32deb7bd9d59c0633d24c04))
+* support color coded tabs and connections ([#4](https://github.com/gkampitakis/weaviate-gui/issues/4)) ([8bc1be1](https://github.com/gkampitakis/weaviate-gui/commit/8bc1be19189c34d7c9ca89e0bbaa679978d827ca))
+* finish implementing the cluster information ([f73c293](https://github.com/gkampitakis/weaviate-gui/commit/f73c293a45f6749c0a8dd015c9ff63e7dbf39800))
+* implement self update dialog on frontend ([4a9acf5](https://github.com/gkampitakis/weaviate-gui/commit/4a9acf5c77aad15117139df7de3dcb574865d9bf))
+* implement app self update core logic ([768cae8](https://github.com/gkampitakis/weaviate-gui/commit/768cae8a6e8c4e609c14c22cd453f91d00a7928b))
+
+
+### Bug Fixes
+
+* bug when editing connection changes are now reflected on the app ([#8](https://github.com/gkampitakis/weaviate-gui/issues/8)) ([e511e3d](https://github.com/gkampitakis/weaviate-gui/commit/e511e3d83a2037b7ab384a214ea6e24fca033bb9))
+* store api keys encrypted ([#5](https://github.com/gkampitakis/weaviate-gui/issues/5)) ([c4bda0a](https://github.com/gkampitakis/weaviate-gui/commit/c4bda0aad7f001a5006c98884a92baba34ea0fce))
+* add confirmation prompt before deleting a connection ([1ab0548](https://github.com/gkampitakis/weaviate-gui/commit/1ab0548c64792761a2a17add0c64fea01c8385a1))
+* failing test on windows ([657ab97](https://github.com/gkampitakis/weaviate-gui/commit/657ab979c730e6fec521b2bc396ea89795d6c8bc))
+* setup pipeline for branch and github source for selfupdate ([37d3d49](https://github.com/gkampitakis/weaviate-gui/commit/37d3d494daa06d3384d355ef02865687d047a31e))
+
 ## [0.0.6](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.5...v0.0.6) (2025-04-21)
 
 
