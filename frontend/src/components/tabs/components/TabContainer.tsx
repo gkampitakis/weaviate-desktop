@@ -5,7 +5,9 @@ const TabContainer: React.FC<PropsWithChildren<{ className?: string }>> = ({
   className,
 }) => {
   return (
-    <div className={`flex-1 bg-white p-5 ${className ? className : ""}`}>
+    <div
+      className={`flex flex-1 flex-col overflow-hidden bg-white px-5 pt-5 pb-2 ${className ? className : ""}`}
+    >
       {children}
     </div>
   );

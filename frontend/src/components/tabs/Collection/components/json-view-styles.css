@@ -1,0 +1,69 @@
+/* Custom styles for JsonView */
+.json-view-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Target all JsonView elements globally */
+.w-rjv-container {
+  max-width: 100% !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.w-rjv-container * {
+  max-width: 100% !important;
+  text-overflow: ellipsis !important;
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
+}
+
+.w-rjv-container .w-rjv-object-string,
+.w-rjv-container .w-rjv-object-value,
+.w-rjv-container .w-rjv-array-value,
+.w-rjv-container .w-rjv-tree {
+  word-break: break-all !important;
+  display: inline-block !important;
+  max-width: 100% !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* Target the tree and block elements */
+.w-rjv-tree {
+  max-width: 100% !important;
+  overflow-x: visible !important;
+}
+
+/* Ensure all nested elements wrap properly */
+.w-rjv-key-string,
+.w-rjv-value-string,
+.w-rjv-value-number,
+.w-rjv-value-boolean,
+.w-rjv-value-null {
+  max-width: 100% !important;
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+}
+
+/* Style for the container of the component */
+.object-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  position: relative;
+}
+
+.json-content {
+  overflow-x: auto;
+  max-width: calc(100% - 80px);
+  flex-grow: 1;
+  padding-right: 10px;
+}
+
+.action-buttons {
+  min-width: 80px;
+  align-self: flex-start;
+  position: sticky;
+  right: 0;
+  background-color: rgba(243, 244, 246, 0.8);
+}

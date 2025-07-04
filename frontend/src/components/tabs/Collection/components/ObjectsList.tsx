@@ -1,7 +1,8 @@
-import { models } from "wailsjs/go/models";
+import { weaviate } from "wailsjs/go/models";
 import JsonView from "@uiw/react-json-view";
 import { Check, Copy, LoaderCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
+import "./json-view-styles.css";
 import {
   Dialog,
   DialogContent,
@@ -14,13 +15,16 @@ import { Button } from "@/components/ui/button";
 import { DeleteObject } from "wailsjs/go/weaviate/Weaviate";
 import { errorReporting } from "@/lib/utils";
 import logo from "@/assets/images/no-data.svg";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 
 interface Props {
-  objects: models.w_Object[];
+  objects: weaviate.w_WeaviateObject[];
   tenant?: string;
   connectionID: number;
   refetch: () => void;
   loading: boolean;
+  isSearch: boolean;
+  ref: React.Ref<HTMLDivElement> | undefined;
 }
 
 const ObjectsList: React.FC<Props> = ({
@@ -28,14 +32,13 @@ const ObjectsList: React.FC<Props> = ({
   tenant,
   connectionID,
   loading,
+  isSearch,
   refetch,
+  ref,
 }) => {
   if (!objects.length) {
     return (
-      <div
-        className="item-center flex flex-col items-center justify-center"
-        style={{ height: "70vh" }}
-      >
+      <div className="item-center flex h-full w-full flex-col items-center justify-center">
         {loading ? (
           <LoaderCircle size="1.3em" className="animate-spin text-green-600" />
         ) : (
@@ -46,9 +49,13 @@ const ObjectsList: React.FC<Props> = ({
               src={logo}
             />
             <h2 className="text-primary mt-10 scroll-m-20 pb-2 text-2xl font-semibold tracking-tight transition-colors first:mt-0">
-              This collection has no data
+              {isSearch ? "No results" : "This collection has no data"}
             </h2>
-            <p className="text-primary">You can import data with ....</p>
+            <p className="text-primary">
+              {isSearch
+                ? "You can refine your query to get results back."
+                : "You can import data with ...."}
+            </p>
           </>
         )}
       </div>
@@ -56,7 +63,7 @@ const ObjectsList: React.FC<Props> = ({
   }
 
   return (
-    <div className="overflow-y-auto" style={{ height: "calc(100vh - 120px)" }}>
+    <div className="overflow-y-auto" ref={ref}>
       {objects.map((object, id) => (
         <Object
           connectionID={connectionID}
@@ -71,7 +78,7 @@ const ObjectsList: React.FC<Props> = ({
 };
 
 interface ObjectActionsProps {
-  object: models.w_Object;
+  object: weaviate.w_WeaviateObject;
   tenant?: string;
   connectionID: number;
   refetch: () => void;
@@ -84,7 +91,6 @@ const Object: React.FC<ObjectActionsProps> = ({
   refetch,
 }) => {
   const [copied, setCopied] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [open, setOpen] = useState(false);
   const Icon = copied ? Check : Copy;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -131,37 +137,43 @@ const Object: React.FC<ObjectActionsProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div
-        className="my-2 flex flex-row justify-between rounded-md border-red-200 bg-gray-100/80"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <JsonView
-          className="select-text"
-          displayDataTypes={false}
-          displayObjectSize={false}
-          enableClipboard={false}
-          collapsed={2}
-          shortenTextAfterLength={120}
-          value={jsonValue}
-          highlightUpdates={false}
-        />
-        <div
-          className="flex transform flex-row gap-2 px-10 py-4 opacity-0 transition-opacity ease-in-out"
-          style={{ opacity: isHovered ? 1 : 0 }}
-        >
+      <Card className="mb-2 gap-0 py-0">
+        <CardTitle className="flex flex-row items-center justify-end gap-2 px-2 pt-4">
           <Icon
             onClick={handleCopy}
-            size={"1.4em"}
+            size="1.2em"
             className={`cursor-pointer ${copied ? "text-green-600" : ""}`}
           />
           <Trash2
             onClick={() => setOpen(true)}
-            size={"1.4em"}
+            size="1.2em"
             className="cursor-pointer text-red-600"
           />
-        </div>
-      </div>
+        </CardTitle>
+        <CardContent className="px-2">
+          <div className="object-container">
+            <div className="json-content">
+              <div className="json-view-wrapper">
+                <JsonView
+                  className="select-text"
+                  displayDataTypes={false}
+                  displayObjectSize={false}
+                  enableClipboard={false}
+                  collapsed={2}
+                  shortenTextAfterLength={120}
+                  value={jsonValue}
+                  highlightUpdates={false}
+                  style={{
+                    maxWidth: "100%",
+                    overflowWrap: "break-word",
+                    wordBreak: "break-all",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </>
   );
 };

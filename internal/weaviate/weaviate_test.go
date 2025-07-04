@@ -273,7 +273,7 @@ func TestWeaviate(t *testing.T) {
 			// Add a client manually to the map
 			weaviate.clients[connectionID] = &WClient{
 				healthy: true,
-				cl:      nil,
+				w:       nil,
 			}
 
 			// Verify client exists
@@ -312,7 +312,7 @@ func TestWeaviate(t *testing.T) {
 			// Manually add a client to the map
 			weaviate.clients[connectionID] = &WClient{
 				healthy: true,
-				cl:      nil, // Not needed for this test
+				w:       nil, // Not needed for this test
 			}
 
 			assert.NoError(t, weaviate.Connect(connectionID))

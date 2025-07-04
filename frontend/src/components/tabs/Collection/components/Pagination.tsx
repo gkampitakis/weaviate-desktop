@@ -16,7 +16,9 @@ interface Props {
   previous: () => void;
   currentPage: number;
   totalPages: number;
+  totalCount: number;
   loading?: boolean;
+  disabled?: boolean;
 }
 
 const Pagination: React.FC<Props> = ({
@@ -27,12 +29,15 @@ const Pagination: React.FC<Props> = ({
   previous,
   currentPage,
   totalPages,
+  totalCount,
+  disabled = false,
   loading,
 }) => {
   const disabledNext =
-    loading || totalPages === 0 || currentPage === totalPages;
+    loading || totalPages === 0 || currentPage === totalPages || disabled;
 
-  const disabledPrevious = loading || totalPages === 0 || currentPage === 1;
+  const disabledPrevious =
+    loading || totalPages === 0 || currentPage === 1 || disabled;
 
   return (
     <div
@@ -49,8 +54,10 @@ const Pagination: React.FC<Props> = ({
           setPageSize(Number(e));
         }}
       >
-        <span className="flex text-center">
-          {totalPages === 0 ? "0 of 0" : `${currentPage} of ${totalPages}`}
+        <span className={`flex text-center ${disabled ? "opacity-50" : ""}`}>
+          {totalPages === 0
+            ? "0 of 0"
+            : `${currentPage} - ${totalPages} of ${totalCount}`}
         </span>
         <ChevronLeft
           className={`rounded-full p-1 transition ${
@@ -74,7 +81,11 @@ const Pagination: React.FC<Props> = ({
             next();
           }}
         />
-        <SelectTrigger size="sm" className="pr-1 pl-2" disabled={loading}>
+        <SelectTrigger
+          size="sm"
+          className="pr-1 pl-2"
+          disabled={loading || disabled}
+        >
           <SelectValue placeholder="Select page size" />
         </SelectTrigger>
         <SelectContent>

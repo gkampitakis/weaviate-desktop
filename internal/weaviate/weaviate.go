@@ -23,7 +23,7 @@ import (
 )
 
 type WClient struct {
-	cl      *weaviate.Client
+	w       *weaviate.Client
 	healthy bool
 }
 
@@ -31,6 +31,15 @@ type Weaviate struct {
 	clients    map[int64]*WClient
 	storage    Storage
 	httpClient *http.Client
+}
+
+type WeaviateObject struct {
+	ID                 string `json:"id"`
+	Class              string `json:"class"`
+	LastUpdateTimeUnix int64  `json:"lastUpdateTimeUnix,omitempty"`
+	CreationTimeUnix   int64  `json:"creationTimeUnix,omitempty"`
+	Tenant             string `json:"tenant,omitempty"`
+	Properties         any    `json:"properties,omitempty"`
 }
 
 type Storage interface {
@@ -65,7 +74,7 @@ func (w *Weaviate) updateClusterStatus(d time.Duration) {
 		slog.Debug("running status updater", slog.Int("clientsConnected", len(w.clients)))
 
 		for id, cl := range w.clients {
-			cl.healthy, err = cl.cl.Misc().LiveChecker().Do(context.Background())
+			cl.healthy, err = cl.w.Misc().LiveChecker().Do(context.Background())
 			if err != nil {
 				slog.Error(
 					"failed querying status",
@@ -94,7 +103,7 @@ func (w Weaviate) TestConnection(i TestConnectionInput) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err = c.cl.Misc().MetaGetter().Do(ctx)
+	_, err = c.w.Misc().MetaGetter().Do(ctx)
 
 	return err
 }
@@ -120,7 +129,7 @@ func (w *Weaviate) getClientFromConnection(c *models.Connection) (*WClient, erro
 
 	return &WClient{
 		healthy: true,
-		cl:      client,
+		w:       client,
 	}, nil
 }
 
@@ -143,7 +152,7 @@ func (w *Weaviate) Connect(id int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err = client.cl.Misc().MetaGetter().Do(ctx)
+	_, err = client.w.Misc().MetaGetter().Do(ctx)
 	if err != nil {
 		return fmt.Errorf("failed connecting to %s: %w", connection.URI, err)
 	}
@@ -167,7 +176,7 @@ func (w *Weaviate) GetTotalObjects(connectionID int64, collection, tenant string
 		},
 	}
 
-	get := c.cl.GraphQL().Aggregate().
+	get := c.w.GraphQL().Aggregate().
 		WithClassName(collection).
 		WithFields(meta)
 
@@ -204,7 +213,7 @@ func (w *Weaviate) DeleteObject(connectionID int64, collection, id, tenant strin
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	deleteObject := c.cl.Data().Deleter().WithClassName(collection).WithID(id)
+	deleteObject := c.w.Data().Deleter().WithClassName(collection).WithID(id)
 	if tenant != "" {
 		deleteObject = deleteObject.WithTenant(tenant)
 	}
@@ -213,8 +222,9 @@ func (w *Weaviate) DeleteObject(connectionID int64, collection, id, tenant strin
 }
 
 type PaginatedObjectResponse struct {
-	Objects      []weaviate_models.Object
-	TotalResults int
+	Objects       []WeaviateObject
+	ExecutionTime string
+	TotalResults  int
 }
 
 func (w *Weaviate) GetObjectsPaginated(
@@ -303,7 +313,7 @@ func (w *Weaviate) GetTenants(
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	return c.cl.Schema().TenantsGetter().WithClassName(collection).Do(ctx)
+	return c.w.Schema().TenantsGetter().WithClassName(collection).Do(ctx)
 }
 
 func (w *Weaviate) NodesStatus(connectionID int64) (*weaviate_models.NodesStatusResponse, error) {
@@ -315,7 +325,7 @@ func (w *Weaviate) NodesStatus(connectionID int64) (*weaviate_models.NodesStatus
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	res, err := c.cl.Cluster().NodesStatusGetter().WithOutput("verbose").Do(ctx)
+	res, err := c.w.Cluster().NodesStatusGetter().WithOutput("verbose").Do(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed querying node status: %w", err)
 	}
@@ -341,7 +351,7 @@ func (w *Weaviate) GetCollections(connectionID int64) ([]*weaviate_models.Class,
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	s, err := c.cl.Schema().Getter().Do(ctx)
+	s, err := c.w.Schema().Getter().Do(ctx)
 	if err != nil {
 		return nil, err
 	}

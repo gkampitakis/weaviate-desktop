@@ -413,36 +413,6 @@ export namespace models {
 		    return a;
 		}
 	}
-	export class w_Object {
-	    additional?: Record<string, any>;
-	    class?: string;
-	    creationTimeUnix?: number;
-	    id?: string;
-	    lastUpdateTimeUnix?: number;
-	    properties?: any;
-	    tenant?: string;
-	    vector?: number[];
-	    vectorWeights?: any;
-	    vectors?: Record<string, any>;
-	
-	    static createFrom(source: any = {}) {
-	        return new w_Object(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.additional = source["additional"];
-	        this.class = source["class"];
-	        this.creationTimeUnix = source["creationTimeUnix"];
-	        this.id = source["id"];
-	        this.lastUpdateTimeUnix = source["lastUpdateTimeUnix"];
-	        this.properties = source["properties"];
-	        this.tenant = source["tenant"];
-	        this.vector = source["vector"];
-	        this.vectorWeights = source["vectorWeights"];
-	        this.vectors = source["vectors"];
-	    }
-	}
 	
 	
 	
@@ -486,8 +456,31 @@ export namespace updater {
 
 export namespace weaviate {
 	
+	export class w_WeaviateObject {
+	    id: string;
+	    class: string;
+	    lastUpdateTimeUnix?: number;
+	    creationTimeUnix?: number;
+	    tenant?: string;
+	    properties?: any;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_WeaviateObject(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.class = source["class"];
+	        this.lastUpdateTimeUnix = source["lastUpdateTimeUnix"];
+	        this.creationTimeUnix = source["creationTimeUnix"];
+	        this.tenant = source["tenant"];
+	        this.properties = source["properties"];
+	    }
+	}
 	export class w_PaginatedObjectResponse {
-	    Objects: w_models.Object[];
+	    Objects: w_WeaviateObject[];
+	    ExecutionTime: string;
 	    TotalResults: number;
 	
 	    static createFrom(source: any = {}) {
@@ -496,7 +489,8 @@ export namespace weaviate {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.Objects = this.convertValues(source["Objects"], w_models.Object);
+	        this.Objects = this.convertValues(source["Objects"], w_WeaviateObject);
+	        this.ExecutionTime = source["ExecutionTime"];
 	        this.TotalResults = source["TotalResults"];
 	    }
 	
