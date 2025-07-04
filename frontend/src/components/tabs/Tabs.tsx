@@ -28,7 +28,6 @@ interface DraggableTabPaneProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const DraggableTabNode: React.FC<Readonly<DraggableTabPaneProps>> = ({
-  className,
   ...props
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -43,6 +42,7 @@ const DraggableTabNode: React.FC<Readonly<DraggableTabPaneProps>> = ({
     cursor: "move",
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return React.cloneElement(props.children as React.ReactElement<any>, {
     ref: setNodeRef,
     style,

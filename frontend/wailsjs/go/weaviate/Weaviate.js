@@ -38,8 +38,8 @@ export function NodesStatus(arg1) {
   return window['go']['weaviate']['Weaviate']['NodesStatus'](arg1);
 }
 
-export function Search(arg1, arg2, arg3, arg4, arg5, arg6) {
-  return window['go']['weaviate']['Weaviate']['Search'](arg1, arg2, arg3, arg4, arg5, arg6);
+export function Search(arg1, arg2, arg3, arg4) {
+  return window['go']['weaviate']['Weaviate']['Search'](arg1, arg2, arg3, arg4);
 }
 
 export function TestConnection(arg1) {

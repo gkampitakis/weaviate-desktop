@@ -11,6 +11,7 @@ export function errorReporting(error: unknown) {
 
   return toast.error(String(error), {
     dismissible: true,
+    id: `error-${String(error)}`,
     duration: 5000,
     closeButton: true,
   });

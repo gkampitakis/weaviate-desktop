@@ -6,17 +6,15 @@ import (
 	"log/slog"
 	"strings"
 	"time"
+
 	"weaviate-gui/internal/utils"
 
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/graphql"
 	"github.com/weaviate/weaviate/entities/models"
 )
 
-// TODO: support different types of searches
 func (w *Weaviate) Search(
 	connectionID int64,
-	pageSize int,
-	offset int,
 	collection, tenant, term string,
 ) (*PaginatedObjectResponse, error) {
 	c, exists := w.clients[connectionID]
@@ -27,6 +25,8 @@ func (w *Weaviate) Search(
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	now := time.Now()
+
 	col, err := c.w.Schema().ClassGetter().WithClassName(collection).Do(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed retrieving schema for %s: %w", collection, err)
@@ -34,15 +34,12 @@ func (w *Weaviate) Search(
 
 	gqlQuery := c.w.GraphQL().Get().
 		WithClassName(collection).
-		WithLimit(pageSize).
-		WithOffset(offset).
+		WithLimit(100).
 		WithFields(getGQLFields(col.Properties)...).
 		WithBM25((&graphql.BM25ArgumentBuilder{}).WithQuery(term))
 	if tenant != "" {
 		gqlQuery = gqlQuery.WithTenant(tenant)
 	}
-
-	now := time.Now()
 
 	result, err := gqlQuery.Do(ctx)
 	if err != nil {
@@ -52,14 +49,26 @@ func (w *Weaviate) Search(
 		return nil, handleGQLError(result, term)
 	}
 	if len(result.Data) == 0 {
-		slog.Debug("no results found for keyword search", slog.String("term", term), slog.String("collection", collection))
+		slog.Debug(
+			"no results found for keyword search",
+			slog.String("term", term),
+			slog.String("collection", collection),
+		)
 	}
 
 	objects := result.Data["Get"].(map[string]any)[collection].([]any)
 
 	if len(objects) == 0 {
-		slog.Debug("no objects found for keyword search", slog.String("term", term), slog.String("collection", collection))
-		return nil, nil
+		slog.Debug(
+			"no objects found for keyword search",
+			slog.String("term", term),
+			slog.String("collection", collection),
+		)
+		return &PaginatedObjectResponse{
+			Objects:       []WeaviateObject{},
+			TotalResults:  0,
+			ExecutionTime: time.Since(now).String(),
+		}, nil
 	}
 
 	response := &PaginatedObjectResponse{
@@ -72,11 +81,15 @@ func (w *Weaviate) Search(
 		if objMap, ok := obj.(map[string]any); ok {
 			// Convert the object to models.Object
 			object := WeaviateObject{
-				Class:              collection,
-				LastUpdateTimeUnix: utils.MustParseInt[int64](objMap["_additional"].(map[string]any)["lastUpdateTimeUnix"].(string)),
-				CreationTimeUnix:   utils.MustParseInt[int64](objMap["_additional"].(map[string]any)["creationTimeUnix"].(string)),
-				ID:                 objMap["_additional"].(map[string]any)["id"].(string),
-				Properties:         objMap,
+				Class: collection,
+				LastUpdateTimeUnix: utils.MustParseInt[int64](
+					objMap["_additional"].(map[string]any)["lastUpdateTimeUnix"].(string),
+				),
+				CreationTimeUnix: utils.MustParseInt[int64](
+					objMap["_additional"].(map[string]any)["creationTimeUnix"].(string),
+				),
+				ID:         objMap["_additional"].(map[string]any)["id"].(string),
+				Properties: objMap,
 			}
 			// Remove the _additional field from properties
 			delete(object.Properties.(map[string]any), "_additional")
@@ -101,7 +114,10 @@ func handleGQLError(result *models.GraphQLResponse, term string) error {
 func getGQLFields(props []*models.Property) []graphql.Field {
 	fields := make([]graphql.Field, 0, len(props))
 	for _, prop := range props {
-		fields = append(fields, graphql.Field{Name: prop.Name})
+		fields = append(fields, graphql.Field{
+			Name:   prop.Name,
+			Fields: getNestedFields(prop.NestedProperties),
+		})
 	}
 
 	fields = append(fields, graphql.Field{
@@ -113,4 +129,17 @@ func getGQLFields(props []*models.Property) []graphql.Field {
 		},
 	})
 	return fields
+}
+
+func getNestedFields(nestedProps []*models.NestedProperty) []graphql.Field {
+	nestedFields := make([]graphql.Field, 0, len(nestedProps))
+
+	for _, nestedProp := range nestedProps {
+		nestedFields = append(nestedFields, graphql.Field{
+			Name:   nestedProp.Name,
+			Fields: getNestedFields(nestedProp.NestedProperties),
+		})
+	}
+
+	return nestedFields
 }

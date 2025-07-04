@@ -24,6 +24,7 @@ interface Props {
   refetch: () => void;
   loading: boolean;
   isSearch: boolean;
+  ref: React.Ref<HTMLDivElement> | undefined;
 }
 
 const ObjectsList: React.FC<Props> = ({
@@ -33,10 +34,11 @@ const ObjectsList: React.FC<Props> = ({
   loading,
   isSearch,
   refetch,
+  ref,
 }) => {
   if (!objects.length) {
     return (
-      <div className="item-center flex w-full flex-col items-center justify-center">
+      <div className="item-center flex h-full w-full flex-col items-center justify-center">
         {loading ? (
           <LoaderCircle size="1.3em" className="animate-spin text-green-600" />
         ) : (
@@ -51,7 +53,7 @@ const ObjectsList: React.FC<Props> = ({
             </h2>
             <p className="text-primary">
               {isSearch
-                ? "You can refine your query"
+                ? "You can refine your query to get results back."
                 : "You can import data with ...."}
             </p>
           </>
@@ -61,7 +63,7 @@ const ObjectsList: React.FC<Props> = ({
   }
 
   return (
-    <div className="overflow-y-auto">
+    <div className="overflow-y-auto" ref={ref}>
       {objects.map((object, id) => (
         <Object
           connectionID={connectionID}

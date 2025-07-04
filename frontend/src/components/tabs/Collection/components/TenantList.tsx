@@ -27,49 +27,52 @@ const TenantList: React.FC<Props> = ({ tenants, selected, setTenant }) => {
   const [open, setOpen] = useState(false);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild className="h-[30px]">
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-[200px] justify-between"
-        >
-          {selected && tenants
-            ? tenants?.find((tenant) => tenant.name === selected)?.name
-            : "Select tenant..."}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
-        <Command>
-          <CommandInput placeholder="Search tenant..." />
-          <CommandList>
-            <CommandEmpty>No tenant found.</CommandEmpty>
-            <CommandGroup>
-              {tenants?.map((tenant) => (
-                <CommandItem
-                  key={tenant.name}
-                  value={tenant.name}
-                  onSelect={(currentValue) => {
-                    setTenant(currentValue === selected ? "" : currentValue);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selected === tenant.name ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {tenant.name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <div className="flex items-center gap-2">
+      <span className="text-sm font-medium text-gray-500">Tenant:</span>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild className="h-[30px]">
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-[200px] justify-between"
+          >
+            {selected && tenants
+              ? tenants?.find((tenant) => tenant.name === selected)?.name
+              : "Select tenant..."}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[200px] p-0">
+          <Command>
+            <CommandInput placeholder="Search tenant..." />
+            <CommandList>
+              <CommandEmpty>No tenant found.</CommandEmpty>
+              <CommandGroup>
+                {tenants?.map((tenant) => (
+                  <CommandItem
+                    key={tenant.name}
+                    value={tenant.name}
+                    onSelect={(currentValue) => {
+                      setTenant(currentValue === selected ? "" : currentValue);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selected === tenant.name ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {tenant.name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 };
 

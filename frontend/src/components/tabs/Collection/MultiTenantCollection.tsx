@@ -1,5 +1,5 @@
 import type { Collection } from "@/types";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   GetObjectsPaginated,
   GetTenants,
@@ -13,9 +13,10 @@ import TenantList from "./components/TenantList";
 import Pagination from "./components/Pagination";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { errorReporting } from "@/lib/utils";
-import { useDebouncedCallback } from "use-debounce";
 import { Tabs as AntdTabs } from "antd";
 import type { TabsProps } from "antd";
+import { weaviate } from "wailsjs/go/models";
+import SearchComponent from "./components/Search";
 
 interface Props {
   collection: Collection;
@@ -27,7 +28,22 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
   const [pageSize, setPageSize] = useState(25);
   const [cursorHistory, setCursorHistory] = useState<string[]>([]);
   const [selectedTenant, setSelectedTenant] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [objects, setObjects] = useState<
+    weaviate.w_WeaviateObject[] | undefined
+  >();
+  const [searchExecutionTime, setSearchExecutionTime] = useState<string>();
+  const objectsContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToTop = () => {
+    // Use the ref to scroll to top smoothly
+    if (objectsContainerRef.current) {
+      objectsContainerRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  };
 
   const selectTenant = (tenant: string) => {
     setSelectedTenant(tenant);
@@ -83,14 +99,13 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
       }
     },
     // when changing page we need to make sure we have fetched the tenants again
-    enabled: !!selectedTenant && !!tenants?.length && !searchQuery,
+    enabled: !!selectedTenant && !!tenants?.length && !searching,
   });
 
   const totalPages = Math.ceil(totalObjects / pageSize);
 
   // Retrieve objects
   const {
-    data: objects,
     isLoading: loadingObject,
     isPlaceholderData,
     refetch: refetchObjects,
@@ -114,6 +129,8 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
           selectedTenant
         );
 
+        setObjects(objects);
+        scrollToTop();
         return objects;
       } catch (error) {
         errorReporting(error);
@@ -121,62 +138,29 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
       }
     },
     // when changing page we need to make sure we have fetched the tenants again
-    enabled: !!selectedTenant && !!tenants?.length && !searchQuery,
-  });
-
-  // Retrieve search results
-  const { data: searchResults, isLoading: loadingSearch } = useQuery({
-    queryKey: ["search", connection.id, name, searchQuery],
-    queryFn: async () => {
-      if (!searchQuery) return null;
-      try {
-        const results = await Search(
-          connection.id,
-          // FIXME:
-          pageSize,
-          0,
-          name,
-          selectedTenant,
-          searchQuery
-        );
-        return results?.Objects || [];
-      } catch (error) {
-        errorReporting(error);
-        throw error;
-      }
-    },
-    enabled: !!searchQuery, // Only run this query if searchQuery is not empty
+    enabled: !!selectedTenant && !!tenants?.length && !searching,
   });
 
   const loading =
-    loadingTenant ||
-    loadingObject ||
-    isPlaceholderData ||
-    loadingTotal ||
-    loadingSearch;
-
-  // Use search results if available, otherwise use regular objects
-  const displayedObjects = searchQuery ? searchResults : objects || [];
+    loadingTenant || loadingObject || isPlaceholderData || loadingTotal;
 
   const refetch = () => {
     refetchObjects();
     refetchTotal();
   };
 
-  // FIXME: to handle searching
   const handleNext = async () => {
     // If searching, don't allow pagination
-    if (searchQuery || cursorHistory.length + 1 === totalPages || loading) {
+    if (searching || cursorHistory.length + 1 === totalPages || loading) {
       return;
     }
 
     setCursorHistory((state) => [...state, objects!.at(-1)!.id!]);
   };
 
-  // FIXME: to handle searching
   const handlePrevious = async () => {
     // If searching, don't allow pagination
-    if (searchQuery || cursorHistory.length <= 0 || loading) {
+    if (searching || cursorHistory.length <= 0 || loading) {
       return;
     }
 
@@ -188,62 +172,70 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
     setCursorHistory([]);
   };
 
+  const handleSearch = async (v: string) => {
+    setSearching(true);
+
+    try {
+      const { ExecutionTime, Objects } = await Search(
+        connection.id,
+        name,
+        selectedTenant,
+        v
+      );
+
+      setObjects(Objects);
+      scrollToTop();
+      setSearchExecutionTime(ExecutionTime);
+    } catch (error) {
+      errorReporting(error);
+      setSearching(false);
+    }
+  };
+
+  const resetSearch = () => {
+    setSearching(false);
+    setSearchExecutionTime(undefined);
+  };
+
   const items: TabsProps["items"] = [
     {
       key: "1",
       label: "Objects",
       children: (
         <div className="flex h-full w-full flex-col overflow-hidden p-2">
-          <div className="relative mb-4">
-            <input
-              type="text"
-              className="focus:ring-primary w-full rounded-md border py-2 pr-4 pl-10 focus:ring-2 focus:outline-none"
-              placeholder="Search"
-              onChange={useDebouncedCallback((e) => {
-                setSearchQuery(e.target.value);
-              }, 300)}
-            />
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          <SearchComponent
+            handleSearch={handleSearch}
+            resetSearch={resetSearch}
+            searchObjects={objects?.length || 0}
+            executionTime={searchExecutionTime || ""}
+            changeId={`${connection.id}-${name}`}
+          >
+            <div className="mb-2 flex flex-row items-center justify-between">
+              <TenantList
+                selected={selectedTenant}
+                setTenant={selectTenant}
+                tenants={tenants}
               />
-            </svg>
-          </div>
-          <div className="mb-2 flex flex-row items-center justify-between">
-            <TenantList
-              selected={selectedTenant}
-              setTenant={selectTenant}
-              tenants={tenants}
-            />
-            <Pagination
-              pageSize={pageSize}
-              setPageSize={handlePageSizeChange}
-              next={handleNext}
-              previous={handlePrevious}
-              currentPage={cursorHistory.length + 1}
-              totalCount={totalObjects}
-              totalPages={totalPages}
-              loading={loading}
-            />
-          </div>
-          <div className="flex-1 overflow-hidden">
+              <Pagination
+                pageSize={pageSize}
+                setPageSize={handlePageSizeChange}
+                next={handleNext}
+                previous={handlePrevious}
+                currentPage={cursorHistory.length + 1}
+                totalCount={totalObjects}
+                totalPages={totalPages}
+                loading={loading}
+              />
+            </div>
             <ObjectsList
               loading={loading}
-              objects={displayedObjects || []}
+              objects={objects || []}
               connectionID={connection.id}
-              isSearch={!!searchQuery}
+              isSearch={searching}
               refetch={refetch}
+              ref={objectsContainerRef}
             />
-          </div>
+          </SearchComponent>
         </div>
       ),
     },

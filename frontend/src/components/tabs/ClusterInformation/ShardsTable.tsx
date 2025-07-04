@@ -16,8 +16,6 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-// BUG: with vertical overflow on single tentant check screenshot
-
 interface Props {
   shards: models.w_NodeShardStatus[];
 }
