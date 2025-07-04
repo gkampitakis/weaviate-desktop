@@ -131,7 +131,19 @@
   margin: 0 !important;
   opacity: 0.65; /* Faint effect */
   transition: opacity 0.05s ease-in-out;
+  cursor: pointer !important; /* Ensure pointer cursor for tabs */
   gap: 0;
+}
+
+/* Hide close icon by default */
+.ant-tabs-tab .ant-tabs-tab-remove {
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+/* Show close icon on hover */
+.ant-tabs-tab:hover .ant-tabs-tab-remove {
+  opacity: 1;
 }
 
 .ant-tabs-tab-remove {

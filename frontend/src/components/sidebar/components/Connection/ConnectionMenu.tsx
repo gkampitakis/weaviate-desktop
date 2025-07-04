@@ -12,6 +12,7 @@ import {
   Info,
   Link2Off,
   Pencil,
+  RefreshCcw,
   Star,
   Trash2,
 } from "lucide-react";
@@ -48,7 +49,7 @@ export const ConnectionMenu: React.FC<Props> = ({
   const [openNewConnection, setOpenConnection] = useState(false);
   const { favorite, status, id, name } = connection;
   const addTab = useTabStore(useShallow((state) => state.add));
-  const { removeConnection, setFavoriteConnection, disconnect } =
+  const { removeConnection, setFavoriteConnection, disconnect, connect } =
     useConnectionStore(
       useShallow((state) => ({
         removeConnection: state.remove,
@@ -61,6 +62,14 @@ export const ConnectionMenu: React.FC<Props> = ({
   const removeTabsByConnectionID = useTabStore(
     (state) => state.removeByConnection
   );
+
+  const handleRefresh = async () => {
+    try {
+      await connect(id);
+    } catch (error) {
+      errorReporting(error);
+    }
+  };
 
   const handleDisconnect = async () => {
     try {
@@ -147,6 +156,9 @@ export const ConnectionMenu: React.FC<Props> = ({
           <>
             <DropdownMenuItem onClick={handleDisconnect}>
               <Link2Off /> Disconnect
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleRefresh}>
+              <RefreshCcw /> Refresh
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleClusterInformation}>
