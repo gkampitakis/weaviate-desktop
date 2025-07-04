@@ -4,13 +4,14 @@ import {
   CollapsibleContent,
 } from "@/components/ui/collapsible";
 import { useTabStore } from "@/store/tab-store";
-import { Box, Boxes, ChevronRight } from "lucide-react";
-import CollectionTabLabel from "../tabs/components/CollectionTabLabel";
+import { ChevronRight } from "lucide-react";
+import CollectionTabLabel from "../../../tabs/components/CollectionTabLabel";
 import type { Collection } from "@/types";
 import { useShallow } from "zustand/shallow";
-import CollectionTab from "../tabs/Collection/HOCollection";
+import CollectionTab from "../../../tabs/Collection/HOCollection";
 import { useQueryClient } from "@tanstack/react-query";
-import { isGeneralTab } from "../tabs/util";
+import { isGeneralTab } from "../../../tabs/util";
+import CollectionComponent from "./components/Collection";
 
 export const ConnectionCollapsibleTrigger: React.FC<{
   connected: boolean;
@@ -82,6 +83,10 @@ export const ConnectionCollapsibleContent: React.FC<{
       return;
     }
 
+    handleAddNewTab(collection);
+  };
+
+  const handleAddNewTab = (collection: Collection) => {
     add({
       label: (
         <CollectionTabLabel
@@ -101,18 +106,13 @@ export const ConnectionCollapsibleContent: React.FC<{
   return (
     <CollapsibleContent>
       {collections?.map((collection, idx) => (
-        <div
+        <CollectionComponent
+          addNewTab={handleAddNewTab}
           key={idx}
-          className={`flex cursor-pointer flex-row py-2 pl-13 text-xs ${color}`}
-          onClick={() => handleClick(collection)}
-        >
-          {collection.multiTenancyConfig?.enabled ? (
-            <Boxes size="1.1em" className="mr-2 flex-shrink-0" />
-          ) : (
-            <Box size="1.1em" className="mr-2 flex-shrink-0" />
-          )}
-          <span className="truncate">{collection.name}</span>
-        </div>
+          onClick={handleClick}
+          collection={collection}
+          color={color}
+        />
       ))}
     </CollapsibleContent>
   );

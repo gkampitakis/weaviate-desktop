@@ -30,8 +30,8 @@ import { useTabStore } from "@/store/tab-store";
 import { errorReporting } from "@/lib/utils";
 import ClusterInformation, {
   ClusterInformationName,
-} from "../tabs/ClusterInformation/ClusterInformation";
-import GeneralTabLabel from "../tabs/components/GeneralTabLabel";
+} from "../../../tabs/ClusterInformation/ClusterInformation";
+import GeneralTabLabel from "../../../tabs/components/GeneralTabLabel";
 import { useState } from "react";
 import { ConnectionDetails } from "./ConnectionDetails";
 
