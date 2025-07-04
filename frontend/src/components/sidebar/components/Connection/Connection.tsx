@@ -2,7 +2,7 @@ import type { Connection as ConnectionI } from "@/types";
 import { ConnectionStatus } from "@/types/enums";
 import { Button } from "@/components/ui/button";
 import { Layers3, Star } from "lucide-react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
@@ -21,12 +21,20 @@ import {
 
 interface Props {
   connection: ConnectionI;
+  collapse: boolean;
 }
 
-export const Connection: React.FC<Props> = ({ connection }) => {
+export const Connection: React.FC<Props> = ({ connection, collapse }) => {
   const { favorite, name, status, id, collections, color } = connection;
   const [isHovered, setIsHovered] = useState(false);
   const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(false);
+
+  useEffect(() => {
+    if (collapse && status === ConnectionStatus.Connected) {
+      setIsCollapsibleOpen(false);
+    }
+  }, [collapse]);
+
   const { connect } = useConnectionStore(
     useShallow((state) => ({
       connect: state.connect,
