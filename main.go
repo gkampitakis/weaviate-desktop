@@ -8,11 +8,11 @@ import (
 	"os"
 	"time"
 
-	"weaviate-gui/internal/config"
-	"weaviate-gui/internal/encrypter"
-	"weaviate-gui/internal/storage/sql"
-	"weaviate-gui/internal/updater"
-	"weaviate-gui/internal/weaviate"
+	"weaviate-desktop/internal/config"
+	"weaviate-desktop/internal/encrypter"
+	"weaviate-desktop/internal/storage/sql"
+	"weaviate-desktop/internal/updater"
+	"weaviate-desktop/internal/weaviate"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/leaanthony/u"

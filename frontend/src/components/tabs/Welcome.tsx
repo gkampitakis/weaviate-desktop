@@ -15,7 +15,7 @@ const Welcome = () => {
         />
         <div className="m-2 flex-1">
           <h1 className="scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-5xl">
-            Welcome to Weaviate GUI
+            Welcome to Weaviate Desktop
           </h1>
           <div className="flex flex-col py-4">
             <span>

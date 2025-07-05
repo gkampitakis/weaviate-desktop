@@ -439,6 +439,7 @@ export namespace updater {
 	    Exists: boolean;
 	    LatestVersion: string;
 	    Size: string;
+	    ReleaseTagURL: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new w_CheckForUpdatesResponse(source);
@@ -449,6 +450,7 @@ export namespace updater {
 	        this.Exists = source["Exists"];
 	        this.LatestVersion = source["LatestVersion"];
 	        this.Size = source["Size"];
+	        this.ReleaseTagURL = source["ReleaseTagURL"];
 	    }
 	}
 

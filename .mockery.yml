@@ -11,12 +11,12 @@ require-template-schema-exists: true
 template: testify
 template-schema: "{{.Template}}.schema.json"
 packages:
-  weaviate-gui/internal/updater:
+  weaviate-desktop/internal/updater:
     config:
       all: true
-  weaviate-gui/internal/storage/sql:
+  weaviate-desktop/internal/storage/sql:
     config:
       include-interface-regex: Encrypter
-  weaviate-gui/internal/weaviate:
+  weaviate-desktop/internal/weaviate:
     config:
       all: true

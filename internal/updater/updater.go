@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"weaviate-gui/internal/http_util"
+	"weaviate-desktop/internal/http_util"
 
 	"github.com/Masterminds/semver"
 	wails_runtime "github.com/wailsapp/wails/v2/pkg/runtime"
@@ -229,6 +229,7 @@ type CheckForUpdatesResponse struct {
 	Exists        bool
 	LatestVersion string
 	Size          string
+	ReleaseTagURL string
 }
 
 // CheckForUpdates checks if a new version is available on the asset source
@@ -254,5 +255,10 @@ func (u *Updater) CheckForUpdates() (*CheckForUpdatesResponse, error) {
 		Exists:        resp.exists,
 		LatestVersion: resp.version.Original(),
 		Size:          resp.assetSize,
+		ReleaseTagURL: fmt.Sprintf(
+			"https://github.com/gkampitakis/%s/releases/tag/%s",
+			u.fileName,
+			resp.version.Original(),
+		),
 	}, nil
 }

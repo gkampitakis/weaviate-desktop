@@ -11,6 +11,7 @@ interface VersionStore {
   newVersion?: {
     version: string;
     size: string;
+    releaseTagURL: string;
   };
 }
 
@@ -32,6 +33,7 @@ CheckForUpdates()
         newVersion: {
           version: newVersion.LatestVersion,
           size: newVersion.Size,
+          releaseTagURL: newVersion.ReleaseTagURL,
         },
       });
     }

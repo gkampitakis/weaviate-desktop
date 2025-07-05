@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"weaviate-gui/internal/http_util"
-	"weaviate-gui/internal/models"
+	"weaviate-desktop/internal/http_util"
+	"weaviate-desktop/internal/models"
 
 	"github.com/weaviate/weaviate-go-client/v5/weaviate"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/auth"

@@ -25,7 +25,7 @@ jobs:
       - uses: ./.github/actions/build
       - uses: ./.github/actions/zip
         with:
-          file-name: "weaviate-gui"
+          file-name: "weaviate-desktop"
       - uses: softprops/action-gh-release@v2
         with:
           preserve_order: true

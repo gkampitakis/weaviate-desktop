@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"weaviate-gui/internal/http_util"
-	"weaviate-gui/internal/models"
-	"weaviate-gui/internal/utils"
+	"weaviate-desktop/internal/http_util"
+	"weaviate-desktop/internal/models"
+	"weaviate-desktop/internal/utils"
 
 	"github.com/stretchr/testify/assert"
 )
