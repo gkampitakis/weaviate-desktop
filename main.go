@@ -14,7 +14,6 @@ import (
 	"weaviate-desktop/internal/updater"
 	"weaviate-desktop/internal/weaviate"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/leaanthony/u"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
@@ -33,15 +32,11 @@ var wailsConfig string
 func main() {
 	cfg := config.New(wailsConfig)
 
-	db, err := sqlx.Open("sqlite", sql.GetStorageSource(cfg.FileName))
+	sqlStorage, dbCloser, err := sql.NewStorage(cfg.FileName, encrypter.New())
 	if err != nil {
-		log.Fatalf("failed opening sqlite: %v", err)
-	}
-	if err := sql.InitStorage(db); err != nil {
 		log.Fatalf("failed initializing storage: %v", err)
 	}
 
-	sqlStorage := sql.NewStorage(db, encrypter.New())
 	w := weaviate.New(sqlStorage, weaviate.Configuration{
 		StatusUpdateInterval: 30 * time.Second,
 	})
@@ -80,7 +75,7 @@ func main() {
 			appUpdater.SetRuntimeContext(ctx)
 		},
 		OnShutdown: func(_ context.Context) {
-			db.Close()
+			_ = dbCloser()
 		},
 		DragAndDrop: &options.DragAndDrop{
 			DisableWebViewDrop: true,

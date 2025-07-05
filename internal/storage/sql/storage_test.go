@@ -13,37 +13,6 @@ import (
 )
 
 func TestStorage(t *testing.T) {
-	t.Run("InitStorage", func(t *testing.T) {
-		t.Run("should initialize storage successfully", func(t *testing.T) {
-			db, mock, err := sqlmock.New()
-			assert.NoError(t, err)
-			defer db.Close()
-
-			mock.ExpectExec("CREATE TABLE IF NOT EXISTS connections").
-				WillReturnResult(sqlmock.NewResult(0, 0))
-			mock.ExpectExec("PRAGMA journal_mode=WAL;").WillReturnResult(sqlmock.NewResult(0, 0))
-
-			sqlxDB := sqlx.NewDb(db, "sqlite")
-			err = InitStorage(sqlxDB)
-			assert.NoError(t, err)
-			assert.NoError(t, mock.ExpectationsWereMet())
-		})
-
-		t.Run("should return error if initialization fails", func(t *testing.T) {
-			db, mock, err := sqlmock.New()
-			assert.NoError(t, err)
-			defer db.Close()
-
-			mock.ExpectExec("CREATE TABLE IF NOT EXISTS connections").
-				WillReturnError(errors.New("mock error"))
-
-			sqlxDB := sqlx.NewDb(db, "sqlite")
-			err = InitStorage(sqlxDB)
-			assert.EqualError(t, err, "failed creating connections table: mock error")
-			assert.NoError(t, mock.ExpectationsWereMet())
-		})
-	})
-
 	t.Run("GetConnections", func(t *testing.T) {
 		t.Run("should return connections", func(t *testing.T) {
 			db, mock, err := sqlmock.New()
@@ -61,7 +30,10 @@ func TestStorage(t *testing.T) {
 			encrypter.EXPECT().Decrypt("encrypted-key").Return("test-key", nil)
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, encrypter)
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: encrypter,
+			}
 
 			connections, err := storage.GetConnections(true)
 			assert.NoError(t, err)
@@ -93,7 +65,10 @@ func TestStorage(t *testing.T) {
 			encrypter.EXPECT().DecryptSecret("encrypted-key").Return("test-key", nil)
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, encrypter)
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: encrypter,
+			}
 
 			connections, err := storage.GetConnections(false)
 			assert.NoError(t, err)
@@ -118,7 +93,10 @@ func TestStorage(t *testing.T) {
 				WillReturnError(errors.New("mock error"))
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, NewMockEncrypter(t))
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: NewMockEncrypter(t),
+			}
 
 			connections, err := storage.GetConnections(false)
 			assert.EqualError(t, err, "failed getting connections: mock error")
@@ -142,7 +120,10 @@ func TestStorage(t *testing.T) {
 			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, encrypter)
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: encrypter,
+			}
 
 			connection := models.Connection{
 				Name:     "Test Connection",
@@ -173,7 +154,10 @@ func TestStorage(t *testing.T) {
 			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, encrypter)
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: encrypter,
+			}
 
 			connection := models.Connection{
 				Name:   "Test Connection",
@@ -204,7 +188,10 @@ func TestStorage(t *testing.T) {
 			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, encrypter)
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: encrypter,
+			}
 
 			connection := models.Connection{
 				ID:       5,
@@ -234,7 +221,10 @@ func TestStorage(t *testing.T) {
 			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, encrypter)
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: encrypter,
+			}
 
 			connection := models.Connection{
 				ID:       5,
@@ -268,7 +258,10 @@ func TestStorage(t *testing.T) {
 			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, encrypter)
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: encrypter,
+			}
 
 			connection := models.Connection{
 				ID:       5,
@@ -299,7 +292,10 @@ func TestStorage(t *testing.T) {
 				WillReturnResult(sqlmock.NewResult(0, 1))
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, NewMockEncrypter(t))
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: NewMockEncrypter(t),
+			}
 
 			err = storage.RemoveConnection(1)
 			assert.NoError(t, err)
@@ -315,7 +311,10 @@ func TestStorage(t *testing.T) {
 				WillReturnError(errors.New("mock error"))
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, NewMockEncrypter(t))
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: NewMockEncrypter(t),
+			}
 
 			err = storage.RemoveConnection(1)
 			assert.EqualError(t, err, "failed deleting connection: mock error")
@@ -331,7 +330,10 @@ func TestStorage(t *testing.T) {
 				WillReturnResult(sqlmock.NewResult(0, 0))
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, NewMockEncrypter(t))
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: NewMockEncrypter(t),
+			}
 
 			err = storage.RemoveConnection(1)
 			assert.EqualError(t, err, "connection with id 1 not found")
@@ -350,7 +352,10 @@ func TestStorage(t *testing.T) {
 				WillReturnResult(sqlmock.NewResult(0, 1))
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, NewMockEncrypter(t))
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: NewMockEncrypter(t),
+			}
 
 			err = storage.UpdateFavorite(1, true)
 			assert.NoError(t, err)
@@ -367,7 +372,10 @@ func TestStorage(t *testing.T) {
 				WillReturnError(errors.New("mock error"))
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, NewMockEncrypter(t))
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: NewMockEncrypter(t),
+			}
 
 			err = storage.UpdateFavorite(1, true)
 			assert.EqualError(t, err, "failed updating favorite: mock error")
@@ -384,7 +392,10 @@ func TestStorage(t *testing.T) {
 				WillReturnResult(sqlmock.NewResult(0, 0))
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, NewMockEncrypter(t))
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: NewMockEncrypter(t),
+			}
 
 			err = storage.UpdateFavorite(1, true)
 			assert.EqualError(t, err, "favorite with id 1 not found")
@@ -410,7 +421,10 @@ func TestStorage(t *testing.T) {
 			encrypter.EXPECT().Decrypt("encrypted-key").Return("test-key", nil)
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, encrypter)
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: encrypter,
+			}
 
 			connection, err := storage.GetConnection(1, true)
 			assert.NoError(t, err)
@@ -437,7 +451,10 @@ func TestStorage(t *testing.T) {
 			encrypter.EXPECT().DecryptSecret("encrypted-key").Return("test-key", nil)
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, encrypter)
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: encrypter,
+			}
 
 			connection, err := storage.GetConnection(1, false)
 			assert.NoError(t, err)
@@ -457,7 +474,10 @@ func TestStorage(t *testing.T) {
 				WillReturnError(errors.New("mock error"))
 
 			sqlxDB := sqlx.NewDb(db, "sqlite")
-			storage := NewStorage(sqlxDB, NewMockEncrypter(t))
+			storage := &Storage{
+				db:   sqlxDB,
+				encr: NewMockEncrypter(t),
+			}
 
 			connection, err := storage.GetConnection(1, true)
 			assert.EqualError(t, err, "failed getting connection: mock error")
