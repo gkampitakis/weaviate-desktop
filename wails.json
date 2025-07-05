@@ -1,21 +1,21 @@
 {
-  "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "Weaviate Desktop",
-  "info": {
-  "productVersion": "0.0.7"
-  },
-  "outputfilename": "weaviate-desktop",
-  "frontend:install": "npm install",
-  "frontend:build": "npm run build",
-  "frontend:dev:watcher": "npm run dev",
-  "frontend:dev:serverUrl": "auto",
-  "author": {
-    "name": "gkampitakis",
-    "email": "gkabitakis@gmail.com"
-  },
-  "bindings": {
-    "ts_generation": {
-      "prefix": "w_"
-    }
+ "$schema": "https://wails.io/schemas/config.v2.json",
+ "name": "Weaviate Desktop",
+ "info": {
+  "productVersion": "0.0.8"
+ },
+ "outputfilename": "weaviate-desktop",
+ "frontend:install": "npm install",
+ "frontend:build": "npm run build",
+ "frontend:dev:watcher": "npm run dev",
+ "frontend:dev:serverUrl": "auto",
+ "author": {
+  "name": "gkampitakis",
+  "email": "gkabitakis@gmail.com"
+ },
+ "bindings": {
+  "ts_generation": {
+   "prefix": "w_"
   }
+ }
 }

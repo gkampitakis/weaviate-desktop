@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.8](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.7...v0.0.8) (2025-07-05)
+
+
+### Features
+
+* rename to weaviate-desktop ([fc9f453](https://github.com/gkampitakis/weaviate-gui/commit/fc9f453b4334a4dfe6eba5eb2aa374c56826d127))
+* add collapse all on connection lists ([81aa799](https://github.com/gkampitakis/weaviate-gui/commit/81aa79946ca66ab8f1fc242574492daad39a2e08))
+* add support for refreshing collection list in a connection ([45f8750](https://github.com/gkampitakis/weaviate-gui/commit/45f8750a58834f1c0bcdf7a3e2ca5f2d998b3442))
+* support simple keyword search ([#7](https://github.com/gkampitakis/weaviate-gui/issues/7)) ([4a07e58](https://github.com/gkampitakis/weaviate-gui/commit/4a07e58d816e042cc6b6510b17c892ee8ce5b613))
+
+
+### Bug Fixes
+
+* add support for openning collection on new tab ([2437cdf](https://github.com/gkampitakis/weaviate-gui/commit/2437cdf8ebb3e0eece271ce69f6065f78c0e79ed))
+
 ## [0.0.7](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.6...v0.0.7) (2025-06-04)
 
 
