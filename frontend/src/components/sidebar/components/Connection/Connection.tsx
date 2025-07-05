@@ -1,14 +1,14 @@
 import type { Connection as ConnectionI } from "@/types";
 import { ConnectionStatus } from "@/types/enums";
 import { Button } from "@/components/ui/button";
-import { Layers3, Star } from "lucide-react";
+import { Ellipsis, Layers3, Plus, Star } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
 import { toast } from "sonner";
 import { Collapsible } from "@/components/ui/collapsible";
-import { ConnectionMenu, ConnectionMenuTrigger } from "./ConnectionMenu";
+import { ConnectionMenu } from "./ConnectionMenu";
 import {
   ConnectionCollapsibleContent,
   ConnectionCollapsibleTrigger,
@@ -18,6 +18,8 @@ import {
   connectionColorBgHv,
   connectionColorBgHvImportant,
 } from "@/lib/dynamic-colors";
+import ConnectionAction from "./ConnectionAction";
+import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 
 interface Props {
   connection: ConnectionI;
@@ -94,7 +96,7 @@ export const Connection: React.FC<Props> = ({ connection, collapse }) => {
           </div>
           {!isConnected && (
             <Button
-              className="absolute end-10 transform !bg-white !text-black opacity-0 transition-opacity duration-300 ease-in-out"
+              className="absolute end-14 h-6 transform !bg-white px-3 py-2 !text-black opacity-0 transition-opacity duration-300 ease-in-out"
               style={{ opacity: isHovered ? 1 : 0 }}
               size="sm"
               onClick={handleConnect}
@@ -102,8 +104,16 @@ export const Connection: React.FC<Props> = ({ connection, collapse }) => {
               Connect
             </Button>
           )}
-
-          <ConnectionMenuTrigger hovered={isHovered} color={color} />
+          <div className="flex justify-end gap-2">
+            <ConnectionAction hovered={isHovered} color={color} icon={Plus} />
+            <DropdownMenuTrigger>
+              <ConnectionAction
+                hovered={isHovered}
+                color={color}
+                icon={Ellipsis}
+              />
+            </DropdownMenuTrigger>
+          </div>
         </div>
         <ConnectionMenu
           connection={connection}

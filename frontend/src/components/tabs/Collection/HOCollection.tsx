@@ -1,17 +1,20 @@
-import type { Collection as CollectionI } from "@/types";
 import MultiTenantCollection from "./MultiTenantCollection";
 import SingleTenantCollection from "./SingleTenantCollection";
+import { Props } from "./types";
 
-interface Props {
-  collection: CollectionI;
-}
-
-const HOCollection: React.FC<Props> = ({ collection }) => {
+const HOCollection: React.FC<Props> = ({ collection, selectedTab }) => {
   if (collection.multiTenancyConfig?.enabled) {
-    return <MultiTenantCollection collection={collection} />;
+    return (
+      <MultiTenantCollection
+        collection={collection}
+        selectedTab={selectedTab}
+      />
+    );
   }
 
-  return <SingleTenantCollection collection={collection} />;
+  return (
+    <SingleTenantCollection collection={collection} selectedTab={selectedTab} />
+  );
 };
 
 export default HOCollection;

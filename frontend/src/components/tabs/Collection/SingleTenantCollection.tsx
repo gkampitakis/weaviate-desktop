@@ -15,12 +15,13 @@ import { Tabs as AntdTabs } from "antd";
 import type { TabsProps } from "antd";
 import { weaviate } from "wailsjs/go/models";
 import SearchComponent from "./components/Search";
+import { Props } from "./types";
+import CollectionDetails from "./components/CollectionDetails";
 
-interface Props {
-  collection: SingleTenantCollection;
-}
-
-const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
+const SingleTenantCollection: React.FC<Props> = ({
+  collection,
+  selectedTab,
+}) => {
   const { connection, name } = collection;
 
   const [pageSize, setPageSize] = useState(25);
@@ -64,7 +65,7 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
         throw error;
       }
     },
-    enabled: !searching, // Only run this query if searchQuery is empty
+    enabled: !searching && !objects, // Only run this query if searchQuery is empty
   });
 
   const totalPages = Math.ceil(totalObjects / pageSize);
@@ -156,7 +157,7 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
 
   const items: TabsProps["items"] = [
     {
-      key: "1",
+      key: "objects",
       label: "Objects",
       children: (
         <div className="flex h-full w-full flex-col overflow-hidden p-2">
@@ -193,20 +194,16 @@ const SingleTenantCollection: React.FC<Props> = ({ collection }) => {
       ),
     },
     {
-      key: "2",
-      label: "Placeholder",
-      children: (
-        <div className="p-4">
-          <p className="text-gray-500">Placeholder</p>
-        </div>
-      ),
+      key: "details",
+      label: "Details",
+      children: <CollectionDetails />,
     },
   ];
 
   return (
     <TabContainer>
       <AntdTabs
-        defaultActiveKey="1"
+        defaultActiveKey={selectedTab || "objects"}
         items={items}
         className="custom-green-tabs flex h-full flex-col"
         tabBarStyle={{
