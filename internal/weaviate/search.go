@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"weaviate-gui/internal/utils"
+	"weaviate-desktop/internal/utils"
 
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/graphql"
 	"github.com/weaviate/weaviate/entities/models"

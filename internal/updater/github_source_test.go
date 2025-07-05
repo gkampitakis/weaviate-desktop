@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"weaviate-gui/internal/http_util"
+	"weaviate-desktop/internal/http_util"
 
 	"github.com/Masterminds/semver"
 	"github.com/stretchr/testify/assert"

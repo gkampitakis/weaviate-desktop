@@ -358,7 +358,7 @@ func (g *GithubPrivateSource) getLatestReleaseInfo() ([]byte, error) {
 	return data, nil
 }
 
-// returns the asset name for the current platform: e.g. weaviate-gui.macos.%s
+// returns the asset name for the current platform: e.g. weaviate-desktop.macos.%s
 func (g *GithubPrivateSource) getPlatformFilename() (string, error) {
 	platform := getPlatform()
 	if platform == "" {

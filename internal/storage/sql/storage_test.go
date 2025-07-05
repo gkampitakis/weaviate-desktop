@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"weaviate-gui/internal/models"
-	"weaviate-gui/internal/utils"
+	"weaviate-desktop/internal/models"
+	"weaviate-desktop/internal/utils"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"

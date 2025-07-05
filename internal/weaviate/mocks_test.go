@@ -5,7 +5,7 @@
 package weaviate
 
 import (
-	"weaviate-gui/internal/models"
+	"weaviate-desktop/internal/models"
 
 	mock "github.com/stretchr/testify/mock"
 )

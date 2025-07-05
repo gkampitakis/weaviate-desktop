@@ -1,4 +1,4 @@
-module weaviate-gui
+module weaviate-desktop
 
 go 1.24
 

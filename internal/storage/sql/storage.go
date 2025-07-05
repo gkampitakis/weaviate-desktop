@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"weaviate-gui/internal/models"
+	"weaviate-desktop/internal/models"
 
 	"github.com/jmoiron/sqlx"
 	// register sqlite driver

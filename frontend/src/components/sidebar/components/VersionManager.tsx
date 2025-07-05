@@ -79,6 +79,9 @@ const VersionToast = () => {
       {!loading && (
         <>
           <span>Version {newVersion?.version} available</span>
+          <span>
+            <WLink href={newVersion?.releaseTagURL || ""}>Release notes </WLink>
+          </span>
           <div className="flex justify-end gap-2">
             {restart ? (
               <Button
