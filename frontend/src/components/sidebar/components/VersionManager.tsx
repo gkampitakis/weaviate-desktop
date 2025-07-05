@@ -56,7 +56,6 @@ const VersionToast = () => {
       errorReporting(error);
     } finally {
       setLoading(false);
-      setProgress(0);
     }
   };
 
@@ -74,39 +73,43 @@ const VersionToast = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newVersion]);
 
+  let action = (
+    <Button
+      onClick={handleUpdate}
+      className="h-8 !rounded-none !px-1 !py-0 text-xs"
+    >
+      Download
+    </Button>
+  );
+
+  if (restart) {
+    action = (
+      <Button
+        onClick={Restart}
+        className="h-8 !rounded-none !px-1 !py-0 text-xs"
+      >
+        Restart
+      </Button>
+    );
+  }
+  if (loading) {
+    action = (
+      <div className="flex h-8 w-full flex-row items-center gap-2">
+        <Progress value={progress} className="flex-1" />
+        <span className="text-xs">{progress}%</span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex w-[320px] flex-col gap-2">
-      {!loading && (
-        <>
-          <span>Version {newVersion?.version} available</span>
-          <span>
-            <WLink href={newVersion?.releaseTagURL || ""}>Release notes </WLink>
-          </span>
-          <div className="flex justify-end gap-2">
-            {restart ? (
-              <Button
-                onClick={Restart}
-                className="h-8 !rounded-none !px-1 !py-0 text-xs"
-              >
-                Restart
-              </Button>
-            ) : (
-              <Button
-                onClick={handleUpdate}
-                className="h-8 !rounded-none !px-1 !py-0 text-xs"
-              >
-                Download
-              </Button>
-            )}
-          </div>
-        </>
-      )}
-      {loading && (
-        <div className="flex flex-row items-center">
-          <Progress value={progress} className="mr-2 flex-1" />
-          <span className="text-xs">{progress}%</span>
-        </div>
-      )}
+      <span>
+        Version {newVersion?.version} available ({newVersion?.size})
+      </span>
+      <span>
+        <WLink href={newVersion?.releaseTagURL || ""}>Release notes </WLink>
+      </span>
+      <div className="flex justify-end gap-2">{action}</div>
     </div>
   );
 };
