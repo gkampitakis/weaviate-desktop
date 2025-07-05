@@ -3,14 +3,19 @@ package sql
 import (
 	"context"
 	"database/sql"
+	"embed"
 	"fmt"
+	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"time"
 
 	"weaviate-desktop/internal/models"
 
+	"github.com/amacneil/dbmate/v2/pkg/dbmate"
 	"github.com/jmoiron/sqlx"
+
 	// register sqlite driver
 	_ "modernc.org/sqlite"
 )
@@ -19,6 +24,9 @@ type Storage struct {
 	db   *sqlx.DB
 	encr Encrypter
 }
+
+//go:embed db/migrations/*
+var migrations embed.FS
 
 type SqlDB interface {
 	SelectContext(ctx context.Context, dest any, query string, args ...any) error
@@ -34,36 +42,11 @@ type Encrypter interface {
 	DecryptSecret(data string) (string, error)
 }
 
-var connectionTable = `CREATE TABLE IF NOT EXISTS connections (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	name TEXT NOT NULL,
-	uri TEXT NOT NULL,
-	favorite BOOLEAN DEFAULT FALSE,
-	api_key TEXT,
-	color TEXT
-);`
-
-func InitStorage(db SqlDB) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if _, err := db.ExecContext(ctx, connectionTable); err != nil {
-		return fmt.Errorf("failed creating connections table: %w", err)
-	}
-
-	_, err := db.Exec("PRAGMA journal_mode=WAL;")
-	if err != nil {
-		return fmt.Errorf("failed creating connections table: %w", err)
-	}
-
-	return nil
-}
-
 func getDbFile(fileName string) string {
 	return fileName + ".db"
 }
 
-func GetStorageSource(fileName string) string {
+func getStorageSource(fileName string) string {
 	cacheDir, _ := os.UserCacheDir()
 	dataDir := filepath.Join(cacheDir, fileName)
 
@@ -74,8 +57,37 @@ func GetStorageSource(fileName string) string {
 	return filepath.Join(dataDir, getDbFile(fileName))
 }
 
-func NewStorage(db *sqlx.DB, e Encrypter) *Storage {
-	return &Storage{db: db, encr: e}
+func NewStorage(filename string, e Encrypter) (*Storage, func() error, error) {
+	source := getStorageSource(filename)
+
+	if err := runMigration(source); err != nil {
+		return nil, nil, fmt.Errorf("failed running migration: %w", err)
+	}
+
+	db, err := sqlx.Open("sqlite", source)
+	if err != nil {
+		log.Fatalf("failed opening sqlite: %v", err)
+	}
+
+	return &Storage{db: db, encr: e}, db.Close, nil
+}
+
+func runMigration(s string) error {
+	u, err := url.Parse(fmt.Sprintf("sqlite:%s", s))
+	if err != nil {
+		return fmt.Errorf("failed parsing sqlite source: %w", err)
+	}
+	dbmate.RegisterDriver(NewDriver, "sqlite")
+
+	dbm := dbmate.New(u)
+	dbm.FS = migrations
+	dbm.SchemaFile = "./internal/storage/sql/db/schema.sql"
+
+	if err := dbm.CreateAndMigrate(); err != nil {
+		return fmt.Errorf("failed creating and migrating database: %w", err)
+	}
+
+	return nil
 }
 
 func (s *Storage) GetConnections(decrypt bool) ([]models.Connection, error) {
