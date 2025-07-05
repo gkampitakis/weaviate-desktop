@@ -12,6 +12,7 @@ import CollectionTab from "../../../tabs/Collection/HOCollection";
 import { useQueryClient } from "@tanstack/react-query";
 import { isGeneralTab } from "../../../tabs/util";
 import CollectionComponent from "./components/Collection";
+import { InnerTabs } from "@/components/tabs/Collection/types";
 
 export const ConnectionCollapsibleTrigger: React.FC<{
   connected: boolean;
@@ -86,7 +87,10 @@ export const ConnectionCollapsibleContent: React.FC<{
     handleAddNewTab(collection);
   };
 
-  const handleAddNewTab = (collection: Collection) => {
+  const handleAddNewTab = (
+    collection: Collection,
+    selectedInnerTab?: InnerTabs
+  ) => {
     add({
       label: (
         <CollectionTabLabel
@@ -98,7 +102,9 @@ export const ConnectionCollapsibleContent: React.FC<{
         />
       ),
       connection: collection.connection,
-      children: <CollectionTab collection={collection} />,
+      children: (
+        <CollectionTab collection={collection} selectedTab={selectedInnerTab} />
+      ),
       name: collection.name,
     });
   };
