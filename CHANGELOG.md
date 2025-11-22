@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.9](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.8...v0.0.9) (2025-11-22)
+
+
+### Features
+
+* make repo public ([b7dccba](https://github.com/gkampitakis/weaviate-gui/commit/b7dccba5297604e23dfb0ea854add02817e514eb))
+* support migrations for sqlite ([1dfd919](https://github.com/gkampitakis/weaviate-gui/commit/1dfd919d3c19b850f8fd191213687dd6172635c9))
+
+
+### Bug Fixes
+
+* flashing progress on self upgrade ([48f0230](https://github.com/gkampitakis/weaviate-gui/commit/48f023019a742c2100e97c15c1b12773bb057e3d))
+
 ## [0.0.8](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.7...v0.0.8) (2025-07-05)
 
 
