@@ -23,7 +23,6 @@ func TestUpdater(t *testing.T) {
 				semver.MustParse(tag),
 				"test-app",
 				"Test App",
-				"test-token",
 			)
 
 			assert.Equal(
@@ -43,7 +42,6 @@ func TestUpdater(t *testing.T) {
 				currentVersion,
 				"test-app",
 				"Test App",
-				"test-token",
 			)
 			// mock asset source
 			u.assetSource = m
@@ -76,7 +74,6 @@ func TestUpdater(t *testing.T) {
 				currentVersion,
 				"test-app",
 				"Test App",
-				"test-token",
 			)
 			// mock asset source
 			u.assetSource = m
@@ -111,7 +108,6 @@ func TestUpdater(t *testing.T) {
 				currentVersion,
 				"test-app",
 				"Test App",
-				"test-token",
 			)
 			// mock asset source
 			u.assetSource = m
@@ -136,7 +132,6 @@ func TestUpdater(t *testing.T) {
 				currentVersion,
 				"test-app",
 				"Test App",
-				"test-token",
 			)
 			u.shouldRestart = true
 
@@ -151,7 +146,6 @@ func TestUpdater(t *testing.T) {
 				currentVersion,
 				"test-app",
 				"Test App",
-				"test-token",
 			)
 			// mock asset source
 			u.assetSource = m
@@ -221,7 +215,6 @@ func TestUpdater(t *testing.T) {
 				currentVersion,
 				appFilename,
 				"Test App",
-				"test-token",
 			)
 			// mock asset source
 			u.assetSource = m

@@ -37,7 +37,6 @@ type AssetVerifier interface {
 
 type GithubPrivateSource struct {
 	client        *http.Client
-	ghToken       string
 	appName       string
 	fileName      string
 	assetVerifier AssetVerifier
@@ -56,9 +55,9 @@ func getPlatform() string {
 	}
 }
 
-func NewGithubPrivateSource(
+func NewGithubSource(
 	client *http.Client,
-	fileName, appName, token string,
+	fileName, appName string,
 ) *GithubPrivateSource {
 	assetVerifier := NewSigStoreVerifier(
 		ghTokenCertIssuer,
@@ -70,7 +69,6 @@ func NewGithubPrivateSource(
 		assetVerifier: assetVerifier,
 		client:        client,
 		fileName:      fileName,
-		ghToken:       token,
 	}
 }
 
@@ -133,7 +131,6 @@ func (g *GithubPrivateSource) downloadAssets(
 		if err != nil {
 			return err
 		}
-		req.Header.Add("Authorization", fmt.Sprintf("token %s", g.ghToken))
 		req.Header.Add("Accept", "application/octet-stream")
 
 		resp, err := g.client.Do(req)
@@ -168,7 +165,6 @@ func (g *GithubPrivateSource) downloadAssets(
 		if err != nil {
 			return err
 		}
-		req.Header.Add("Authorization", fmt.Sprintf("token %s", g.ghToken))
 		req.Header.Add("Accept", "application/octet-stream")
 
 		resp, err := g.client.Do(req)
@@ -337,8 +333,6 @@ func (g *GithubPrivateSource) getLatestReleaseInfo() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	req.Header.Add("Authorization", fmt.Sprintf("token %s", g.ghToken))
 
 	resp, err := g.client.Do(req)
 	if err != nil {

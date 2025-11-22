@@ -23,7 +23,6 @@ func TestGithubSource(t *testing.T) {
 			mockServer := http_util.NewServer(
 				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, "/repos/test-app/releases/latest", r.URL.Path)
-					assert.Equal(t, "token test-token", r.Header.Get("Authorization"))
 
 					w.WriteHeader(http.StatusOK)
 					w.Write([]byte(`{
@@ -43,7 +42,7 @@ func TestGithubSource(t *testing.T) {
 
 			// Create a GithubPrivateSource instance
 			client := &http.Client{}
-			source := NewGithubPrivateSource(client, "test-app", "Test App", "test-token")
+			source := NewGithubSource(client, "test-app", "Test App")
 
 			// Call NewVersionExists
 			currentVersion := semver.MustParse("v1.0.0")
@@ -61,7 +60,6 @@ func TestGithubSource(t *testing.T) {
 			mockServer := http_util.NewServer(
 				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, "/repos/test-app/releases/latest", r.URL.Path)
-					assert.Equal(t, "token test-token", r.Header.Get("Authorization"))
 
 					w.WriteHeader(http.StatusOK)
 					w.Write([]byte(`{
@@ -81,7 +79,7 @@ func TestGithubSource(t *testing.T) {
 
 			// Create a GithubPrivateSource instance
 			client := &http.Client{}
-			source := NewGithubPrivateSource(client, "test-app", "Test App", "test-token")
+			source := NewGithubSource(client, "test-app", "Test App")
 
 			// Call NewVersionExists
 			currentVersion := semver.MustParse("v1.0.0")
@@ -99,7 +97,6 @@ func TestGithubSource(t *testing.T) {
 			mockServer := http_util.NewServer(
 				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, "/repos/test-app/releases/latest", r.URL.Path)
-					assert.Equal(t, "token test-token", r.Header.Get("Authorization"))
 
 					w.WriteHeader(http.StatusInternalServerError)
 					w.Write([]byte(`{"message": "Internal Server Error"}`))
@@ -112,7 +109,7 @@ func TestGithubSource(t *testing.T) {
 
 			// Create a GithubPrivateSource instance
 			client := &http.Client{}
-			source := NewGithubPrivateSource(client, "test-app", "Test App", "test-token")
+			source := NewGithubSource(client, "test-app", "Test App")
 
 			// Call NewVersionExists
 			currentVersion := semver.MustParse("v1.0.0")
@@ -133,7 +130,6 @@ func TestGithubSource(t *testing.T) {
 			mockServer := http_util.NewServer(
 				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, "/repos/test-app/releases/latest", r.URL.Path)
-					assert.Equal(t, "token test-token", r.Header.Get("Authorization"))
 
 					w.WriteHeader(http.StatusOK)
 					w.Write([]byte(`{"tag_name": "v1.2.3"}`))
@@ -146,7 +142,7 @@ func TestGithubSource(t *testing.T) {
 
 			// Create a GithubPrivateSource instance
 			client := &http.Client{}
-			source := NewGithubPrivateSource(client, "test-app", "Test App", "test-token")
+			source := NewGithubSource(client, "test-app", "Test App")
 
 			// Call NewVersionExists
 			currentVersion := semver.MustParse("v1.0.0")
@@ -167,7 +163,6 @@ func TestGithubSource(t *testing.T) {
 			mockServer := http_util.NewServer(
 				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, "/repos/test-app/releases/latest", r.URL.Path)
-					assert.Equal(t, "token test-token", r.Header.Get("Authorization"))
 
 					w.WriteHeader(http.StatusOK)
 					w.Write([]byte(`{
@@ -187,7 +182,7 @@ func TestGithubSource(t *testing.T) {
 
 			// Create a GithubPrivateSource instance
 			client := &http.Client{}
-			source := NewGithubPrivateSource(client, "test-app", "Test App", "test-token")
+			source := NewGithubSource(client, "test-app", "Test App")
 
 			// Call NewVersionExists
 			currentVersion := semver.MustParse("v1.0.0")
@@ -212,7 +207,6 @@ func TestGithubSource(t *testing.T) {
 			mockServer := http_util.NewServer(
 				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					if r.URL.Path == "/repos/test-app/releases/latest" {
-						assert.Equal(t, "token test-token", r.Header.Get("Authorization"))
 
 						w.WriteHeader(http.StatusOK)
 						w.Write(fmt.Appendf(nil, `{
@@ -294,7 +288,6 @@ func TestGithubSource(t *testing.T) {
 			client := &http.Client{}
 			source := &GithubPrivateSource{
 				client:        client,
-				ghToken:       "test-token",
 				appName:       "Test App",
 				fileName:      "test-app",
 				assetVerifier: v,

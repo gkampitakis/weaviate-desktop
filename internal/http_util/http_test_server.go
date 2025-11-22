@@ -29,16 +29,16 @@ func NewServer(handler http.Handler, opts ...Options) *httptest.Server {
 
 func newLocalListener(opts Options) net.Listener {
 	if opts.Address != "" {
-		l, err := net.Listen("tcp", opts.Address)
+		l, err := net.Listen("tcp", opts.Address) //nolint:noctx
 		if err != nil {
 			panic(fmt.Sprintf("httptest: failed to listen on %v: %v", opts.Address, err))
 		}
 
 		return l
 	}
-	l, err := net.Listen("tcp", "127.0.0.1:0")
+	l, err := net.Listen("tcp", "127.0.0.1:0") //nolint:noctx
 	if err != nil {
-		if l, err = net.Listen("tcp6", "[::1]:0"); err != nil {
+		if l, err = net.Listen("tcp6", "[::1]:0"); err != nil { //nolint:noctx
 			panic(fmt.Sprintf("httptest: failed to listen on a port: %v", err))
 		}
 	}

@@ -1,5 +1,21 @@
 export namespace models {
 	
+	export class w_AsyncReplicationStatus {
+	    objectsPropagated?: number;
+	    startDiffTimeUnixMillis?: number;
+	    targetNode?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_AsyncReplicationStatus(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.objectsPropagated = source["objectsPropagated"];
+	        this.startDiffTimeUnixMillis = source["startDiffTimeUnixMillis"];
+	        this.targetNode = source["targetNode"];
+	    }
+	}
 	export class w_BM25Config {
 	    b?: number;
 	    k1?: number;
@@ -304,11 +320,14 @@ export namespace models {
 	
 	
 	export class w_NodeShardStatus {
+	    asyncReplicationStatus: w_AsyncReplicationStatus[];
 	    class: string;
 	    compressed: boolean;
 	    loaded: boolean;
 	    name: string;
+	    numberOfReplicas?: number;
 	    objectCount: number;
+	    replicationFactor?: number;
 	    vectorIndexingStatus: string;
 	    vectorQueueLength: number;
 	
@@ -318,14 +337,35 @@ export namespace models {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.asyncReplicationStatus = this.convertValues(source["asyncReplicationStatus"], w_AsyncReplicationStatus);
 	        this.class = source["class"];
 	        this.compressed = source["compressed"];
 	        this.loaded = source["loaded"];
 	        this.name = source["name"];
+	        this.numberOfReplicas = source["numberOfReplicas"];
 	        this.objectCount = source["objectCount"];
+	        this.replicationFactor = source["replicationFactor"];
 	        this.vectorIndexingStatus = source["vectorIndexingStatus"];
 	        this.vectorQueueLength = source["vectorQueueLength"];
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class w_NodeStats {
 	    objectCount: number;

@@ -39,7 +39,7 @@ type Updater struct {
 	shouldRestart  bool
 }
 
-func New(v *semver.Version, fileName, appName, ghToken string) *Updater {
+func New(v *semver.Version, fileName, appName string) *Updater {
 	httpClient := http_util.GetClient(15 * time.Minute)
 
 	return &Updater{
@@ -47,7 +47,7 @@ func New(v *semver.Version, fileName, appName, ghToken string) *Updater {
 		appName:        appName,
 		fileName:       fileName,
 		httpClient:     httpClient,
-		assetSource:    NewGithubPrivateSource(httpClient, fileName, appName, ghToken),
+		assetSource:    NewGithubSource(httpClient, fileName, appName),
 		shouldRestart:  false,
 	}
 }

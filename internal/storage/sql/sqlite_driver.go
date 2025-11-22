@@ -2,6 +2,7 @@ package sql
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/amacneil/dbmate/v2/pkg/dbmate"
 	"github.com/amacneil/dbmate/v2/pkg/dbutil"
@@ -69,6 +71,9 @@ func (drv *Driver) Open() (*sql.DB, error) {
 
 // CreateDatabase creates the specified database
 func (drv *Driver) CreateDatabase() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	fmt.Fprintf(drv.log, "Creating: %s\n", ConnectionString(drv.databaseURL))
 
 	db, err := drv.Open()
@@ -77,7 +82,7 @@ func (drv *Driver) CreateDatabase() error {
 	}
 	defer dbutil.MustClose(db)
 
-	return db.Ping()
+	return db.PingContext(ctx)
 }
 
 // DropDatabase drops the specified database (if it exists)
@@ -152,8 +157,11 @@ func (drv *Driver) DatabaseExists() (bool, error) {
 
 // MigrationsTableExists checks if the schema_migrations table exists
 func (drv *Driver) MigrationsTableExists(db *sql.DB) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	exists := false
-	err := db.QueryRow("SELECT 1 FROM sqlite_master "+
+	err := db.QueryRowContext(ctx, "SELECT 1 FROM sqlite_master "+
 		"WHERE type='table' AND name=$1",
 		drv.migrationsTableName).
 		Scan(&exists)
@@ -166,7 +174,10 @@ func (drv *Driver) MigrationsTableExists(db *sql.DB) (bool, error) {
 
 // CreateMigrationsTable creates the schema migrations table
 func (drv *Driver) CreateMigrationsTable(db *sql.DB) error {
-	_, err := db.Exec(fmt.Sprintf(
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := db.ExecContext(ctx, fmt.Sprintf(
 		"create table if not exists %s (version varchar(128) primary key)",
 		drv.quotedMigrationsTableName()))
 
@@ -176,6 +187,9 @@ func (drv *Driver) CreateMigrationsTable(db *sql.DB) error {
 // SelectMigrations returns a list of applied migrations
 // with an optional limit (in descending order)
 func (drv *Driver) SelectMigrations(db *sql.DB, limit int) (map[string]bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	query := fmt.Sprintf(
 		"select version from %s order by version desc",
 		drv.quotedMigrationsTableName(),
@@ -183,7 +197,7 @@ func (drv *Driver) SelectMigrations(db *sql.DB, limit int) (map[string]bool, err
 	if limit >= 0 {
 		query = fmt.Sprintf("%s limit %d", query, limit)
 	}
-	rows, err := db.Query(query)
+	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -229,13 +243,16 @@ func (drv *Driver) DeleteMigration(db dbutil.Transaction, version string) error 
 // testing whether the database is valid, it will automatically create the database
 // if it does not already exist.
 func (drv *Driver) Ping() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	db, err := drv.Open()
 	if err != nil {
 		return err
 	}
 	defer dbutil.MustClose(db)
 
-	return db.Ping()
+	return db.PingContext(ctx)
 }
 
 // Return a normalized version of the driver-specific error type.

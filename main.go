@@ -45,7 +45,6 @@ func main() {
 		cfg.Version,
 		cfg.FileName,
 		cfg.AppName,
-		"<will drop this when app is public>",
 	)
 
 	// Create application with options

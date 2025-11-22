@@ -36,7 +36,7 @@ func (ssv *SigStoreVerifier) Verify(assetPath, bundlePath, version string) error
 		return fmt.Errorf("failed to retrieve trusted root: %w", err)
 	}
 
-	sev, err := verify.NewSignedEntityVerifier(
+	sev, err := verify.NewVerifier(
 		trustedRoot,
 		verify.WithSignedCertificateTimestamps(1),
 		verify.WithObserverTimestamps(1),
