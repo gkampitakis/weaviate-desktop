@@ -1,23 +1,10 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { TabsProps } from "antd";
 import TabContainer from "../components/TabContainer";
-import { NodesStatus } from "wailsjs/go/weaviate/Weaviate";
-import { LoaderCircle, RefreshCcw } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { StatusIndicator } from "./StatusIndicator";
-import { Version } from "./Version";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { ShardsTable } from "./ShardsTable";
-import { Button } from "@/components/ui/button";
+import Nodes from "./Nodes";
+import { Tabs as AntdTabs } from "antd";
+import { useConnectionStore } from "@/store/connection-store";
+import { useShallow } from "zustand/shallow";
+import Backups from "./Backups";
 
 export const ClusterInformationName = "ClusterInformation";
 
@@ -26,84 +13,60 @@ interface Props {
 }
 
 const ClusterInformation = ({ connectionID }: Props) => {
-  const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["clusterInformation", connectionID],
-    placeholderData: keepPreviousData,
-    queryFn: () => NodesStatus(connectionID),
-    // 5 minutes
-    refetchInterval: 5 * 60000,
-  });
+  const { getConnection } = useConnectionStore(
+    useShallow((state) => ({
+      getConnection: state.get,
+    }))
+  );
+  const connection = getConnection(connectionID);
+
+  const items: TabsProps["items"] = [
+    {
+      key: "nodes",
+      label: "Nodes",
+      children: <Nodes connectionID={connectionID} />,
+    },
+  ];
+
+  // For now assuming that RBAC and DB users are enabled together
+  if (connection?.usersEnabled) {
+    items.push(
+      {
+        key: "users",
+        label: "Users",
+        children: <div>Users Tab Content</div>,
+      },
+      {
+        key: "roles",
+        label: "Roles",
+        children: <div>Roles Tab Content</div>,
+      }
+    );
+  }
+
+  if (connection?.backupModules?.length) {
+    items.push({
+      key: "backups",
+      label: "Backups",
+      children: (
+        <Backups
+          connectionID={connectionID}
+          backends={connection.backupModules}
+        />
+      ),
+    });
+  }
 
   return (
     <TabContainer className="flex flex-col gap-1 overflow-y-auto">
-      <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => refetch({ cancelRefetch: false })}
-          disabled={isFetching}
-        >
-          {isFetching ? (
-            <LoaderCircle className="animate-spin" />
-          ) : (
-            <RefreshCcw />
-          )}
-        </Button>
-      </div>
-      {isLoading && (
-        <LoaderCircle size="1.3em" className="animate-spin text-green-600" />
-      )}
-      {!isLoading &&
-        data?.nodes.map((n, id) => (
-          <Card key={id} className="mb-2 bg-gray-100">
-            <CardHeader>
-              <CardTitle className="flex justify-between">
-                <span>{n.name}</span>
-                <div className="flex justify-end gap-2">
-                  <Version nodeStatus={n} />
-                  <StatusIndicator status={n.status} />
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <h3 className="scroll-m-20 text-lg font-bold tracking-tight">
-                Stats
-              </h3>
-              <div className="mt-2 flex flex-row gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <Tooltip>
-                    <TooltipTrigger className="text-lg">📦</TooltipTrigger>
-                    <TooltipContent className="bg-[oklch(0.21_0.006_285.885)] fill-[oklch(0.21_0.006_285.885)] text-[oklch(0.985_0_0)]">
-                      Objects
-                    </TooltipContent>
-                  </Tooltip>
-                  <span>{n.stats?.objectCount}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Tooltip>
-                    <TooltipTrigger className="text-lg">📂</TooltipTrigger>
-                    <TooltipContent className="bg-[oklch(0.21_0.006_285.885)] fill-[oklch(0.21_0.006_285.885)] text-[oklch(0.985_0_0)]">
-                      Shards
-                    </TooltipContent>
-                  </Tooltip>
-                  <span>{n.stats?.shardCount}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Tooltip>
-                    <TooltipTrigger className="text-lg">⚡</TooltipTrigger>
-                    <TooltipContent className="bg-[oklch(0.21_0.006_285.885)] fill-[oklch(0.21_0.006_285.885)] text-[oklch(0.985_0_0)]">
-                      Batch RPS
-                    </TooltipContent>
-                  </Tooltip>
-                  <span>{n.batchStats?.ratePerSecond}</span>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <ShardsTable shards={n.shards} />
-            </CardFooter>
-          </Card>
-        ))}
+      <AntdTabs
+        defaultActiveKey="nodes"
+        items={items}
+        className="custom-green-tabs flex h-full w-full flex-row"
+        tabBarStyle={{
+          marginBottom: "16px",
+        }}
+      />
     </TabContainer>
   );
 };

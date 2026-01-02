@@ -9,9 +9,11 @@ import {
 } from "wailsjs/go/sql/Storage";
 import { models } from "wailsjs/go/models";
 import {
+  BackupModulesEnabled,
   Connect,
   Disconnect,
   GetCollections,
+  UsersEnabled,
 } from "wailsjs/go/weaviate/Weaviate";
 import { ConnectionStatus } from "@/types/enums";
 
@@ -23,10 +25,14 @@ interface ConnectionStore {
   setFavorite: (id: number, favorite: boolean) => Promise<void>;
   connect: (id: number) => Promise<void>;
   disconnect: (id: number) => Promise<void>;
+  get(id: number): Connection | undefined;
 }
 
 export const useConnectionStore = create<ConnectionStore>((set) => ({
   connections: [],
+  get: (id: number): Connection | undefined => {
+    return useConnectionStore.getState().connections.find((c) => c.id === id);
+  },
   save: async (c) => {
     const id = await SaveConnection(
       new models.w_Connection({
@@ -43,6 +49,8 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
   },
   update: async (c) => {
     await UpdateConnection(c);
+
+    // TODO: can we add support for keybindings
 
     set((state) => ({
       connections: state.connections
@@ -76,7 +84,11 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
   },
   connect: async (id: number) => {
     await Connect(id);
-    const collections = await GetCollections(id);
+    const [collections, usersEnabled, backupModules] = await Promise.all([
+      GetCollections(id),
+      UsersEnabled(id),
+      BackupModulesEnabled(id),
+    ]);
 
     set((state) => ({
       connections: state.connections.map((c) =>
@@ -84,6 +96,8 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
           ? {
               ...c,
               status: ConnectionStatus.Connected,
+              usersEnabled: usersEnabled,
+              backupModules: backupModules,
               collections: collections
                 .map((collection) => ({
                   name: collection.class!,

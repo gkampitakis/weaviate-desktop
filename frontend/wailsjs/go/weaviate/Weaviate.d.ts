@@ -3,6 +3,8 @@
 import {models} from '../models';
 import {weaviate} from '../models';
 
+export function BackupModulesEnabled(arg1:number):Promise<Array<string>>;
+
 export function ClusterStatus(arg1:number):Promise<boolean>;
 
 export function Connect(arg1:number):Promise<void>;
@@ -19,8 +21,12 @@ export function GetTenants(arg1:number,arg2:string):Promise<Array<models.w_Tenan
 
 export function GetTotalObjects(arg1:number,arg2:string,arg3:string):Promise<number>;
 
+export function ListBackups(arg1:number,arg2:Array<string>):Promise<Array<weaviate.w_Backup>>;
+
 export function NodesStatus(arg1:number):Promise<models.w_NodesStatusResponse>;
 
 export function Search(arg1:number,arg2:string,arg3:string,arg4:string):Promise<weaviate.w_PaginatedObjectResponse>;
 
 export function TestConnection(arg1:weaviate.w_TestConnectionInput):Promise<void>;
+
+export function UsersEnabled(arg1:number):Promise<boolean>;

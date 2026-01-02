@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Database,
-  Info,
   Link2Off,
   Pencil,
   RefreshCcw,
@@ -28,7 +27,7 @@ import { useShallow } from "zustand/shallow";
 import { useTabStore } from "@/store/tab-store";
 import { errorReporting } from "@/lib/utils";
 import ClusterInformation, {
-  ClusterInformationName,
+  ClusterInformationName as ClusterName,
 } from "../../../tabs/ClusterInformation/ClusterInformation";
 import GeneralTabLabel from "../../../tabs/components/GeneralTabLabel";
 import { useState } from "react";
@@ -96,17 +95,18 @@ export const ConnectionMenu: React.FC<Props> = ({
     }
   };
 
-  const handleClusterInformation = () => {
+  const handleClusterItem = () => {
     addTab({
       label: (
         <GeneralTabLabel
           icon={Database}
-          name={"Cluster Information for " + name}
+          name={"Cluster " + name}
           color={connection.color}
         />
       ),
       connection: connection,
-      name: ClusterInformationName,
+      name: ClusterName,
+      // FIXME: rename
       children: <ClusterInformation connectionID={id} />,
     });
   };
@@ -159,8 +159,8 @@ export const ConnectionMenu: React.FC<Props> = ({
               <RefreshCcw /> Refresh
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleClusterInformation}>
-              <Info /> Cluster Information
+            <DropdownMenuItem onClick={handleClusterItem}>
+              <Database /> Cluster
             </DropdownMenuItem>
           </>
         )}
