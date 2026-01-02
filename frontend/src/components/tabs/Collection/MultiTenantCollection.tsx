@@ -1,4 +1,3 @@
-import type { Collection } from "@/types";
 import { useRef, useState } from "react";
 import {
   GetObjectsPaginated,
@@ -17,12 +16,18 @@ import { Tabs as AntdTabs } from "antd";
 import type { TabsProps } from "antd";
 import { weaviate } from "wailsjs/go/models";
 import SearchComponent from "./components/Search";
+import { Props } from "./types";
+import CollectionDetails from "./components/CollectionDetails";
 
-interface Props {
-  collection: Collection;
-}
+// FIXME: when selecting another collection the selected tab inner tab should reset
+// FIXME: decide on strategy how new tabs are opened and when clicking on details if it should be a new tab
+// shall we check if tab is already open and switch to it or always open a new one?
+// can we update the state inside the same tab? we should also try to make sure we keep a state if the tab is "dirty" we shouldn't replace it but this is a future consideration
 
-const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
+const MultiTenantCollection: React.FC<Props> = ({
+  collection,
+  selectedTab,
+}) => {
   const { connection, name } = collection;
 
   const [pageSize, setPageSize] = useState(25);
@@ -99,7 +104,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
       }
     },
     // when changing page we need to make sure we have fetched the tenants again
-    enabled: !!selectedTenant && !!tenants?.length && !searching,
+    enabled: !!selectedTenant && !!tenants?.length && !searching && !objects,
   });
 
   const totalPages = Math.ceil(totalObjects / pageSize);
@@ -199,7 +204,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
 
   const items: TabsProps["items"] = [
     {
-      key: "1",
+      key: "objects",
       label: "Objects",
       children: (
         <div className="flex h-full w-full flex-col overflow-hidden p-2">
@@ -240,7 +245,12 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
       ),
     },
     {
-      key: "2",
+      key: "details",
+      label: "Details",
+      children: <CollectionDetails />,
+    },
+    {
+      key: "tenants",
       label: "Tenants",
       children: (
         <div className="p-4">
@@ -253,7 +263,7 @@ const MultiTenantCollection: React.FC<Props> = ({ collection }) => {
   return (
     <TabContainer>
       <AntdTabs
-        defaultActiveKey="1"
+        defaultActiveKey={selectedTab || "objects"}
         items={items}
         className="custom-green-tabs flex h-full flex-col"
         tabBarStyle={{

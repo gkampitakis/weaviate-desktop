@@ -1,18 +1,18 @@
-name: "Compress"
-description: "Compress built files"
+name: 'Compress'
+description: 'Compress built files'
 
 inputs:
   file-name:
-    description: "zip file name"
+    description: 'zip file name'
     required: true
 
 runs:
   using: composite
   steps:
     - name: Install cosign
-      uses: sigstore/cosign-installer@v3.7.0
+      uses: sigstore/cosign-installer@v4.0.0
       with:
-        cosign-release: "v2.5.0"
+        cosign-release: 'v3.0.3'
 
     - if: runner.os == 'Linux'
       shell: bash

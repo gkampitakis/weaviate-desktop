@@ -1,31 +1,23 @@
 import React from "react";
 import Sidebar from "./components/sidebar/Sidebar";
 import Tabs from "./components/tabs/Tabs";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "./components/ui/resizable";
+import { Group, Panel } from "react-resizable-panels";
 
 const App: React.FC = () => {
   return (
-    <ResizablePanelGroup
-      direction="horizontal"
-      className="flex h-screen flex-row"
-    >
-      <ResizablePanel
-        minSize={10}
-        defaultSize={20}
-        maxSize={45}
-        className="top-0 left-0 flex h-screen min-w-64 flex-1 flex-col border-r border-gray-200 bg-gray-100 text-gray-700"
+    <Group orientation="horizontal" className="h-screen">
+      <Panel
+        minSize="15%"
+        defaultSize="25%"
+        maxSize="45%"
+        className="flex min-w-64 flex-col border-r border-gray-200 bg-gray-100 text-gray-700"
       >
         <Sidebar />
-      </ResizablePanel>
-      <ResizableHandle />
-      <ResizablePanel className="flex flex-5 flex-col">
+      </Panel>
+      <Panel className="flex flex-col">
         <Tabs />
-      </ResizablePanel>
-    </ResizablePanelGroup>
+      </Panel>
+    </Group>
   );
 };
 

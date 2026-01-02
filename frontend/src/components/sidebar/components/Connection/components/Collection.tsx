@@ -1,3 +1,4 @@
+import { InnerTabs } from "@/components/tabs/Collection/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +20,7 @@ interface Props {
   collection: Collection;
   color: string;
   onClick: (collection: Collection) => void;
-  addNewTab: (collection: Collection) => void;
+  addNewTab: (collection: Collection, selectedInnerTab?: InnerTabs) => void;
 }
 
 const Collection: React.FC<Props> = ({
@@ -60,8 +61,8 @@ const Collection: React.FC<Props> = ({
           <DropdownMenuItem onClick={() => addNewTab(collection)}>
             <SquareArrowOutUpRight /> Open in new tab
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Collection details (unimplemented)
+          <DropdownMenuItem onClick={() => addNewTab(collection, "details")}>
+            Details
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive">
