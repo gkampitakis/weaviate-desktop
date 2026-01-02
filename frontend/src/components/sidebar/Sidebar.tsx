@@ -27,7 +27,7 @@ const Sidebar: React.FC = () => {
     setTimeout(() => {
       setCollapseAll(false);
     }, 100);
-  }, []);
+  }, [collapseAll]);
 
   const handleSearch = useDebouncedCallback((value: string) => {
     setSearch(value);

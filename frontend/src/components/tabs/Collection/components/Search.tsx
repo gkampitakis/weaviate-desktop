@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface Props {
   handleSearch: (s: string) => void;
@@ -21,12 +21,15 @@ const Search: React.FC<Props> = ({
   children,
 }) => {
   const [searchOptionsOpen, setSearchOptionsOpen] = useState(false);
+  // Use changeId to reset the searchQuery state when it changes
+  // This pattern is acceptable for derived/synchronized state
+  const [lastChangeId, setLastChangeId] = useState(changeId);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    // reset form
+  if (changeId !== lastChangeId) {
     setSearchQuery("");
-  }, [changeId]);
+    setLastChangeId(changeId);
+  }
 
   return (
     <>

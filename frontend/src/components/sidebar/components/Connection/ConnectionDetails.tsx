@@ -324,14 +324,16 @@ export const ConnectionDetails: React.FC<Props> = ({
                   },
                 })}
               />
-              <button
-                type="button"
-                className="absolute top-0 right-0 h-full cursor-pointer px-3 py-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                disabled={disableWhenConnected}
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+              {!disableWhenConnected && getValues("apiKey") && (
+                <button
+                  type="button"
+                  className="absolute top-0 right-0 h-full cursor-pointer px-3 py-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  disabled={disableWhenConnected}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              )}
             </div>
             <FieldError message={errors.apiKey?.message} />
           </div>

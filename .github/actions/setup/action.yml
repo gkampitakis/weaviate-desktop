@@ -2,13 +2,13 @@ name: Setup Dependencies
 description: Setups correct Go and Node version
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Setup Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
-        go-version-file: "go.mod"
+        go-version-file: 'go.mod'
     - name: Setup Node
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
-        node-version-file: ".nvmrc"
+        node-version-file: '.nvmrc'

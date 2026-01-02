@@ -168,6 +168,24 @@ export namespace models {
 		    return a;
 		}
 	}
+	export class w_ObjectTTLConfig {
+	    defaultTtl: number;
+	    deleteOn: string;
+	    enabled: boolean;
+	    filterExpiredObjects: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_ObjectTTLConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.defaultTtl = source["defaultTtl"];
+	        this.deleteOn = source["deleteOn"];
+	        this.enabled = source["enabled"];
+	        this.filterExpiredObjects = source["filterExpiredObjects"];
+	    }
+	}
 	export class w_MultiTenancyConfig {
 	    autoTenantActivation: boolean;
 	    autoTenantCreation: boolean;
@@ -183,6 +201,52 @@ export namespace models {
 	        this.autoTenantCreation = source["autoTenantCreation"];
 	        this.enabled = source["enabled"];
 	    }
+	}
+	export class w_TokenizerUserDictConfigReplacementsItems0 {
+	    source?: string;
+	    target?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_TokenizerUserDictConfigReplacementsItems0(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.source = source["source"];
+	        this.target = source["target"];
+	    }
+	}
+	export class w_TokenizerUserDictConfig {
+	    replacements: w_TokenizerUserDictConfigReplacementsItems0[];
+	    tokenizer?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_TokenizerUserDictConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.replacements = this.convertValues(source["replacements"], w_TokenizerUserDictConfigReplacementsItems0);
+	        this.tokenizer = source["tokenizer"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class w_StopwordConfig {
 	    additions: string[];
@@ -207,6 +271,7 @@ export namespace models {
 	    indexPropertyLength?: boolean;
 	    indexTimestamps?: boolean;
 	    stopwords?: w_StopwordConfig;
+	    tokenizerUserDict?: w_TokenizerUserDictConfig[];
 	    usingBlockMaxWAND?: boolean;
 	
 	    static createFrom(source: any = {}) {
@@ -221,6 +286,7 @@ export namespace models {
 	        this.indexPropertyLength = source["indexPropertyLength"];
 	        this.indexTimestamps = source["indexTimestamps"];
 	        this.stopwords = this.convertValues(source["stopwords"], w_StopwordConfig);
+	        this.tokenizerUserDict = this.convertValues(source["tokenizerUserDict"], w_TokenizerUserDictConfig);
 	        this.usingBlockMaxWAND = source["usingBlockMaxWAND"];
 	    }
 	
@@ -248,6 +314,7 @@ export namespace models {
 	    invertedIndexConfig?: w_InvertedIndexConfig;
 	    moduleConfig?: any;
 	    multiTenancyConfig?: w_MultiTenancyConfig;
+	    objectTtlConfig?: w_ObjectTTLConfig;
 	    properties: w_Property[];
 	    replicationConfig?: w_ReplicationConfig;
 	    shardingConfig?: any;
@@ -267,6 +334,7 @@ export namespace models {
 	        this.invertedIndexConfig = this.convertValues(source["invertedIndexConfig"], w_InvertedIndexConfig);
 	        this.moduleConfig = source["moduleConfig"];
 	        this.multiTenancyConfig = this.convertValues(source["multiTenancyConfig"], w_MultiTenancyConfig);
+	        this.objectTtlConfig = this.convertValues(source["objectTtlConfig"], w_ObjectTTLConfig);
 	        this.properties = this.convertValues(source["properties"], w_Property);
 	        this.replicationConfig = this.convertValues(source["replicationConfig"], w_ReplicationConfig);
 	        this.shardingConfig = source["shardingConfig"];
@@ -385,6 +453,7 @@ export namespace models {
 	    batchStats?: w_BatchStats;
 	    gitHash?: string;
 	    name?: string;
+	    operationalMode?: string;
 	    shards: w_NodeShardStatus[];
 	    stats?: w_NodeStats;
 	    status?: string;
@@ -399,6 +468,7 @@ export namespace models {
 	        this.batchStats = this.convertValues(source["batchStats"], w_BatchStats);
 	        this.gitHash = source["gitHash"];
 	        this.name = source["name"];
+	        this.operationalMode = source["operationalMode"];
 	        this.shards = this.convertValues(source["shards"], w_NodeShardStatus);
 	        this.stats = this.convertValues(source["stats"], w_NodeStats);
 	        this.status = source["status"];
@@ -456,6 +526,7 @@ export namespace models {
 	
 	
 	
+	
 	export class w_Tenant {
 	    activityStatus?: string;
 	    name?: string;
@@ -470,6 +541,8 @@ export namespace models {
 	        this.name = source["name"];
 	    }
 	}
+	
+	
 
 }
 

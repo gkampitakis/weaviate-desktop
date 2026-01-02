@@ -2,7 +2,7 @@ import type { Connection as ConnectionI } from "@/types";
 import { ConnectionStatus } from "@/types/enums";
 import { Button } from "@/components/ui/button";
 import { Ellipsis, Layers3, Plus, Star } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
@@ -30,12 +30,19 @@ export const Connection: React.FC<Props> = ({ connection, collapse }) => {
   const { favorite, name, status, id, collections, color } = connection;
   const [isHovered, setIsHovered] = useState(false);
   const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(false);
+  const [lastCollapse, setLastCollapse] = useState(collapse);
 
-  useEffect(() => {
-    if (collapse && status === ConnectionStatus.Connected) {
-      setIsCollapsibleOpen(false);
-    }
-  }, [collapse]);
+  // Synchronize state when collapse changes - this pattern is acceptable for derived state
+  if (
+    collapse !== lastCollapse &&
+    collapse &&
+    status === ConnectionStatus.Connected
+  ) {
+    setIsCollapsibleOpen(false);
+    setLastCollapse(collapse);
+  } else if (collapse !== lastCollapse) {
+    setLastCollapse(collapse);
+  }
 
   const { connect } = useConnectionStore(
     useShallow((state) => ({
