@@ -571,6 +571,30 @@ export namespace updater {
 
 export namespace weaviate {
 	
+	export class w_Backup {
+	    classes: string[];
+	    completedAt?: string;
+	    id?: string;
+	    size?: number;
+	    startedAt?: string;
+	    status?: string;
+	    backend?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_Backup(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.classes = source["classes"];
+	        this.completedAt = source["completedAt"];
+	        this.id = source["id"];
+	        this.size = source["size"];
+	        this.startedAt = source["startedAt"];
+	        this.status = source["status"];
+	        this.backend = source["backend"];
+	    }
+	}
 	export class w_WeaviateObject {
 	    id: string;
 	    class: string;
