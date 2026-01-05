@@ -1,37 +1,50 @@
 import { Button } from "@/components/ui/button";
 import { ListBackups } from "wailsjs/go/weaviate/Weaviate";
 import { VirtualBackupList } from "./components/VirtualBackupList";
-import { weaviate } from "wailsjs/go/models";
-import { useQuery } from "@tanstack/react-query";
+import { CreateBackupDialog } from "./components/CreateBackupDialog";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { errorReporting } from "@/lib/utils";
+import { useState } from "react";
+import RefreshButton from "@/components/ui/refresh-button";
 
 interface Props {
   connectionID: number;
   backends: string[];
 }
 
-// FIXME: update nodes list to use the same UI as backups and have the same feeling
-// FIXME: status badges
-// FIXME: test the actual dates are correctly formatted
-// FIXME: add support for polling if a backup is in progress
-// FIXME: replace mock data with actual API call
-// FIXME: add "New Backup" functionality
-// FIXME: check how backup with a lot classes is rendered
-// FIXME: add filtering
-// FIXME: add support for all backup backends
-// FIXME: for in progress we want to be able to cancel the backup action
-// FIXME: add restore support (restore button on each backup card)
-// FIXME: we need to hide the fact that we are consolidating multiple backends into one list
+/*
+Functionality to add:
+- Create new backup. If we have multiple backends, we need to select which backend to use. ✅
+- add a refresh button to the backups list ✅
+- can we have a nice duration calculated from startedAt and completedAt
+- start polling for backup status when started
+- Restore from backup and check status.
+- Show progress of in-progress backups (polling). Allow cancelling in-progress backups.
+- Add filtering options by status
+
+FIXES: 
+- started completed at date is wrong ✅
+- use same feeling list for nodes
+- improve the "custom made" multi select inside the create backup dialog
+
+Open questions:
+- what happens if no classes exist. Technically, we should be able to backup even if no classes exist but backup users and roles right?
+*/
 
 const Backups = ({ connectionID, backends }: Props) => {
-  const handleNewBackup = async () => {};
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const {
     data: backups,
     isLoading,
+    isFetching,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["backups", connectionID],
+    placeholderData: keepPreviousData,
+    // 5 minutes
+    refetchInterval: 5 * 60000,
     queryFn: async () => {
       try {
         return await ListBackups(connectionID, backends);
@@ -89,12 +102,19 @@ const Backups = ({ connectionID, backends }: Props) => {
     <div className="flex h-full w-full flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Backups</h2>
+          <div className="flex flex-row items-center gap-2">
+            <h2 className="text-xl font-semibold">Backups</h2>
+            <RefreshButton
+              isRefreshing={isFetching}
+              refresh={() => refetch({ cancelRefetch: false })}
+              tooltipText="Refresh backups"
+            />
+          </div>
           <p className="text-muted-foreground text-sm">
             {backups?.length} backup{backups?.length !== 1 ? "s" : ""} found
           </p>
         </div>
-        <Button variant="default" onClick={handleNewBackup}>
+        <Button variant="default" onClick={() => setCreateDialogOpen(true)}>
           New Backup
         </Button>
       </div>
@@ -105,6 +125,14 @@ const Backups = ({ connectionID, backends }: Props) => {
           estimatedItemHeight={280}
         />
       </div>
+      <CreateBackupDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        connectionId={connectionID}
+        backends={backends}
+        backupIds={backups?.map((b) => b.id) || []}
+        onSuccess={refetch}
+      />
     </div>
   );
 };

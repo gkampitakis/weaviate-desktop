@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { NodesStatus } from "wailsjs/go/weaviate/Weaviate";
-import { LoaderCircle, RefreshCcw } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -16,7 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ShardsTable } from "./ShardsTable";
-import { Button } from "@/components/ui/button";
+import RefreshButton from "@/components/ui/refresh-button";
 
 interface Props {
   connectionID: number;
@@ -32,20 +32,15 @@ const Nodes = ({ connectionID }: Props) => {
   });
 
   return (
-    <div className="flex w-full flex-col gap-4">
-      <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => refetch({ cancelRefetch: false })}
-          disabled={isFetching}
-        >
-          {isFetching ? (
-            <LoaderCircle className="animate-spin" />
-          ) : (
-            <RefreshCcw />
-          )}
-        </Button>
+    <div className="flex w-full flex-col gap-4 p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-row items-center gap-2">
+          <h2 className="text-xl font-semibold">Nodes</h2>
+          <RefreshButton
+            isRefreshing={isFetching}
+            refresh={() => refetch({ cancelRefetch: false })}
+          />
+        </div>
       </div>
       {isLoading && (
         <LoaderCircle size="1.3em" className="animate-spin text-green-600" />

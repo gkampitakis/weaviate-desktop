@@ -9,7 +9,7 @@ import {
   Database,
   Link2Off,
   Pencil,
-  RefreshCcw,
+  RefreshCw,
   Star,
   Trash2,
 } from "lucide-react";
@@ -156,7 +156,7 @@ export const ConnectionMenu: React.FC<Props> = ({
               <Link2Off /> Disconnect
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleRefresh}>
-              <RefreshCcw /> Refresh
+              <RefreshCw /> Refresh
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleClusterItem}>

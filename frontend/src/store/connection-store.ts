@@ -50,8 +50,6 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
   update: async (c) => {
     await UpdateConnection(c);
 
-    // TODO: can we add support for keybindings
-
     set((state) => ({
       connections: state.connections
         .map((conn) => {

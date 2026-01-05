@@ -3,8 +3,11 @@ package weaviate
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
+
+	weaviate_models "github.com/weaviate/weaviate/entities/models"
 )
 
 func (w *Weaviate) BackupModulesEnabled(connectionID int64) ([]string, error) {
@@ -40,12 +43,13 @@ func (w *Weaviate) BackupModulesEnabled(connectionID int64) ([]string, error) {
 type Backup struct {
 	Classes     []string `json:"classes"`
 	CompletedAt string   `json:"completedAt,omitempty"`
-	ID          string   `json:"id,omitempty"`
+	ID          string   `json:"id"`
 	Size        float64  `json:"size,omitempty"`
 	StartedAt   string   `json:"startedAt,omitempty"`
 	// Status of backup process.
 	// Enum: [STARTED TRANSFERRING TRANSFERRED SUCCESS FAILED CANCELED]
-	Status  string `json:"status,omitempty"`
+	Status string `json:"status,omitempty"`
+	// added for tracking which backend the backup belongs to
 	Backend string `json:"backend,omitempty"`
 }
 
@@ -68,9 +72,18 @@ func (w *Weaviate) ListBackups(connectionID int64, backends []string) ([]Backup,
 		}
 
 		for _, b := range data {
+			// Sort classes for consistency
+			slices.Sort(b.Classes)
+
+			// Handle possible empty CompletedAt
+			completedAt := ""
+			if !b.CompletedAt.IsZero() {
+				completedAt = b.CompletedAt.String()
+			}
+
 			backups = append(backups, Backup{
 				Classes:     b.Classes,
-				CompletedAt: b.CompletedAt.String(),
+				CompletedAt: completedAt,
 				ID:          b.ID,
 				Size:        b.Size,
 				StartedAt:   b.StartedAt.String(),
@@ -81,4 +94,61 @@ func (w *Weaviate) ListBackups(connectionID int64, backends []string) ([]Backup,
 	}
 
 	return backups, nil
+}
+
+type CreateBackupInput struct {
+	ConnectionID     int64    `json:"connectionID"`
+	Backend          string   `json:"backend"`
+	ID               string   `json:"id"`
+	Include          []string `json:"include,omitempty"`
+	Exclude          []string `json:"exclude,omitempty"`
+	CompressionLevel string   `json:"compressionLevel,omitempty"`
+	CPUPercentage    int      `json:"cpuPercentage,omitempty"`
+}
+
+func (w *Weaviate) CreateBackup(input CreateBackupInput) error {
+	c, exists := w.clients[input.ConnectionID]
+	if !exists {
+		return fmt.Errorf("connection doesn't exist %d", input.ConnectionID)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	creator := c.w.Backup().Creator().
+		WithBackend(input.Backend).
+		WithWaitForCompletion(false).
+		WithBackupID(input.ID)
+
+	if len(input.Include) > 0 {
+		creator = creator.WithIncludeClassNames(input.Include...)
+	}
+
+	if len(input.Exclude) > 0 {
+		creator = creator.WithExcludeClassNames(input.Exclude...)
+	}
+
+	// Build config if needed
+	if input.CompressionLevel != "" || input.CPUPercentage > 0 {
+		config := &weaviate_models.BackupConfig{}
+
+		if input.CPUPercentage > 0 {
+			cpuPercentage := int64(input.CPUPercentage)
+			config.CPUPercentage = cpuPercentage
+		}
+
+		if input.CompressionLevel != "" {
+			compressionLevel := input.CompressionLevel
+			config.CompressionLevel = compressionLevel
+		}
+
+		creator = creator.WithConfig(config)
+	}
+
+	_, err := creator.Do(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to create backup: %w", err)
+	}
+
+	return nil
 }

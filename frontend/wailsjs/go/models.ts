@@ -574,7 +574,7 @@ export namespace weaviate {
 	export class w_Backup {
 	    classes: string[];
 	    completedAt?: string;
-	    id?: string;
+	    id: string;
 	    size?: number;
 	    startedAt?: string;
 	    status?: string;
@@ -593,6 +593,30 @@ export namespace weaviate {
 	        this.startedAt = source["startedAt"];
 	        this.status = source["status"];
 	        this.backend = source["backend"];
+	    }
+	}
+	export class w_CreateBackupInput {
+	    connectionID: number;
+	    backend: string;
+	    id: string;
+	    include?: string[];
+	    exclude?: string[];
+	    compressionLevel?: string;
+	    cpuPercentage?: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_CreateBackupInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.connectionID = source["connectionID"];
+	        this.backend = source["backend"];
+	        this.id = source["id"];
+	        this.include = source["include"];
+	        this.exclude = source["exclude"];
+	        this.compressionLevel = source["compressionLevel"];
+	        this.cpuPercentage = source["cpuPercentage"];
 	    }
 	}
 	export class w_WeaviateObject {

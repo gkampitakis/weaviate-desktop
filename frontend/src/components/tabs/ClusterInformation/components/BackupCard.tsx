@@ -2,7 +2,15 @@ import { Card } from "@/components/ui/card";
 import { formatGibToReadable } from "@/lib/utils";
 import { weaviate } from "wailsjs/go/models";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Database, HardDrive, Clock } from "lucide-react";
+import {
+  Calendar,
+  Database,
+  HardDrive,
+  Clock,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { useState } from "react";
 
 interface BackupCardProps {
   backup: weaviate.w_Backup;
@@ -35,6 +43,13 @@ const formatDate = (dateString?: string) => {
 };
 
 export function BackupCard({ backup }: BackupCardProps) {
+  const [showAllClasses, setShowAllClasses] = useState(false);
+  const classLimit = 5;
+  const hasMoreClasses = backup.classes && backup.classes.length > classLimit;
+  const displayedClasses = showAllClasses
+    ? backup.classes
+    : backup.classes?.slice(0, classLimit);
+
   return (
     <Card className="p-4 transition-shadow hover:shadow-md">
       <div className="space-y-3">
@@ -55,9 +70,32 @@ export function BackupCard({ backup }: BackupCardProps) {
           <div className="flex items-start gap-2">
             <Database className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
             <div className="min-w-0 flex-1">
-              <p className="text-muted-foreground mb-1 text-xs">Classes</p>
+              <div className="mb-1 flex items-center justify-between">
+                <p className="text-muted-foreground text-xs">
+                  Classes{" "}
+                  {backup.classes.length > 1 && `(${backup.classes.length})`}
+                </p>
+                {hasMoreClasses && (
+                  <button
+                    onClick={() => setShowAllClasses(!showAllClasses)}
+                    className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
+                  >
+                    {showAllClasses ? (
+                      <>
+                        Show less
+                        <ChevronUp className="h-3 w-3" />
+                      </>
+                    ) : (
+                      <>
+                        +{backup.classes.length - classLimit} more
+                        <ChevronDown className="h-3 w-3" />
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
               <div className="flex flex-wrap gap-1">
-                {backup.classes.map((cls: string, idx: number) => (
+                {displayedClasses?.map((cls: string, idx: number) => (
                   <Badge key={idx} variant="outline" className="text-xs">
                     {cls}
                   </Badge>
@@ -82,18 +120,20 @@ export function BackupCard({ backup }: BackupCardProps) {
             </div>
           </div>
 
-          <div className="flex items-start gap-2">
-            <Calendar className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="text-muted-foreground text-xs">Completed</p>
-              <p
-                className="truncate text-xs font-medium"
-                title={formatDate(backup.completedAt)}
-              >
-                {formatDate(backup.completedAt)}
-              </p>
+          {backup.completedAt && (
+            <div className="flex items-start gap-2">
+              <Calendar className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-muted-foreground text-xs">Completed</p>
+                <p
+                  className="truncate text-xs font-medium"
+                  title={formatDate(backup.completedAt)}
+                >
+                  {formatDate(backup.completedAt)}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Size */}
