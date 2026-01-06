@@ -79,12 +79,14 @@ const Collection: React.FC<Props> = ({
   return (
     <DropdownMenu>
       <div
-        className={`relative flex cursor-pointer items-center justify-between pr-3 ${color}`}
+        className={`relative flex items-center justify-between pr-3 ${color}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onClick={() => onClick(collection)}
       >
-        <div className="flex flex-row py-2 pl-13 text-xs">
+        <div
+          className="flex w-full cursor-pointer flex-row py-2 pl-13 text-xs"
+          onClick={() => onClick(collection)}
+        >
           {Icon}
           <span className="truncate">{collection.name}</span>
         </div>
