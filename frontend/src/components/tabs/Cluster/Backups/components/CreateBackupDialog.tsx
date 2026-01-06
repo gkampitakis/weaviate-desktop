@@ -32,7 +32,7 @@ import { CreateBackup, GetCollections } from "wailsjs/go/weaviate/Weaviate";
 interface CreateBackupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  connectionId: number;
+  connectionID: number;
   backends: string[];
   onSuccess: () => void;
   backupIds: string[];
@@ -62,7 +62,7 @@ export function CreateBackupDialog({
   open,
   backends,
   onOpenChange,
-  connectionId,
+  connectionID,
   onSuccess,
   backupIds,
 }: CreateBackupDialogProps) {
@@ -70,9 +70,9 @@ export function CreateBackupDialog({
 
   // Fetch collections only when advanced options is opened
   const { data: collectionData, isLoading: isLoadingCollections } = useQuery({
-    queryKey: ["collections", connectionId],
+    queryKey: ["collections", connectionID],
     queryFn: async () => {
-      const classes = await GetCollections(connectionId);
+      const classes = await GetCollections(connectionID);
       return classes
         .filter((c) => c.class)
         .map((c) => ({
@@ -125,8 +125,7 @@ export function CreateBackupDialog({
     }
 
     try {
-      await CreateBackup({
-        connectionID: connectionId,
+      await CreateBackup(connectionID, {
         backend: data.backend,
         id: data.backupId,
         include:

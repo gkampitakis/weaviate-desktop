@@ -12,8 +12,9 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-interface BackupCardProps {
+interface Props {
   backup: weaviate.w_Backup;
+  connectionID: number;
 }
 
 const getStatusColor = (status?: string) => {
@@ -42,7 +43,7 @@ const formatDate = (dateString?: string) => {
   }
 };
 
-export function BackupCard({ backup }: BackupCardProps) {
+export function BackupCard({ backup, connectionID }: Props) {
   const [showAllClasses, setShowAllClasses] = useState(false);
   const classLimit = 5;
   const hasMoreClasses = backup.classes && backup.classes.length > classLimit;

@@ -11,6 +11,7 @@ import { models } from "wailsjs/go/models";
 import {
   BackupModulesEnabled,
   Connect,
+  DeleteCollection,
   Disconnect,
   GetCollections,
   UsersEnabled,
@@ -26,6 +27,7 @@ interface ConnectionStore {
   connect: (id: number) => Promise<void>;
   disconnect: (id: number) => Promise<void>;
   get(id: number): Connection | undefined;
+  deleteCollection: (id: number, collection: string) => Promise<void>;
 }
 
 export const useConnectionStore = create<ConnectionStore>((set) => ({
@@ -78,6 +80,20 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
 
     set((state) => ({
       connections: state.connections.filter((c) => c.id !== id),
+    }));
+  },
+  deleteCollection: async (id: number, collection: string) => {
+    await DeleteCollection(id, collection);
+
+    set((state) => ({
+      connections: state.connections.map((c) => {
+        if (c.id !== id || !c.collections) return c;
+
+        return {
+          ...c,
+          collections: c.collections.filter((col) => col.name !== collection),
+        };
+      }),
     }));
   },
   connect: async (id: number) => {

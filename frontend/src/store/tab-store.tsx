@@ -15,6 +15,7 @@ interface TabStore {
   setActive: (key?: string) => void;
   updateActiveTab(tab: Omit<Tab, "key">): void;
   removeByConnection(id: number): void;
+  removeByConnectionAndCollection(id: number, name: string): void;
   updateByConnection(id: number, name: string, color: string): void;
   getActiveTab(): Tab | undefined;
   reorderTabs(activeIndex: string, overIndex: string): void;
@@ -74,6 +75,30 @@ export const useTabStore = create<TabStore>((set, get) => ({
               }
             : t
         ),
+      };
+    });
+  },
+  removeByConnectionAndCollection: (id, name) => {
+    return set((state) => {
+      // filter out all tabs that are not part of the connection and collection
+      const tabs = state.tabs.filter(
+        ({ connection = {}, name: tabName }) =>
+          connection.id !== id || tabName !== name
+      );
+      // if from the remaining tabs none of them are the active ones
+      // we need to find an active one
+      if (tabs.findIndex((t) => t.key === state.active) === -1) {
+        let newActiveKey = state.active;
+
+        if (tabs.length > 0) {
+          newActiveKey = tabs[tabs.length - 1].key;
+        }
+
+        return { tabs, active: newActiveKey };
+      }
+
+      return {
+        tabs,
       };
     });
   },

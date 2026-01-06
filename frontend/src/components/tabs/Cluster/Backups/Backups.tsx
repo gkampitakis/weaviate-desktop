@@ -121,6 +121,7 @@ const Backups = ({ connectionID, backends }: Props) => {
       <div className="flex-1">
         <VirtualBackupList
           backups={backups || []}
+          connectionID={connectionID}
           height="calc(100vh - 200px)"
           estimatedItemHeight={280}
         />
@@ -128,7 +129,7 @@ const Backups = ({ connectionID, backends }: Props) => {
       <CreateBackupDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        connectionId={connectionID}
+        connectionID={connectionID}
         backends={backends}
         backupIds={backups?.map((b) => b.id) || []}
         onSuccess={refetch}

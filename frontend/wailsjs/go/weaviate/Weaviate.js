@@ -6,6 +6,10 @@ export function BackupModulesEnabled(arg1) {
   return window['go']['weaviate']['Weaviate']['BackupModulesEnabled'](arg1);
 }
 
+export function CancelBackup(arg1, arg2, arg3) {
+  return window['go']['weaviate']['Weaviate']['CancelBackup'](arg1, arg2, arg3);
+}
+
 export function ClusterStatus(arg1) {
   return window['go']['weaviate']['Weaviate']['ClusterStatus'](arg1);
 }
@@ -14,8 +18,12 @@ export function Connect(arg1) {
   return window['go']['weaviate']['Weaviate']['Connect'](arg1);
 }
 
-export function CreateBackup(arg1) {
-  return window['go']['weaviate']['Weaviate']['CreateBackup'](arg1);
+export function CreateBackup(arg1, arg2) {
+  return window['go']['weaviate']['Weaviate']['CreateBackup'](arg1, arg2);
+}
+
+export function DeleteCollection(arg1, arg2) {
+  return window['go']['weaviate']['Weaviate']['DeleteCollection'](arg1, arg2);
 }
 
 export function DeleteObject(arg1, arg2, arg3, arg4) {
@@ -28,6 +36,10 @@ export function Disconnect(arg1) {
 
 export function GetCollections(arg1) {
   return window['go']['weaviate']['Weaviate']['GetCollections'](arg1);
+}
+
+export function GetCreationStatus(arg1, arg2) {
+  return window['go']['weaviate']['Weaviate']['GetCreationStatus'](arg1, arg2);
 }
 
 export function GetObjectsPaginated(arg1, arg2, arg3, arg4, arg5) {
@@ -48,6 +60,10 @@ export function ListBackups(arg1, arg2) {
 
 export function NodesStatus(arg1) {
   return window['go']['weaviate']['Weaviate']['NodesStatus'](arg1);
+}
+
+export function RestoreBackup(arg1, arg2) {
+  return window['go']['weaviate']['Weaviate']['RestoreBackup'](arg1, arg2);
 }
 
 export function Search(arg1, arg2, arg3, arg4) {

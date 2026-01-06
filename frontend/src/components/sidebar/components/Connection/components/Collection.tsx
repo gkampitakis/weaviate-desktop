@@ -6,6 +6,17 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useConnectionStore } from "@/store/connection-store";
+import { useTabStore } from "@/store/tab-store";
 import type { Collection } from "@/types";
 import {
   Box,
@@ -15,6 +26,8 @@ import {
   Trash,
 } from "lucide-react";
 import { useState } from "react";
+import { useShallow } from "zustand/shallow";
+import { errorReporting } from "@/lib/utils";
 
 interface Props {
   collection: Collection;
@@ -30,12 +43,38 @@ const Collection: React.FC<Props> = ({
   color,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { deleteCollection } = useConnectionStore(
+    useShallow((state) => ({
+      deleteCollection: state.deleteCollection,
+    }))
+  );
+  const removeByConnectionAndCollection = useTabStore(
+    (state) => state.removeByConnectionAndCollection
+  );
 
   const Icon = collection.multiTenancyConfig?.enabled ? (
     <Boxes size="1.1em" className="mr-2 flex-shrink-0" />
   ) : (
     <Box size="1.1em" className="mr-2 flex-shrink-0" />
   );
+
+  const handleCollectionDeletion = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteCollection(collection.connection.id, collection.name);
+      removeByConnectionAndCollection(
+        collection.connection.id,
+        collection.name
+      );
+      setShowDeleteDialog(false);
+    } catch (error) {
+      errorReporting(error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -65,11 +104,42 @@ const Collection: React.FC<Props> = ({
             Details
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">
-            <Trash /> Delete (unimplemented)
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            <Trash /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </div>
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Collection</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the collection &quot;
+              {collection.name}&quot;? This action cannot be undone and all data
+              will be permanently lost.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCollectionDeletion}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DropdownMenu>
   );
 };

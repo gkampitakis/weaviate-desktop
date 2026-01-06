@@ -45,12 +45,12 @@ type Backup struct {
 	CompletedAt string   `json:"completedAt,omitempty"`
 	ID          string   `json:"id"`
 	Size        float64  `json:"size,omitempty"`
-	StartedAt   string   `json:"startedAt,omitempty"`
+	StartedAt   string   `json:"startedAt"`
 	// Status of backup process.
 	// Enum: [STARTED TRANSFERRING TRANSFERRED SUCCESS FAILED CANCELED]
-	Status string `json:"status,omitempty"`
+	Status string `json:"status"`
 	// added for tracking which backend the backup belongs to
-	Backend string `json:"backend,omitempty"`
+	Backend string `json:"backend"`
 }
 
 func (w *Weaviate) ListBackups(connectionID int64, backends []string) ([]Backup, error) {
@@ -97,7 +97,6 @@ func (w *Weaviate) ListBackups(connectionID int64, backends []string) ([]Backup,
 }
 
 type CreateBackupInput struct {
-	ConnectionID     int64    `json:"connectionID"`
 	Backend          string   `json:"backend"`
 	ID               string   `json:"id"`
 	Include          []string `json:"include,omitempty"`
@@ -106,10 +105,10 @@ type CreateBackupInput struct {
 	CPUPercentage    int      `json:"cpuPercentage,omitempty"`
 }
 
-func (w *Weaviate) CreateBackup(input CreateBackupInput) error {
-	c, exists := w.clients[input.ConnectionID]
+func (w *Weaviate) CreateBackup(connectionID int64, input CreateBackupInput) error {
+	c, exists := w.clients[connectionID]
 	if !exists {
-		return fmt.Errorf("connection doesn't exist %d", input.ConnectionID)
+		return fmt.Errorf("connection doesn't exist %d", connectionID)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)

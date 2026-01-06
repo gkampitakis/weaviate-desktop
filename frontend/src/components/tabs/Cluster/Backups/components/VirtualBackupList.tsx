@@ -5,12 +5,14 @@ import { BackupCard } from "./BackupCard";
 
 interface VirtualBackupListProps {
   backups: weaviate.w_Backup[];
+  connectionID: number;
   height?: string;
   estimatedItemHeight?: number;
 }
 
 export function VirtualBackupList({
   backups,
+  connectionID,
   height = "600px",
   estimatedItemHeight = 250,
 }: VirtualBackupListProps) {
@@ -64,7 +66,10 @@ export function VirtualBackupList({
                 padding: "8px",
               }}
             >
-              <BackupCard backup={backups[virtualItem.index]} />
+              <BackupCard
+                backup={backups[virtualItem.index]}
+                connectionID={connectionID}
+              />
             </div>
           ))}
         </div>

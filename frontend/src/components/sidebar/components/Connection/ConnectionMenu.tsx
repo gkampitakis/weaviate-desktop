@@ -43,7 +43,6 @@ export const ConnectionMenu: React.FC<Props> = ({
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [openNewConnection, setOpenConnection] = useState(false);
   const { favorite, status, id, name } = connection;
-  const addTab = useTabStore(useShallow((state) => state.add));
   const { removeConnection, setFavoriteConnection, disconnect, connect } =
     useConnectionStore(
       useShallow((state) => ({
@@ -54,8 +53,11 @@ export const ConnectionMenu: React.FC<Props> = ({
       }))
     );
 
-  const removeTabsByConnectionID = useTabStore(
-    (state) => state.removeByConnection
+  const { addTab, removeTabsByConnectionID } = useTabStore(
+    useShallow((state) => ({
+      addTab: state.add,
+      removeTabsByConnectionID: state.removeByConnection,
+    }))
   );
 
   const handleRefresh = async () => {

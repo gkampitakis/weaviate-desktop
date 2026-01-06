@@ -5,17 +5,23 @@ import {models} from '../models';
 
 export function BackupModulesEnabled(arg1:number):Promise<Array<string>>;
 
+export function CancelBackup(arg1:number,arg2:string,arg3:string):Promise<void>;
+
 export function ClusterStatus(arg1:number):Promise<boolean>;
 
 export function Connect(arg1:number):Promise<void>;
 
-export function CreateBackup(arg1:weaviate.w_CreateBackupInput):Promise<void>;
+export function CreateBackup(arg1:number,arg2:weaviate.w_CreateBackupInput):Promise<void>;
+
+export function DeleteCollection(arg1:number,arg2:string):Promise<void>;
 
 export function DeleteObject(arg1:number,arg2:string,arg3:string,arg4:string):Promise<void>;
 
 export function Disconnect(arg1:number):Promise<void>;
 
 export function GetCollections(arg1:number):Promise<Array<models.w_Class>>;
+
+export function GetCreationStatus(arg1:number,arg2:weaviate.w_GetCreationStatusInput):Promise<string>;
 
 export function GetObjectsPaginated(arg1:number,arg2:number,arg3:string,arg4:string,arg5:string):Promise<weaviate.w_PaginatedObjectResponse>;
 
@@ -26,6 +32,8 @@ export function GetTotalObjects(arg1:number,arg2:string,arg3:string):Promise<num
 export function ListBackups(arg1:number,arg2:Array<string>):Promise<Array<weaviate.w_Backup>>;
 
 export function NodesStatus(arg1:number):Promise<models.w_NodesStatusResponse>;
+
+export function RestoreBackup(arg1:number,arg2:weaviate.w_RestoreBackupInput):Promise<void>;
 
 export function Search(arg1:number,arg2:string,arg3:string,arg4:string):Promise<weaviate.w_PaginatedObjectResponse>;
 
