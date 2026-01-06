@@ -46,6 +46,10 @@ export function GetObjectsPaginated(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['weaviate']['Weaviate']['GetObjectsPaginated'](arg1, arg2, arg3, arg4, arg5);
 }
 
+export function GetRestoreStatus(arg1, arg2, arg3) {
+  return window['go']['weaviate']['Weaviate']['GetRestoreStatus'](arg1, arg2, arg3);
+}
+
 export function GetTenants(arg1, arg2) {
   return window['go']['weaviate']['Weaviate']['GetTenants'](arg1, arg2);
 }

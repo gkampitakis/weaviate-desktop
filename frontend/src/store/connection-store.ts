@@ -28,6 +28,8 @@ interface ConnectionStore {
   disconnect: (id: number) => Promise<void>;
   get(id: number): Connection | undefined;
   deleteCollection: (id: number, collection: string) => Promise<void>;
+  patch: (id: number, patch: Partial<Connection>) => void;
+  updateCollections: (id: number) => Promise<void>;
 }
 
 export const useConnectionStore = create<ConnectionStore>((set) => ({
@@ -96,6 +98,30 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
       }),
     }));
   },
+  updateCollections: async (id: number) => {
+    const collections = await GetCollections(id);
+
+    set((state) => ({
+      connections: state.connections.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              collections: collections
+                .map((collection) => ({
+                  name: collection.class!,
+                  connection: {
+                    id: c.id,
+                    name: c.name,
+                    color: c.color,
+                  },
+                  multiTenancyConfig: collection.multiTenancyConfig,
+                }))
+                .sort(sortCollections),
+            }
+          : c
+      ),
+    }));
+  },
   connect: async (id: number) => {
     await Connect(id);
     const [collections, usersEnabled, backupModules] = await Promise.all([
@@ -145,6 +171,13 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
     set((state) => ({
       connections: state.connections
         .map((c) => (c.id === id ? { ...c, favorite } : c))
+        .sort(sortConnections),
+    }));
+  },
+  patch: (id: number, patch: Partial<Connection>) => {
+    set((state) => ({
+      connections: state.connections
+        .map((c) => (c.id === id ? { ...c, ...patch } : c))
         .sort(sortConnections),
     }));
   },

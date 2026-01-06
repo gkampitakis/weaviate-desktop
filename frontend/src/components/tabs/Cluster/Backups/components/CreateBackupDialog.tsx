@@ -28,8 +28,9 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { errorReporting } from "@/lib/utils";
 import { CreateBackup, GetCollections } from "wailsjs/go/weaviate/Weaviate";
+import { useConnectionStore } from "@/store/connection-store";
 
-interface CreateBackupDialogProps {
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   connectionID: number;
@@ -65,8 +66,9 @@ export function CreateBackupDialog({
   connectionID,
   onSuccess,
   backupIds,
-}: CreateBackupDialogProps) {
+}: Props) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const patchConnection = useConnectionStore((state) => state.patch);
 
   // Fetch collections only when advanced options is opened
   const { data: collectionData, isLoading: isLoadingCollections } = useQuery({
@@ -91,7 +93,6 @@ export function CreateBackupDialog({
     formState: { errors, isSubmitting },
     reset,
     watch,
-    setError,
     setValue,
   } = useForm<FormData>({
     defaultValues: {
@@ -116,14 +117,6 @@ export function CreateBackupDialog({
   };
 
   const onSubmit = async (data: FormData) => {
-    if (data.includeClasses.length > 0 && data.excludeClasses.length > 0) {
-      setError("root.classes", {
-        type: "manual",
-        message: "Cannot set both include and exclude lists",
-      });
-      return;
-    }
-
     try {
       await CreateBackup(connectionID, {
         backend: data.backend,
@@ -139,6 +132,7 @@ export function CreateBackupDialog({
       // Success - close dialog and refresh
       onSuccess();
       onOpenChange(false);
+      patchConnection(connectionID, { backupInProgress: true });
       reset();
       setAdvancedOpen(false);
     } catch (error) {

@@ -25,6 +25,8 @@ export function GetCreationStatus(arg1:number,arg2:weaviate.w_GetCreationStatusI
 
 export function GetObjectsPaginated(arg1:number,arg2:number,arg3:string,arg4:string,arg5:string):Promise<weaviate.w_PaginatedObjectResponse>;
 
+export function GetRestoreStatus(arg1:number,arg2:string,arg3:string):Promise<weaviate.w_StatusResponse>;
+
 export function GetTenants(arg1:number,arg2:string):Promise<Array<models.w_Tenant>>;
 
 export function GetTotalObjects(arg1:number,arg2:string,arg3:string):Promise<number>;

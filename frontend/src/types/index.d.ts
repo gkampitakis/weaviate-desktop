@@ -6,6 +6,15 @@ export interface Connection extends models.w_Connection {
   collections?: Collection[];
   usersEnabled?: boolean;
   backupModules?: string[];
+  backupInProgress?: boolean;
+  backupRestore?: {
+    id: string;
+    backend: string;
+    include?: string[];
+    exclude?: string[];
+    includeRBACAndUsers?: boolean;
+    overwriteAlias?: boolean;
+  };
 }
 
 export interface Tab extends TabComponent {

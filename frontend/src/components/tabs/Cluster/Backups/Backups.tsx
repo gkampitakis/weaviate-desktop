@@ -2,10 +2,13 @@ import { Button } from "@/components/ui/button";
 import { ListBackups } from "wailsjs/go/weaviate/Weaviate";
 import { VirtualBackupList } from "./components/VirtualBackupList";
 import { CreateBackupDialog } from "./components/CreateBackupDialog";
+import { RestoreInProgressBanner } from "./components/RestoreInProgressBanner";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { errorReporting } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import RefreshButton from "@/components/ui/refresh-button";
+import { useConnectionStore } from "@/store/connection-store";
+import { useShallow } from "zustand/shallow";
 
 interface Props {
   connectionID: number;
@@ -33,6 +36,12 @@ Open questions:
 
 const Backups = ({ connectionID, backends }: Props) => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const { connection, patchConnection } = useConnectionStore(
+    useShallow((state) => ({
+      connection: state.get(connectionID),
+      patchConnection: state.patch,
+    }))
+  );
 
   const {
     data: backups,
@@ -54,6 +63,16 @@ const Backups = ({ connectionID, backends }: Props) => {
       }
     },
   });
+
+  useEffect(() => {
+    if (backups) {
+      const hasBackupInProgress = backups.some(
+        (backup) => backup.status === "STARTED"
+      );
+
+      patchConnection(connectionID, { backupInProgress: hasBackupInProgress });
+    }
+  }, [backups, connectionID, patchConnection]);
 
   if (isLoading) {
     return (
@@ -100,6 +119,10 @@ const Backups = ({ connectionID, backends }: Props) => {
 
   return (
     <div className="flex h-full w-full flex-col gap-4 p-4">
+      <RestoreInProgressBanner
+        connectionID={connectionID}
+        backupRestore={connection?.backupRestore}
+      />
       <div className="flex items-center justify-between">
         <div>
           <div className="flex flex-row items-center gap-2">
@@ -114,7 +137,11 @@ const Backups = ({ connectionID, backends }: Props) => {
             {backups?.length} backup{backups?.length !== 1 ? "s" : ""} found
           </p>
         </div>
-        <Button variant="default" onClick={() => setCreateDialogOpen(true)}>
+        <Button
+          variant="default"
+          onClick={() => setCreateDialogOpen(true)}
+          disabled={connection?.backupInProgress || !!connection?.backupRestore}
+        >
           New Backup
         </Button>
       </div>

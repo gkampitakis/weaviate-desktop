@@ -711,6 +711,20 @@ export namespace weaviate {
 	        this.cpuPercentage = source["cpuPercentage"];
 	    }
 	}
+	export class w_StatusResponse {
+	    status: string;
+	    error?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_StatusResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.status = source["status"];
+	        this.error = source["error"];
+	    }
+	}
 	export class w_TestConnectionInput {
 	    URI: string;
 	    ApiKey?: string;
