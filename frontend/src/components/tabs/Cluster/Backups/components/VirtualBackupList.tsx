@@ -16,6 +16,7 @@ export function VirtualBackupList({
 }: VirtualBackupListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: backups.length,
     getScrollElement: () => parentRef.current,

@@ -1,18 +1,18 @@
 import { TabsProps } from "antd";
 import TabContainer from "../components/TabContainer";
-import Nodes from "./Nodes";
+import Nodes from "./Nodes/Nodes";
 import { Tabs as AntdTabs } from "antd";
 import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
-import Backups from "./Backups";
+import Backups from "./Backups/Backups";
 
-export const ClusterInformationName = "ClusterInformation";
+export const ClusterName = "Cluster";
 
 interface Props {
   connectionID: number;
 }
 
-const ClusterInformation = ({ connectionID }: Props) => {
+const Cluster = ({ connectionID }: Props) => {
   const { getConnection } = useConnectionStore(
     useShallow((state) => ({
       getConnection: state.get,
@@ -71,4 +71,4 @@ const ClusterInformation = ({ connectionID }: Props) => {
   );
 };
 
-export default ClusterInformation;
+export default Cluster;

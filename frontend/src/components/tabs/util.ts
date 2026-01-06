@@ -1,7 +1,7 @@
 import { Tab } from "@/types";
 import { WelcomeName } from "./Welcome";
 import { NewTabName } from "./NewTab";
-import { ClusterInformationName } from "./ClusterInformation/ClusterInformation";
+import { ClusterName } from "./Cluster/Cluster";
 
 export const isGeneralTab = (tab: Tab): boolean =>
-  [WelcomeName, NewTabName, ClusterInformationName].includes(tab.name);
+  [WelcomeName, NewTabName, ClusterName].includes(tab.name);

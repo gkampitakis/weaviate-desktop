@@ -26,9 +26,7 @@ import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
 import { useTabStore } from "@/store/tab-store";
 import { errorReporting } from "@/lib/utils";
-import ClusterInformation, {
-  ClusterInformationName as ClusterName,
-} from "../../../tabs/ClusterInformation/ClusterInformation";
+import Cluster, { ClusterName } from "../../../tabs/Cluster/Cluster";
 import GeneralTabLabel from "../../../tabs/components/GeneralTabLabel";
 import { useState } from "react";
 import { ConnectionDetails } from "./ConnectionDetails";
@@ -106,8 +104,7 @@ export const ConnectionMenu: React.FC<Props> = ({
       ),
       connection: connection,
       name: ClusterName,
-      // FIXME: rename
-      children: <ClusterInformation connectionID={id} />,
+      children: <Cluster connectionID={id} />,
     });
   };
 

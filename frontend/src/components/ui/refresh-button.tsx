@@ -36,7 +36,7 @@ const RefreshButton = ({ isRefreshing, tooltipText, refresh }: Props) => {
   return (
     <Tooltip>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent>
+      <TooltipContent className="bg-[oklch(0.21_0.006_285.885)] fill-[oklch(0.21_0.006_285.885)] text-[oklch(0.985_0_0)]">
         <p>{tooltipText}</p>
       </TooltipContent>
     </Tooltip>

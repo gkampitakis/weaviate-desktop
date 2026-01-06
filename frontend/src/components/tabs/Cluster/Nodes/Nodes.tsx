@@ -8,14 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { StatusIndicator } from "./StatusIndicator";
-import { Version } from "./Version";
+import { StatusIndicator } from "./components/StatusIndicator";
+import { Version } from "./components/Version";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ShardsTable } from "./ShardsTable";
+import { ShardsTable } from "./components/ShardsTable";
 import RefreshButton from "@/components/ui/refresh-button";
 
 interface Props {
@@ -24,7 +24,7 @@ interface Props {
 
 const Nodes = ({ connectionID }: Props) => {
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["clusterInformation", connectionID],
+    queryKey: ["cluster", connectionID],
     placeholderData: keepPreviousData,
     queryFn: () => NodesStatus(connectionID),
     // 5 minutes
