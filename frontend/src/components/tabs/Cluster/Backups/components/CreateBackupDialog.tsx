@@ -30,6 +30,7 @@ import { errorReporting } from "@/lib/utils";
 import { CreateBackup, GetCollections } from "wailsjs/go/weaviate/Weaviate";
 import { useConnectionStore } from "@/store/connection-store";
 import MarkdownCode from "@/components/ui/md_code";
+import { collectionsQueryKey } from "../constants";
 
 interface Props {
   open: boolean;
@@ -73,7 +74,7 @@ export function CreateBackupDialog({
 
   // Fetch collections only when advanced options is opened
   const { data: collectionData, isLoading: isLoadingCollections } = useQuery({
-    queryKey: ["collections", connectionID],
+    queryKey: collectionsQueryKey(connectionID),
     queryFn: async () => {
       const classes = await GetCollections(connectionID);
       return classes

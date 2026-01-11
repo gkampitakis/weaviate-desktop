@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import RefreshButton from "@/components/ui/refresh-button";
 import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
+import { backupsQueryKey, backupRefetchInterval } from "./constants";
 
 interface Props {
   connectionID: number;
@@ -33,10 +34,9 @@ const Backups = ({ connectionID, backends }: Props) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["backups", connectionID],
+    queryKey: backupsQueryKey(connectionID),
     placeholderData: keepPreviousData,
-    // 5 minutes
-    refetchInterval: 5 * 60000,
+    refetchInterval: backupRefetchInterval,
     queryFn: async () => {
       try {
         return await ListBackups(connectionID, backends);
@@ -148,8 +148,6 @@ const Backups = ({ connectionID, backends }: Props) => {
           New Backup
         </Button>
       </div>
-
-      {/* Status Filter */}
       {backups && backups.length > 0 && (
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground text-sm font-medium">

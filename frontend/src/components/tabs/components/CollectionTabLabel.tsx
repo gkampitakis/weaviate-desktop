@@ -7,6 +7,10 @@ import {
 import { borderColor } from "@/lib/dynamic-colors";
 import { useQuery } from "@tanstack/react-query";
 import { ClusterStatus } from "wailsjs/go/weaviate/Weaviate";
+import {
+  clusterStatusQueryKey,
+  refetchClusterStatusInterval,
+} from "../constants";
 
 type Props =
   | {
@@ -55,9 +59,9 @@ const CollectionTabLabel: React.FC<Props> = ({
       const data = await ClusterStatus(connectionID!);
       return data;
     },
-    queryKey: ["status", connectionName],
+    queryKey: clusterStatusQueryKey(connectionID!),
     enabled: tooltip,
-    refetchInterval: 10000,
+    refetchInterval: refetchClusterStatusInterval,
   });
 
   if (!tooltip) {

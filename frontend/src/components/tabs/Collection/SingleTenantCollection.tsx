@@ -17,6 +17,7 @@ import { weaviate } from "wailsjs/go/models";
 import SearchComponent from "./components/Search";
 import { Props } from "./types";
 import CollectionDetails from "./components/CollectionDetails";
+import { objectsQueryKey, totalObjectsQueryKey } from "../constants";
 
 const SingleTenantCollection: React.FC<Props> = ({
   collection,
@@ -49,7 +50,7 @@ const SingleTenantCollection: React.FC<Props> = ({
     isLoading: loadingTotal,
     refetch: refetchTotal,
   } = useQuery({
-    queryKey: ["totalObjects", connection.id, name],
+    queryKey: totalObjectsQueryKey(connection.id, name),
     initialData: 0,
     queryFn: async () => {
       try {
@@ -77,7 +78,12 @@ const SingleTenantCollection: React.FC<Props> = ({
     refetch: refetchObjects,
   } = useQuery({
     placeholderData: keepPreviousData,
-    queryKey: ["objects", connection.id, name, pageSize, cursorHistory.at(-1)],
+    queryKey: objectsQueryKey(
+      connection.id,
+      name,
+      cursorHistory.at(-1),
+      pageSize
+    ),
     queryFn: async () => {
       try {
         const { Objects: objects } = await GetObjectsPaginated(

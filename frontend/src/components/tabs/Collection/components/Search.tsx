@@ -70,16 +70,6 @@ const Search: React.FC<Props> = ({
                   Search
                 </Button>
               </form>
-              {/* <CollapsibleTrigger className="ml-2" asChild>
-              <Button variant="ghost" size="sm" className="flex justify-start">
-                <span>Options</span>
-                {searchOptionsOpen ? (
-                  <ChevronUp size="1em" />
-                ) : (
-                  <ChevronDown size="1em" />
-                )}
-              </Button>
-            </CollapsibleTrigger> */}
             </div>
             <CollapsibleContent className="mt-2">TODO</CollapsibleContent>
           </CardContent>

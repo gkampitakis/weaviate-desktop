@@ -6,6 +6,7 @@ import { Version } from "./components/Version";
 import { ShardsTable } from "./components/ShardsTable";
 import RefreshButton from "@/components/ui/refresh-button";
 import { Database, Layers, Zap } from "lucide-react";
+import { nodeStatusQueryKey, refetchNodeStatusInterval } from "../../constants";
 
 interface Props {
   connectionID: number;
@@ -13,10 +14,10 @@ interface Props {
 
 const Nodes = ({ connectionID }: Props) => {
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["cluster", connectionID],
+    queryKey: nodeStatusQueryKey(connectionID),
     placeholderData: keepPreviousData,
     queryFn: () => NodesStatus(connectionID),
-    refetchInterval: 5 * 60000,
+    refetchInterval: refetchNodeStatusInterval,
   });
 
   return (

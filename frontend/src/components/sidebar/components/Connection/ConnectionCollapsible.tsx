@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isGeneralTab } from "../../../tabs/util";
 import CollectionComponent from "./components/Collection";
 import { InnerTabs } from "@/components/tabs/Collection/types";
+import { objectsQueryKey, tenantsQueryKey } from "@/components/tabs/constants";
 
 export const ConnectionCollapsibleTrigger: React.FC<{
   connected: boolean;
@@ -58,11 +59,11 @@ export const ConnectionCollapsibleContent: React.FC<{
 
       if (collection.multiTenancyConfig?.enabled && !isGeneralTab(activeTab)) {
         await queryClient.resetQueries({
-          queryKey: ["tenants", activeTab.connection!.id, activeTab.name],
+          queryKey: tenantsQueryKey(activeTab.connection!.id, activeTab.name),
         });
 
         await queryClient.resetQueries({
-          queryKey: ["objects", activeTab.connection!.id, activeTab.name],
+          queryKey: objectsQueryKey(activeTab.connection!.id, activeTab.name),
         });
       }
 

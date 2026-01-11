@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { useConnectionStore } from "@/store/connection-store";
 import { useQuery } from "@tanstack/react-query";
 import { useShallow } from "zustand/shallow";
+import { collectionsQueryKey } from "../constants";
 
 interface Props {
   open: boolean;
@@ -80,7 +81,7 @@ export function RestoreBackupDialog({
   }));
 
   const { data: collectionData } = useQuery({
-    queryKey: ["collections", connectionID],
+    queryKey: collectionsQueryKey(connectionID),
     queryFn: async () => {
       const classes = await GetCollections(connectionID);
       return classes.filter((c) => c.class);

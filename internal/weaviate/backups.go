@@ -190,8 +190,6 @@ func (w *Weaviate) CancelBackup(connectionID int64, backend, id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	fmt.Println(backend, id)
-
 	if err := c.w.Backup().
 		Canceler().
 		WithBackend(backend).

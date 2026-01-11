@@ -18,11 +18,11 @@ import { weaviate } from "wailsjs/go/models";
 import SearchComponent from "./components/Search";
 import { Props } from "./types";
 import CollectionDetails from "./components/CollectionDetails";
-
-// FIXME: when selecting another collection the selected tab inner tab should reset
-// FIXME: decide on strategy how new tabs are opened and when clicking on details if it should be a new tab
-// shall we check if tab is already open and switch to it or always open a new one?
-// can we update the state inside the same tab? we should also try to make sure we keep a state if the tab is "dirty" we shouldn't replace it but this is a future consideration
+import {
+  objectsQueryKey,
+  tenantsQueryKey,
+  totalObjectsQueryKey,
+} from "@/components/tabs/constants";
 
 const MultiTenantCollection: React.FC<Props> = ({
   collection,
@@ -58,7 +58,7 @@ const MultiTenantCollection: React.FC<Props> = ({
 
   // Fetch tenants
   const { data: tenants, isLoading: loadingTenant } = useQuery({
-    queryKey: ["tenants", connection.id, name],
+    queryKey: tenantsQueryKey(connection.id, name),
     queryFn: async () => {
       try {
         const tenants = await GetTenants(connection.id, name);
@@ -87,7 +87,7 @@ const MultiTenantCollection: React.FC<Props> = ({
     isLoading: loadingTotal,
     refetch: refetchTotal,
   } = useQuery({
-    queryKey: ["totalObjects", connection.id, name, selectedTenant],
+    queryKey: totalObjectsQueryKey(connection.id, name, selectedTenant),
     initialData: 0,
     queryFn: async () => {
       try {
@@ -116,14 +116,13 @@ const MultiTenantCollection: React.FC<Props> = ({
     refetch: refetchObjects,
   } = useQuery({
     placeholderData: keepPreviousData,
-    queryKey: [
-      "objects",
+    queryKey: objectsQueryKey(
       connection.id,
       name,
-      pageSize,
-      selectedTenant,
       cursorHistory.at(-1),
-    ],
+      pageSize,
+      selectedTenant
+    ),
     queryFn: async () => {
       try {
         const { Objects: objects } = await GetObjectsPaginated(

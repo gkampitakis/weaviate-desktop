@@ -27,6 +27,7 @@ import { GetCreationStatus, CancelBackup } from "wailsjs/go/weaviate/Weaviate";
 import { toast } from "sonner";
 import { RestoreBackupDialog } from "./RestoreBackupDialog";
 import { useConnectionStore } from "@/store/connection-store";
+import { backupsQueryKey, backupCreationStatusQueryKey } from "../constants";
 
 interface Props {
   backup: weaviate.w_Backup;
@@ -73,7 +74,7 @@ export function BackupCard({ backup, connectionID }: Props) {
   const connection = useConnectionStore((state) => state.get(connectionID));
 
   useQuery({
-    queryKey: ["backup-creation-status", connectionID, backup.id],
+    queryKey: backupCreationStatusQueryKey(connectionID, backup.id),
     queryFn: async () => {
       try {
         const status = await GetCreationStatus(connectionID, {
@@ -83,7 +84,7 @@ export function BackupCard({ backup, connectionID }: Props) {
 
         if (status !== "STARTED") {
           await queryClient.invalidateQueries({
-            queryKey: ["backups", connectionID],
+            queryKey: backupsQueryKey(connectionID),
           });
         }
 
@@ -111,7 +112,7 @@ export function BackupCard({ backup, connectionID }: Props) {
 
       // Invalidate queries to refresh the list
       await queryClient.invalidateQueries({
-        queryKey: ["backups", connectionID],
+        queryKey: backupsQueryKey(connectionID),
       });
     } catch (error) {
       errorReporting(error);
@@ -183,8 +184,6 @@ export function BackupCard({ backup, connectionID }: Props) {
             </div>
           </div>
         </div>
-
-        {/* Timeline */}
         <div className="grid grid-cols-2 gap-3">
           <div className="flex items-start gap-2">
             <Clock className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
@@ -198,7 +197,6 @@ export function BackupCard({ backup, connectionID }: Props) {
               </p>
             </div>
           </div>
-
           {backup.completedAt && (
             <div className="flex items-start gap-2">
               <Calendar className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
