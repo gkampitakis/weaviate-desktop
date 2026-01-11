@@ -6,15 +6,17 @@ function Table({
   className,
   ...props
 }: React.ComponentProps<"table"> & { scrollable?: boolean }) {
+  const { scrollable, ...rest } = props;
+
   const t = (
     <table
       data-slot="table"
       className={cn("w-full caption-bottom text-sm", className)}
-      {...props}
+      {...rest}
     />
   );
 
-  if (props.scrollable) {
+  if (scrollable) {
     return t;
   }
 

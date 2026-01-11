@@ -20,10 +20,14 @@ interface Props {
   shards: models.w_NodeShardStatus[];
 }
 
-export const ShardsTable = ({ shards: shard }: Props) => {
+export const ShardsTable = ({ shards }: Props) => {
   const [open, setOpen] = useState(false);
+  // shards can be undefined
+  if (!shards) {
+    return null;
+  }
 
-  shard.sort((a, b) =>
+  shards.sort((a, b) =>
     a.name.localeCompare(b.name, undefined, {
       numeric: true,
       sensitivity: "base",
@@ -52,7 +56,7 @@ export const ShardsTable = ({ shards: shard }: Props) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {shard.map((shard, idx) => (
+              {shards.map((shard, idx) => (
                 <TableRow key={idx} className="border-t">
                   <TableCell>{shard.name}</TableCell>
                   <TableCell>{shard.class}</TableCell>

@@ -7,10 +7,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Database,
-  Info,
   Link2Off,
   Pencil,
-  RefreshCcw,
+  RefreshCw,
   Star,
   Trash2,
 } from "lucide-react";
@@ -27,9 +26,7 @@ import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
 import { useTabStore } from "@/store/tab-store";
 import { errorReporting } from "@/lib/utils";
-import ClusterInformation, {
-  ClusterInformationName,
-} from "../../../tabs/ClusterInformation/ClusterInformation";
+import Cluster, { ClusterName } from "../../../tabs/Cluster/Cluster";
 import GeneralTabLabel from "../../../tabs/components/GeneralTabLabel";
 import { useState } from "react";
 import { ConnectionDetails } from "./ConnectionDetails";
@@ -46,7 +43,6 @@ export const ConnectionMenu: React.FC<Props> = ({
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [openNewConnection, setOpenConnection] = useState(false);
   const { favorite, status, id, name } = connection;
-  const addTab = useTabStore(useShallow((state) => state.add));
   const { removeConnection, setFavoriteConnection, disconnect, connect } =
     useConnectionStore(
       useShallow((state) => ({
@@ -57,8 +53,11 @@ export const ConnectionMenu: React.FC<Props> = ({
       }))
     );
 
-  const removeTabsByConnectionID = useTabStore(
-    (state) => state.removeByConnection
+  const { addTab, removeTabsByConnectionID } = useTabStore(
+    useShallow((state) => ({
+      addTab: state.add,
+      removeTabsByConnectionID: state.removeByConnection,
+    }))
   );
 
   const handleRefresh = async () => {
@@ -96,18 +95,18 @@ export const ConnectionMenu: React.FC<Props> = ({
     }
   };
 
-  const handleClusterInformation = () => {
+  const handleClusterItem = () => {
     addTab({
       label: (
         <GeneralTabLabel
           icon={Database}
-          name={"Cluster Information for " + name}
+          name={"Cluster " + name}
           color={connection.color}
         />
       ),
       connection: connection,
-      name: ClusterInformationName,
-      children: <ClusterInformation connectionID={id} />,
+      name: ClusterName,
+      children: <Cluster connectionID={id} />,
     });
   };
 
@@ -156,11 +155,11 @@ export const ConnectionMenu: React.FC<Props> = ({
               <Link2Off /> Disconnect
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleRefresh}>
-              <RefreshCcw /> Refresh
+              <RefreshCw /> Refresh
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleClusterInformation}>
-              <Info /> Cluster Information
+            <DropdownMenuItem onClick={handleClusterItem}>
+              <Database /> Cluster
             </DropdownMenuItem>
           </>
         )}

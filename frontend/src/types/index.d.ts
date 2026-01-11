@@ -4,6 +4,17 @@ import { Tab as TabComponent } from "rc-tabs/lib/interface";
 export interface Connection extends models.w_Connection {
   status?: ConnectionStatus;
   collections?: Collection[];
+  usersEnabled?: boolean;
+  backupModules?: string[];
+  backupInProgress?: boolean;
+  backupRestore?: {
+    id: string;
+    backend: string;
+    include?: string[];
+    exclude?: string[];
+    includeRBACAndUsers?: boolean;
+    overwriteAlias?: boolean;
+  };
 }
 
 export interface Tab extends TabComponent {
