@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.11](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.10...v0.0.11) (2026-01-11)
+
+
+### Features
+
+* add tab for users/roles/backups ([#12](https://github.com/gkampitakis/weaviate-gui/issues/12)) ([cb4ee2d](https://github.com/gkampitakis/weaviate-gui/commit/cb4ee2d14d314be865f52f333e20427d092d3aa7))
+
 ## [0.0.10](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.9...v0.0.10) (2026-01-02)
 
 
