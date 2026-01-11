@@ -157,7 +157,10 @@ type GetCreationStatusInput struct {
 	ID      string `json:"id"`
 }
 
-func (w *Weaviate) GetCreationStatus(connectionID int64, input GetCreationStatusInput) (string, error) {
+func (w *Weaviate) GetCreationStatus(
+	connectionID int64,
+	input GetCreationStatusInput,
+) (string, error) {
 	c, exists := w.clients[connectionID]
 	if !exists {
 		return "", fmt.Errorf("connection doesn't exist %d", connectionID)
@@ -260,7 +263,10 @@ type StatusResponse struct {
 	Error  string `json:"error,omitempty"`
 }
 
-func (w *Weaviate) GetRestoreStatus(connectionID int64, backend, id string) (StatusResponse, error) {
+func (w *Weaviate) GetRestoreStatus(
+	connectionID int64,
+	backend, id string,
+) (StatusResponse, error) {
 	c, exists := w.clients[connectionID]
 	if !exists {
 		return StatusResponse{}, fmt.Errorf("connection doesn't exist %d", connectionID)

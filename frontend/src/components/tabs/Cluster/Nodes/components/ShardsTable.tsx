@@ -21,11 +21,11 @@ interface Props {
 }
 
 export const ShardsTable = ({ shards }: Props) => {
+  const [open, setOpen] = useState(false);
   // shards can be undefined
   if (!shards) {
     return null;
   }
-  const [open, setOpen] = useState(false);
 
   shards.sort((a, b) =>
     a.name.localeCompare(b.name, undefined, {

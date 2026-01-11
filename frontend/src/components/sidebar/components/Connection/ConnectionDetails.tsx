@@ -317,6 +317,7 @@ export const ConnectionDetails: React.FC<Props> = ({
                 type={
                   showPassword || (isEditing && !apiKey) ? "text" : "password"
                 }
+                className="pr-10"
                 {...register("apiKey", {
                   disabled: disableWhenConnected,
                   onChange: () => {

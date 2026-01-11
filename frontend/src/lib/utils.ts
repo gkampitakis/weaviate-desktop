@@ -27,3 +27,7 @@ export function formatGibToReadable(gib?: number): string {
 
   return `${(bytes / Math.pow(k, i)).toFixed(2)} ${units[i]}`;
 }
+
+export function intersection<T>(setA: Set<T>, setB: Set<T>): Set<T> {
+  return new Set([...setA].filter((x) => setB.has(x)));
+}

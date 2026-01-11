@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check, X, ChevronsUpDown } from "lucide-react";
+import { Check, X, ChevronsUpDown, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,7 +69,7 @@ export function MultiSelect({
           )}
           disabled={disabled}
         >
-          <div className="flex flex-1 flex-wrap gap-1">
+          <div className="flex flex-1 flex-wrap items-center gap-1">
             {selected.length === 0 ? (
               <span>{placeholder}</span>
             ) : (
@@ -79,7 +79,7 @@ export function MultiSelect({
                   <Badge
                     key={value}
                     variant="secondary"
-                    className="mr-1 mb-1"
+                    className="my-0.5"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleUnselect(value);
@@ -92,7 +92,22 @@ export function MultiSelect({
               })
             )}
           </div>
-          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+          <div className="flex items-center gap-1">
+            {selected.length > 0 && (
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onChange([]);
+                }}
+                className="hover:text-foreground text-muted-foreground transition-colors"
+              >
+                <XCircle className="h-4 w-4" />
+              </button>
+            )}
+            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+          </div>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
@@ -107,18 +122,21 @@ export function MultiSelect({
                   <CommandItem
                     key={option.value}
                     onSelect={() => handleSelect(option.value)}
+                    className="cursor-pointer"
                   >
                     <div
                       className={cn(
-                        "border-primary mr-2 flex h-4 w-4 items-center justify-center rounded-sm border",
+                        "mr-2 flex h-4 w-4 items-center justify-center rounded border transition-colors",
                         isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "opacity-50 [&_svg]:invisible"
+                          ? "border-green-600 bg-green-600 dark:border-green-500 dark:bg-green-500"
+                          : "border-input"
                       )}
                     >
-                      <Check className="h-4 w-4" />
+                      {isSelected && <Check className="h-3 w-3 text-white" />}
                     </div>
-                    <span>{option.label}</span>
+                    <span className={cn(isSelected && "font-medium")}>
+                      {option.label}
+                    </span>
                   </CommandItem>
                 );
               })}

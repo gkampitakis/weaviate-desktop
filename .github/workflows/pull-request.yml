@@ -19,7 +19,7 @@ jobs:
           go install github.com/segmentio/golines@latest
           go install mvdan.cc/gofumpt@latest
           (cd frontend && npm install)
-          make lint && make format && git diff --quiet
+          make lint && make format && git diff && git diff --quiet
 
   build_and_test:
     strategy:

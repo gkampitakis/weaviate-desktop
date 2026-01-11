@@ -1,6 +1,6 @@
 import { errorReporting } from "@/lib/utils";
 import { useConnectionStore } from "@/store/connection-store";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, RotateCcw } from "lucide-react";
 import { useEffect } from "react";
 import { GetRestoreStatus } from "wailsjs/go/weaviate/Weaviate";
@@ -8,7 +8,7 @@ import { useShallow } from "zustand/shallow";
 
 interface Props {
   connectionID: number;
-  backupRestore?: {
+  backupRestore: {
     id: string;
     backend: string;
     include?: string[];
@@ -22,6 +22,9 @@ export function RestoreInProgressBanner({
   connectionID,
   backupRestore,
 }: Props) {
+  const queryClient = useQueryClient();
+  const queryKey = ["restore-in-progress", connectionID, backupRestore.id];
+
   const { patchConnection, updateCollections } = useConnectionStore(
     useShallow((state) => ({
       patchConnection: state.patch,
@@ -29,15 +32,22 @@ export function RestoreInProgressBanner({
     }))
   );
 
+  // Cleanup: Remove query from cache when component unmounts
+  useEffect(() => {
+    return () => {
+      queryClient.removeQueries({ queryKey });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey.join(""), backupRestore.id]);
+
   const { data: statusResponse } = useQuery({
-    queryKey: ["restore-in-progress", backupRestore?.id],
-    enabled: !!backupRestore,
+    queryKey,
     queryFn: async () => {
       try {
         const status = await GetRestoreStatus(
           connectionID,
-          backupRestore!.backend,
-          backupRestore!.id
+          backupRestore.backend,
+          backupRestore.id
         );
 
         return status;
@@ -47,9 +57,8 @@ export function RestoreInProgressBanner({
       }
     },
     refetchInterval: (query) => {
-      // Stop polling if status is no longer STARTED
       const status = query.state.data;
-      return status?.status === "STARTED" ? 10000 : false; // Poll every 10 seconds
+      return status?.status === "STARTED" ? 5000 : false;
     },
   });
 
@@ -67,12 +76,10 @@ export function RestoreInProgressBanner({
   }, [
     statusResponse,
     connectionID,
-    backupRestore?.id,
+    backupRestore.id,
     patchConnection,
     updateCollections,
   ]);
-
-  if (!backupRestore) return null;
 
   return (
     <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
@@ -85,7 +92,7 @@ export function RestoreInProgressBanner({
           </p>
         </div>
         <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
-          Restoring backup "{backupRestore.id}"
+          Restoring backup &quot;{backupRestore.id}&quot;
           {backupRestore.include &&
             backupRestore.include.length > 0 &&
             ` (${backupRestore.include.length} collection${backupRestore.include.length !== 1 ? "s" : ""})`}

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ListBackups } from "wailsjs/go/weaviate/Weaviate";
 import { VirtualBackupList } from "./components/VirtualBackupList";
 import { CreateBackupDialog } from "./components/CreateBackupDialog";
@@ -15,27 +16,9 @@ interface Props {
   backends: string[];
 }
 
-/*
-Functionality to add:
-- Create new backup. If we have multiple backends, we need to select which backend to use. ✅
-- add a refresh button to the backups list ✅
-- can we have a nice duration calculated from startedAt and completedAt
-- start polling for backup status when started
-- Restore from backup and check status.
-- Show progress of in-progress backups (polling). Allow cancelling in-progress backups.
-- Add filtering options by status
-
-FIXES: 
-- started completed at date is wrong ✅
-- use same feeling list for nodes
-- improve the "custom made" multi select inside the create backup dialog
-
-Open questions:
-- what happens if no classes exist. Technically, we should be able to backup even if no classes exist but backup users and roles right?
-*/
-
 const Backups = ({ connectionID, backends }: Props) => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const { connection, patchConnection } = useConnectionStore(
     useShallow((state) => ({
       connection: state.get(connectionID),
@@ -63,6 +46,22 @@ const Backups = ({ connectionID, backends }: Props) => {
       }
     },
   });
+
+  // Calculate status counts
+  const statusCounts =
+    backups?.reduce(
+      (acc, backup) => {
+        acc[backup.status] = (acc[backup.status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    ) || {};
+
+  // Filter backups based on selected status
+  const filteredBackups =
+    statusFilter && statusCounts[statusFilter]
+      ? backups?.filter((b) => b.status === statusFilter)
+      : backups;
 
   useEffect(() => {
     if (backups) {
@@ -119,10 +118,13 @@ const Backups = ({ connectionID, backends }: Props) => {
 
   return (
     <div className="flex h-full w-full flex-col gap-4 p-4">
-      <RestoreInProgressBanner
-        connectionID={connectionID}
-        backupRestore={connection?.backupRestore}
-      />
+      {connection?.backupRestore && (
+        <RestoreInProgressBanner
+          key={connection.backupRestore.id}
+          connectionID={connectionID}
+          backupRestore={connection.backupRestore}
+        />
+      )}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex flex-row items-center gap-2">
@@ -134,7 +136,8 @@ const Backups = ({ connectionID, backends }: Props) => {
             />
           </div>
           <p className="text-muted-foreground text-sm">
-            {backups?.length} backup{backups?.length !== 1 ? "s" : ""} found
+            {filteredBackups?.length} backup
+            {filteredBackups?.length !== 1 ? "s" : ""} found
           </p>
         </div>
         <Button
@@ -145,11 +148,52 @@ const Backups = ({ connectionID, backends }: Props) => {
           New Backup
         </Button>
       </div>
+
+      {/* Status Filter */}
+      {backups && backups.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground text-sm font-medium">
+            Filter:
+          </span>
+          <div className="flex flex-wrap gap-2">
+            <Badge
+              variant={
+                statusFilter === null || !statusCounts[statusFilter]
+                  ? "default"
+                  : "outline"
+              }
+              className={`cursor-pointer transition-all ${
+                statusFilter === null || !statusCounts[statusFilter]
+                  ? "hover:opacity-90"
+                  : "hover:bg-secondary"
+              }`}
+              onClick={() => setStatusFilter(null)}
+            >
+              All ({backups.length})
+            </Badge>
+            {Object.entries(statusCounts).map(([status, count]) => (
+              <Badge
+                key={status}
+                variant={statusFilter === status ? "default" : "outline"}
+                className={`cursor-pointer transition-all ${
+                  statusFilter === status
+                    ? "hover:opacity-90"
+                    : "hover:bg-secondary"
+                }`}
+                onClick={() => setStatusFilter(status)}
+              >
+                {status} ({count})
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex-1">
         <VirtualBackupList
-          backups={backups || []}
+          backups={filteredBackups || []}
           connectionID={connectionID}
-          height="calc(100vh - 200px)"
+          height="calc(100vh - 250px)"
           estimatedItemHeight={280}
         />
       </div>

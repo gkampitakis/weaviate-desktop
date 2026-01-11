@@ -29,6 +29,7 @@ import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { errorReporting } from "@/lib/utils";
 import { CreateBackup, GetCollections } from "wailsjs/go/weaviate/Weaviate";
 import { useConnectionStore } from "@/store/connection-store";
+import MarkdownCode from "@/components/ui/md_code";
 
 interface Props {
   open: boolean;
@@ -156,7 +157,6 @@ export function CreateBackupDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-          {/* Backup ID */}
           <div className="space-y-2">
             <Label htmlFor="backup-id">
               Backup ID <span className="text-destructive">*</span>
@@ -208,8 +208,6 @@ export function CreateBackupDialog({
               allowed
             </p>
           </div>
-
-          {/* Advanced Section */}
           <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
             <CollapsibleTrigger asChild>
               <Button
@@ -226,7 +224,6 @@ export function CreateBackupDialog({
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
-              {/* Classes Error */}
               {errors.root?.classes && (
                 <div className="bg-destructive/10 rounded-md p-3">
                   <p className="text-destructive text-sm">
@@ -234,8 +231,6 @@ export function CreateBackupDialog({
                   </p>
                 </div>
               )}
-
-              {/* Backend Selection - Only show if multiple backends */}
               {backends.length > 1 && (
                 <div className="space-y-2">
                   <Label htmlFor="backend">Backend</Label>
@@ -271,8 +266,6 @@ export function CreateBackupDialog({
                   </p>
                 </div>
               )}
-
-              {/* Include Collections */}
               <div className="space-y-2">
                 <Label htmlFor="include-collections">Include Collections</Label>
                 <Controller
@@ -296,11 +289,11 @@ export function CreateBackupDialog({
                   )}
                 />
                 <p className="text-muted-foreground text-xs">
-                  Specific collections to include in the backup
+                  List of collections to include in the backup creation process.
+                  If not set, all collections are included. Cannot be used
+                  together with <MarkdownCode text="exclude" />.
                 </p>
               </div>
-
-              {/* Exclude Collections */}
               <div className="space-y-2">
                 <Label htmlFor="exclude-collections">Exclude Collections</Label>
                 <Controller
@@ -324,11 +317,11 @@ export function CreateBackupDialog({
                   )}
                 />
                 <p className="text-muted-foreground text-xs">
-                  Specific collections to exclude from the backup
+                  List of collections to exclude from the backup creation
+                  process. If not set, all collections are included. Cannot be
+                  used together with <MarkdownCode text="include" />.
                 </p>
               </div>
-
-              {/* Compression Level */}
               <div className="space-y-2">
                 <Label htmlFor="compression-level">Compression Level</Label>
                 <Controller
@@ -350,11 +343,9 @@ export function CreateBackupDialog({
                   )}
                 />
                 <p className="text-muted-foreground text-xs">
-                  Compression algorithm and level for the backup
+                  Compression level used by compression algorithm
                 </p>
               </div>
-
-              {/* CPU Percentage */}
               <div className="space-y-2">
                 <Label htmlFor="cpu-percentage">CPU Percentage</Label>
                 <Controller
@@ -392,7 +383,7 @@ export function CreateBackupDialog({
                   </p>
                 )}
                 <p className="text-muted-foreground text-xs">
-                  CPU usage limit (1-80, default: 50)
+                  Desired CPU core utilization (1-80, default: 50)
                 </p>
               </div>
             </CollapsibleContent>
