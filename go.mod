@@ -16,7 +16,7 @@ require (
 	github.com/tidwall/gjson v1.18.0
 	github.com/wailsapp/wails/v2 v2.11.0
 	github.com/weaviate/weaviate v1.35.2
-	github.com/weaviate/weaviate-go-client/v5 v5.6.0
+	github.com/weaviate/weaviate-go-client/v5 v5.6.1-0.20260112085942-856b9c32af8e
 	golang.org/x/sync v0.19.0
 	modernc.org/sqlite v1.42.2
 )

@@ -12,6 +12,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Calendar,
   Database,
   HardDrive,
@@ -20,6 +26,7 @@ import {
   ChevronUp,
   StopCircle,
   RotateCcw,
+  MoreVertical,
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -65,6 +72,7 @@ export function BackupCard({ backup, connectionID }: Props) {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const queryClient = useQueryClient();
   const classLimit = 5;
   const hasMoreClasses = backup.classes && backup.classes.length > classLimit;
@@ -128,46 +136,60 @@ export function BackupCard({ backup, connectionID }: Props) {
           <h3 className="truncate text-sm font-semibold">
             {backup.id || "Unnamed Backup"}
           </h3>
+          {(backup.status === "SUCCESS" || backup.status === "STARTED") && (
+            <DropdownMenu
+              open={isDropdownOpen}
+              onOpenChange={setIsDropdownOpen}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {backup.status === "SUCCESS" && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setShowRestoreDialog(true);
+                      setIsDropdownOpen(false);
+                    }}
+                    disabled={
+                      connection?.backupInProgress ||
+                      !!connection?.backupRestore
+                    }
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Restore
+                  </DropdownMenuItem>
+                )}
+                {backup.status === "STARTED" && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setShowCancelDialog(true);
+                      setIsDropdownOpen(false);
+                    }}
+                    disabled={isCanceling}
+                    variant="destructive"
+                  >
+                    <StopCircle className="h-4 w-4" />
+                    Cancel
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {backup.classes && backup.classes.length > 0 && (
-            <div className="flex items-start gap-2">
-              <Database className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center justify-between">
-                  <p className="text-muted-foreground text-xs">
-                    Classes{" "}
-                    {backup.classes.length > 1 && `(${backup.classes.length})`}
-                  </p>
-                  {hasMoreClasses && (
-                    <button
-                      onClick={() => setShowAllClasses(!showAllClasses)}
-                      className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
-                    >
-                      {showAllClasses ? (
-                        <>
-                          Show less
-                          <ChevronUp className="h-3 w-3" />
-                        </>
-                      ) : (
-                        <>
-                          +{backup.classes.length - classLimit} more
-                          <ChevronDown className="h-3 w-3" />
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {displayedClasses?.map((cls: string, idx: number) => (
-                    <Badge key={idx} variant="outline" className="text-xs">
-                      {cls}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+          <div className="flex items-start gap-2">
+            <HardDrive className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-muted-foreground text-xs">Size</p>
+              <p className="text-xs font-medium">
+                {formatGibToReadable(backup.size)}
+              </p>
             </div>
-          )}
+          </div>
           <div className="flex items-start gap-2">
             <div className="mt-0.5 h-4 w-4 flex-shrink-0">
               <div
@@ -212,44 +234,45 @@ export function BackupCard({ backup, connectionID }: Props) {
             </div>
           )}
         </div>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <HardDrive className="text-muted-foreground h-4 w-4 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-muted-foreground text-xs">Size</p>
-              <p className="text-xs font-medium">
-                {formatGibToReadable(backup.size)}
-              </p>
+        <div className="grid grid-cols-2 gap-3">
+          {backup.classes && backup.classes.length > 0 && (
+            <div className="flex items-start gap-2">
+              <Database className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center justify-between">
+                  <p className="text-muted-foreground text-xs">
+                    Classes{" "}
+                    {backup.classes.length > 1 && `(${backup.classes.length})`}
+                  </p>
+                  {hasMoreClasses && (
+                    <button
+                      onClick={() => setShowAllClasses(!showAllClasses)}
+                      className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
+                    >
+                      {showAllClasses ? (
+                        <>
+                          Show less
+                          <ChevronUp className="h-3 w-3" />
+                        </>
+                      ) : (
+                        <>
+                          +{backup.classes.length - classLimit} more
+                          <ChevronDown className="h-3 w-3" />
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {displayedClasses?.map((cls: string, idx: number) => (
+                    <Badge key={idx} variant="outline" className="text-xs">
+                      {cls}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="flex gap-2">
-            {backup.status === "SUCCESS" && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowRestoreDialog(true)}
-                className="border-border/50 hover:border-primary/50 hover:bg-primary/10 hover:text-primary h-7 gap-1.5 rounded-md shadow-sm transition-all"
-                disabled={
-                  connection?.backupInProgress || !!connection?.backupRestore
-                }
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">Restore</span>
-              </Button>
-            )}
-            {backup.status === "STARTED" && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowCancelDialog(true)}
-                disabled={isCanceling}
-                className="border-border/50 hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive h-7 gap-1.5 rounded-md shadow-sm transition-all"
-              >
-                <StopCircle className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">Cancel</span>
-              </Button>
-            )}
-          </div>
+          )}
         </div>
       </div>
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>

@@ -571,6 +571,22 @@ export namespace updater {
 
 export namespace weaviate {
 	
+	export class w_AliasPermission {
+	    actions: string[];
+	    alias: string;
+	    collection: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_AliasPermission(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.actions = source["actions"];
+	        this.alias = source["alias"];
+	        this.collection = source["collection"];
+	    }
+	}
 	export class w_Backup {
 	    classes: string[];
 	    completedAt?: string;
@@ -595,6 +611,46 @@ export namespace weaviate {
 	        this.backend = source["backend"];
 	    }
 	}
+	export class w_BackupsPermission {
+	    actions: string[];
+	    collection: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_BackupsPermission(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.actions = source["actions"];
+	        this.collection = source["collection"];
+	    }
+	}
+	export class w_ClusterPermission {
+	    actions: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new w_ClusterPermission(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.actions = source["actions"];
+	    }
+	}
+	export class w_CollectionsPermission {
+	    actions: string[];
+	    collection: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_CollectionsPermission(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.actions = source["actions"];
+	        this.collection = source["collection"];
+	    }
+	}
 	export class w_CreateBackupInput {
 	    backend: string;
 	    id: string;
@@ -617,6 +673,20 @@ export namespace weaviate {
 	        this.cpuPercentage = source["cpuPercentage"];
 	    }
 	}
+	export class w_DataPermission {
+	    actions: string[];
+	    collection: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_DataPermission(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.actions = source["actions"];
+	        this.collection = source["collection"];
+	    }
+	}
 	export class w_GetCreationStatusInput {
 	    backend: string;
 	    id: string;
@@ -629,6 +699,38 @@ export namespace weaviate {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.backend = source["backend"];
 	        this.id = source["id"];
+	    }
+	}
+	export class w_GroupPermission {
+	    actions: string[];
+	    group: string;
+	    groupType: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_GroupPermission(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.actions = source["actions"];
+	        this.group = source["group"];
+	        this.groupType = source["groupType"];
+	    }
+	}
+	export class w_NodesPermission {
+	    actions: string[];
+	    collection: string;
+	    verbosity: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_NodesPermission(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.actions = source["actions"];
+	        this.collection = source["collection"];
+	        this.verbosity = source["verbosity"];
 	    }
 	}
 	export class w_WeaviateObject {
@@ -687,6 +789,22 @@ export namespace weaviate {
 		    return a;
 		}
 	}
+	export class w_ReplicatePermission {
+	    actions: string[];
+	    collection: string;
+	    shard: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_ReplicatePermission(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.actions = source["actions"];
+	        this.collection = source["collection"];
+	        this.shard = source["shard"];
+	    }
+	}
 	export class w_RestoreBackupInput {
 	    backend: string;
 	    id: string;
@@ -711,6 +829,99 @@ export namespace weaviate {
 	        this.cpuPercentage = source["cpuPercentage"];
 	    }
 	}
+	export class w_UsersPermission {
+	    actions: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new w_UsersPermission(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.actions = source["actions"];
+	    }
+	}
+	export class w_TenantsPermission {
+	    actions: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new w_TenantsPermission(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.actions = source["actions"];
+	    }
+	}
+	export class w_RolesPermission {
+	    actions: string[];
+	    role: string;
+	    scope: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_RolesPermission(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.actions = source["actions"];
+	        this.role = source["role"];
+	        this.scope = source["scope"];
+	    }
+	}
+	export class w_Role {
+	    name: string;
+	    backups?: w_BackupsPermission[];
+	    cluster?: w_ClusterPermission[];
+	    collections?: w_CollectionsPermission[];
+	    data?: w_DataPermission[];
+	    nodes?: w_NodesPermission[];
+	    roles?: w_RolesPermission[];
+	    replicate?: w_ReplicatePermission[];
+	    alias?: w_AliasPermission[];
+	    tenants?: w_TenantsPermission[];
+	    users?: w_UsersPermission[];
+	    groups?: w_GroupPermission[];
+	
+	    static createFrom(source: any = {}) {
+	        return new w_Role(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.backups = this.convertValues(source["backups"], w_BackupsPermission);
+	        this.cluster = this.convertValues(source["cluster"], w_ClusterPermission);
+	        this.collections = this.convertValues(source["collections"], w_CollectionsPermission);
+	        this.data = this.convertValues(source["data"], w_DataPermission);
+	        this.nodes = this.convertValues(source["nodes"], w_NodesPermission);
+	        this.roles = this.convertValues(source["roles"], w_RolesPermission);
+	        this.replicate = this.convertValues(source["replicate"], w_ReplicatePermission);
+	        this.alias = this.convertValues(source["alias"], w_AliasPermission);
+	        this.tenants = this.convertValues(source["tenants"], w_TenantsPermission);
+	        this.users = this.convertValues(source["users"], w_UsersPermission);
+	        this.groups = this.convertValues(source["groups"], w_GroupPermission);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
 	export class w_StatusResponse {
 	    status: string;
 	    error?: string;
@@ -725,6 +936,7 @@ export namespace weaviate {
 	        this.error = source["error"];
 	    }
 	}
+	
 	export class w_TestConnectionInput {
 	    URI: string;
 	    ApiKey?: string;
@@ -739,6 +951,49 @@ export namespace weaviate {
 	        this.ApiKey = source["ApiKey"];
 	    }
 	}
+	export class w_UserInfo {
+	    active: boolean;
+	    createdAt: string;
+	    userType: string;
+	    userID: string;
+	    roles: w_Role[];
+	    apiKeyFirstLetters: string;
+	    lastUsedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_UserInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.active = source["active"];
+	        this.createdAt = source["createdAt"];
+	        this.userType = source["userType"];
+	        this.userID = source["userID"];
+	        this.roles = this.convertValues(source["roles"], w_Role);
+	        this.apiKeyFirstLetters = source["apiKeyFirstLetters"];
+	        this.lastUsedAt = source["lastUsedAt"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
 
 }
 
