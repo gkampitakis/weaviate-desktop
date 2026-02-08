@@ -2,9 +2,9 @@ package weaviate
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 )
 
@@ -17,8 +17,12 @@ func (w *Weaviate) UsersEnabled(connectionID int64) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := c.w.Users().DB().Lister().Do(ctx)
+	_, err := c.w.Users().DB().Getter().WithUserID("check-user").Do(ctx)
 	if err != nil {
+		// we are able to look the user but doesn't exist meaning users are enabled
+		if strings.Contains(err.Error(), "404") {
+			return true, nil
+		}
 		return false, fmt.Errorf("failed checking if users are enabled: %w", err)
 	}
 
@@ -35,12 +39,6 @@ type UserInfo struct {
 	LastUsedAt         string `json:"lastUsedAt"`
 }
 
-func stringify(d any) string {
-	data, _ := json.MarshalIndent(d, "", "  ")
-
-	return string(data)
-}
-
 func (w *Weaviate) ListUsers(connectionID int64) ([]UserInfo, error) {
 	c, exists := w.clients[connectionID]
 	if !exists {
@@ -54,8 +52,6 @@ func (w *Weaviate) ListUsers(connectionID int64) ([]UserInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed listing users: %w", err)
 	}
-
-	fmt.Println(users)
 
 	u := make([]UserInfo, len(users))
 	for i, user := range users {

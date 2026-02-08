@@ -8,14 +8,12 @@ interface Props {
   connectionID: number;
   height: string;
   estimatedItemHeight: number;
-  showUserType: boolean;
 }
 
 export function VirtualUserList({
   users,
   height,
   estimatedItemHeight,
-  showUserType,
   connectionID,
 }: Props) {
   const parentRef = useRef<HTMLDivElement>(null);
@@ -70,7 +68,6 @@ export function VirtualUserList({
             >
               <UserCard
                 user={users[virtualItem.index]}
-                showUserType={showUserType}
                 connectionID={connectionID}
               />
             </div>

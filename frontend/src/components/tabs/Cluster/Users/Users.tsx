@@ -63,8 +63,6 @@ const Users = ({ connectionID }: Props) => {
     return matchesStatus && matchesSearch;
   });
 
-  const showUserType = new Set(users?.map((u) => u.userType)).size > 1;
-
   // Count active and inactive users
   const activeCount = users?.filter((u) => u.active).length;
   const inactiveCount = users?.filter((u) => !u.active).length;
@@ -105,9 +103,7 @@ const Users = ({ connectionID }: Props) => {
           />
           <circle cx="12" cy="16" r="1" fill="currentColor" />
         </svg>
-        <p className="text-lg font-medium text-red-600">
-          Failed loading backups
-        </p>
+        <p className="text-lg font-medium text-red-600">Failed loading users</p>
         <Button
           variant="outline"
           onClick={() => refetch()}
@@ -232,7 +228,6 @@ const Users = ({ connectionID }: Props) => {
             connectionID={connectionID}
             height="calc(100vh - 250px)"
             estimatedItemHeight={200}
-            showUserType={showUserType}
           />
         )}
       </div>

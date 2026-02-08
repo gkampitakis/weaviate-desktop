@@ -30,7 +30,6 @@ import { usersQueryKey } from "../constants";
 
 interface Props {
   user: weaviate.w_UserInfo;
-  showUserType: boolean;
   connectionID: number;
 }
 
@@ -47,7 +46,15 @@ const formatDate = (dateString: string) => {
   }
 };
 
-export function UserCard({ user, showUserType, connectionID }: Props) {
+const UserType = (v: string) => {
+  if (v === "db_env_user") {
+    return "static";
+  }
+
+  return "db user";
+};
+
+export function UserCard({ user, connectionID }: Props) {
   const queryClient = useQueryClient();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -55,19 +62,19 @@ export function UserCard({ user, showUserType, connectionID }: Props) {
   const [editRolesDialogOpen, setEditRolesDialogOpen] = useState(false);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
 
+  const isDbEnvUser = user.userType === "db_env_user";
+
   return (
     <Card className="p-4 transition-shadow hover:shadow-md">
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex gap-2">
             <h3 className="truncate text-sm font-semibold">{user.userID}</h3>
-            {showUserType && (
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">
-                  {user.userType}
-                </Badge>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">
+                {UserType(user.userType)}
+              </Badge>
+            </div>
           </div>
           <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
             <DropdownMenuTrigger asChild>
@@ -77,35 +84,41 @@ export function UserCard({ user, showUserType, connectionID }: Props) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={async () => {
-                  setIsDropdownOpen(false);
-                  if (user.active) {
-                    setDeactivateDialogOpen(true);
-                  } else {
-                    await ActivateApiKey(connectionID, user.userID);
-                    queryClient.setQueryData(
-                      usersQueryKey(connectionID),
-                      (oldData: weaviate.w_UserInfo[] | undefined) =>
-                        oldData?.map((u) =>
-                          u.userID === user.userID ? { ...u, active: true } : u
-                        )
-                    );
-                  }
-                }}
-              >
-                <UserCog className="h-4 w-4" />
-                {user.active ? "Deactivate" : "Activate"}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setIsDropdownOpen(false);
-                  setRotateDialogOpen(true);
-                }}
-              >
-                <RotateCw className="h-4 w-4" />
-                Rotate Key
-              </DropdownMenuItem>
+              {!isDbEnvUser && (
+                <DropdownMenuItem
+                  onClick={async () => {
+                    setIsDropdownOpen(false);
+                    if (user.active) {
+                      setDeactivateDialogOpen(true);
+                    } else {
+                      await ActivateApiKey(connectionID, user.userID);
+                      queryClient.setQueryData(
+                        usersQueryKey(connectionID),
+                        (oldData: weaviate.w_UserInfo[] | undefined) =>
+                          oldData?.map((u) =>
+                            u.userID === user.userID
+                              ? { ...u, active: true }
+                              : u
+                          )
+                      );
+                    }
+                  }}
+                >
+                  <UserCog className="h-4 w-4" />
+                  {user.active ? "Deactivate" : "Activate"}
+                </DropdownMenuItem>
+              )}
+              {!isDbEnvUser && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    setRotateDialogOpen(true);
+                  }}
+                >
+                  <RotateCw className="h-4 w-4" />
+                  Rotate Key
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={() => {
                   setIsDropdownOpen(false);
@@ -115,28 +128,47 @@ export function UserCard({ user, showUserType, connectionID }: Props) {
                 <Shield className="h-4 w-4" />
                 Edit Roles
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => {
-                  setIsDropdownOpen(false);
-                  setDeleteDialogOpen(true);
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete User
-              </DropdownMenuItem>
+              {!isDbEnvUser && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      setDeleteDialogOpen(true);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete User
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex items-start gap-2">
-            <Key className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+            <Shield className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
             <div className="min-w-0 flex-1">
-              <p className="text-muted-foreground text-xs">API Key</p>
-              <p className="font-mono text-xs font-medium">
-                {user.apiKeyFirstLetters}...
-              </p>
+              <p className="text-muted-foreground mb-1 text-xs">Roles</p>
+              <div className="flex flex-wrap gap-1">
+                {user.roles && user.roles.length > 0 ? (
+                  <>
+                    {user.roles.slice(0, 3).map((role, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {role.name}
+                      </Badge>
+                    ))}
+                    {user.roles.length > 3 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{user.roles.length - 3} more
+                      </Badge>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground text-xs">No roles</p>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-start gap-2">
@@ -153,43 +185,36 @@ export function UserCard({ user, showUserType, connectionID }: Props) {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-start gap-2">
-            <Calendar className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="text-muted-foreground text-xs">Created</p>
-              <p className="truncate text-xs font-medium">
-                {formatDate(user.createdAt)}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <Clock className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="text-muted-foreground text-xs">Last Used</p>
-              <p className="truncate text-xs font-medium">
-                {formatDate(user.lastUsedAt)}
-              </p>
-            </div>
-          </div>
-        </div>
-        {user.roles && user.roles.length > 0 && (
-          <div className="flex items-start gap-2">
-            <Shield className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
-            <div className="min-w-0 flex-1">
-              <p className="text-muted-foreground mb-1 text-xs">Roles</p>
-              <div className="flex flex-wrap gap-1">
-                {user.roles.slice(0, 5).map((role, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {role.name}
-                  </Badge>
-                ))}
-                {user.roles.length > 5 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{user.roles.length - 5} more
-                  </Badge>
-                )}
+        {!isDbEnvUser && (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-start gap-2">
+              <Calendar className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-muted-foreground text-xs">Created</p>
+                <p className="truncate text-xs font-medium">
+                  {formatDate(user.createdAt)}
+                </p>
               </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <Clock className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-muted-foreground text-xs">Last Used</p>
+                <p className="truncate text-xs font-medium">
+                  {formatDate(user.lastUsedAt)}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        {user.apiKeyFirstLetters && (
+          <div className="flex items-start gap-2">
+            <Key className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-muted-foreground text-xs">API Key</p>
+              <p className="font-mono text-xs font-medium">
+                {user.apiKeyFirstLetters}******
+              </p>
             </div>
           </div>
         )}
