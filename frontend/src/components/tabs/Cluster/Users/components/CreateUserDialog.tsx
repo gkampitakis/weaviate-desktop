@@ -17,7 +17,8 @@ import {
   CreateUser,
   ListRoles,
 } from "wailsjs/go/weaviate/Weaviate";
-import { rolesQueryKey, usersQueryKey } from "../constants";
+import { usersQueryKey } from "../constants";
+import { rolesQueryKey } from "../../Roles/constants";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Check, Copy, KeyRound, Loader2 } from "lucide-react";
@@ -135,7 +136,8 @@ export function CreateUserDialog({
               User Created Successfully
             </DialogTitle>
             <DialogDescription>
-              Copy and save this API key now. You won't be able to see it again.
+              Copy and save this API key now. You won&apos;t be able to see it
+              again.
             </DialogDescription>
           </DialogHeader>
 
@@ -217,7 +219,7 @@ export function CreateUserDialog({
               </p>
             )}
             <p className="text-muted-foreground text-xs">
-              This will be the user's unique identifier
+              This will be the user&apos;s unique identifier
             </p>
           </div>
 

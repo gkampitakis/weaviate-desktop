@@ -141,7 +141,11 @@ func (w *Weaviate) AssignRolesToUser(connectionID int64, userID string, roleName
 	return nil
 }
 
-func (w *Weaviate) RevokeRolesFromUser(connectionID int64, userID string, roleNames []string) error {
+func (w *Weaviate) RevokeRolesFromUser(
+	connectionID int64,
+	userID string,
+	roleNames []string,
+) error {
 	c, exists := w.clients[connectionID]
 	if !exists {
 		return fmt.Errorf("connection doesn't exist %d", connectionID)

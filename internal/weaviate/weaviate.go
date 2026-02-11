@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"weaviate-desktop/internal/http_util"
 	"weaviate-desktop/internal/models"
 

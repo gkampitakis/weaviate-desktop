@@ -75,7 +75,140 @@ type GroupPermission struct {
 	GroupType string   `json:"groupType"`
 }
 
-func convertRbacRoleToRole(rbacRole rbac.Role) Role {
+//nolint:gocognit // straightforward field-by-field conversion
+func convertRoleToWeaviateRbacRole(role Role) rbac.Role {
+	r := rbac.Role{
+		Name: role.Name,
+	}
+
+	// Convert Backups permissions
+	if role.Backups != nil {
+		r.Backups = make([]rbac.BackupsPermission, len(role.Backups))
+		for i, bp := range role.Backups {
+			r.Backups[i] = rbac.BackupsPermission{
+				Actions:    bp.Actions,
+				Collection: bp.Collection,
+			}
+		}
+	}
+
+	// Convert Cluster permissions
+	if role.Cluster != nil {
+		r.Cluster = make([]rbac.ClusterPermission, len(role.Cluster))
+		for i, cp := range role.Cluster {
+			r.Cluster[i] = rbac.ClusterPermission{
+				Actions: cp.Actions,
+			}
+		}
+	}
+
+	// Convert Collections permissions
+	if role.Collections != nil {
+		r.Collections = make([]rbac.CollectionsPermission, len(role.Collections))
+		for i, cp := range role.Collections {
+			r.Collections[i] = rbac.CollectionsPermission{
+				Actions:    cp.Actions,
+				Collection: cp.Collection,
+			}
+		}
+	}
+
+	// Convert Data permissions
+	if role.Data != nil {
+		r.Data = make([]rbac.DataPermission, len(role.Data))
+		for i, dp := range role.Data {
+			r.Data[i] = rbac.DataPermission{
+				Actions:    dp.Actions,
+				Collection: dp.Collection,
+			}
+		}
+	}
+
+	// Convert Nodes permissions
+	if role.Nodes != nil {
+		r.Nodes = make([]rbac.NodesPermission, len(role.Nodes))
+		for i, np := range role.Nodes {
+			r.Nodes[i] = rbac.NodesPermission{
+				Actions:    np.Actions,
+				Collection: np.Collection,
+				Verbosity:  np.Verbosity,
+			}
+		}
+	}
+
+	// Convert Roles permissions
+	if role.Roles != nil {
+		r.Roles = make([]rbac.RolesPermission, len(role.Roles))
+		for i, rp := range role.Roles {
+			r.Roles[i] = rbac.RolesPermission{
+				Actions: rp.Actions,
+				Role:    rp.Role,
+				Scope:   rp.Scope,
+			}
+		}
+	}
+
+	// Convert Replicate permissions
+	if role.Replicate != nil {
+		r.Replicate = make([]rbac.ReplicatePermission, len(role.Replicate))
+		for i, rp := range role.Replicate {
+			r.Replicate[i] = rbac.ReplicatePermission{
+				Actions:    rp.Actions,
+				Collection: rp.Collection,
+				Shard:      rp.Shard,
+			}
+		}
+	}
+
+	// Convert Alias permissions
+	if role.Alias != nil {
+		r.Alias = make([]rbac.AliasPermission, len(role.Alias))
+		for i, ap := range role.Alias {
+			r.Alias[i] = rbac.AliasPermission{
+				Actions:    ap.Actions,
+				Alias:      ap.Alias,
+				Collection: ap.Collection,
+			}
+		}
+	}
+
+	// Convert Tenants permissions
+	if role.Tenants != nil {
+		r.Tenants = make([]rbac.TenantsPermission, len(role.Tenants))
+		for i, tp := range role.Tenants {
+			r.Tenants[i] = rbac.TenantsPermission{
+				Actions: tp.Actions,
+			}
+		}
+	}
+
+	// Convert Users permissions
+	if role.Users != nil {
+		r.Users = make([]rbac.UsersPermission, len(role.Users))
+		for i, up := range role.Users {
+			r.Users[i] = rbac.UsersPermission{
+				Actions: up.Actions,
+			}
+		}
+	}
+
+	// Convert Groups permissions
+	if role.Groups != nil {
+		r.Groups = make([]rbac.GroupPermission, len(role.Groups))
+		for i, gp := range role.Groups {
+			r.Groups[i] = rbac.GroupPermission{
+				Actions:   gp.Actions,
+				Group:     gp.Group,
+				GroupType: gp.GroupType,
+			}
+		}
+	}
+
+	return r
+}
+
+//nolint:gocognit // straightforward field-by-field conversion
+func convertWeaviateRbacRoleToRole(rbacRole rbac.Role) Role {
 	role := Role{
 		Name: rbacRole.Name,
 	}

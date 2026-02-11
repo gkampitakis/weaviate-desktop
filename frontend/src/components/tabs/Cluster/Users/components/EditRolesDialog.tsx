@@ -19,7 +19,8 @@ import {
 } from "wailsjs/go/weaviate/Weaviate";
 import { errorReporting } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { rolesQueryKey, usersQueryKey } from "../constants";
+import { usersQueryKey } from "../constants";
+import { rolesQueryKey } from "../../Roles/constants";
 
 interface Props {
   open: boolean;

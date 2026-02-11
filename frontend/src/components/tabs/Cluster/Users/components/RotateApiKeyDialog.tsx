@@ -98,8 +98,8 @@ export function RotateApiKeyDialog({
               API Key Rotated Successfully
             </DialogTitle>
             <DialogDescription>
-              Copy and save this new API key now. You won't be able to see it
-              again. The old API key has been revoked.
+              Copy and save this new API key now. You won&apos;t be able to see
+              it again. The old API key has been revoked.
             </DialogDescription>
           </DialogHeader>
 

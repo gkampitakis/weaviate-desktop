@@ -6,6 +6,10 @@ export function ActivateApiKey(arg1, arg2) {
   return window['go']['weaviate']['Weaviate']['ActivateApiKey'](arg1, arg2);
 }
 
+export function AddRolePermissions(arg1, arg2, arg3) {
+  return window['go']['weaviate']['Weaviate']['AddRolePermissions'](arg1, arg2, arg3);
+}
+
 export function AssignRolesToUser(arg1, arg2, arg3) {
   return window['go']['weaviate']['Weaviate']['AssignRolesToUser'](arg1, arg2, arg3);
 }
@@ -30,6 +34,10 @@ export function CreateBackup(arg1, arg2) {
   return window['go']['weaviate']['Weaviate']['CreateBackup'](arg1, arg2);
 }
 
+export function CreateRole(arg1, arg2) {
+  return window['go']['weaviate']['Weaviate']['CreateRole'](arg1, arg2);
+}
+
 export function CreateUser(arg1, arg2) {
   return window['go']['weaviate']['Weaviate']['CreateUser'](arg1, arg2);
 }
@@ -44,6 +52,10 @@ export function DeleteCollection(arg1, arg2) {
 
 export function DeleteObject(arg1, arg2, arg3, arg4) {
   return window['go']['weaviate']['Weaviate']['DeleteObject'](arg1, arg2, arg3, arg4);
+}
+
+export function DeleteRole(arg1, arg2) {
+  return window['go']['weaviate']['Weaviate']['DeleteRole'](arg1, arg2);
 }
 
 export function DeleteUser(arg1, arg2) {
@@ -92,6 +104,10 @@ export function ListUsers(arg1) {
 
 export function NodesStatus(arg1) {
   return window['go']['weaviate']['Weaviate']['NodesStatus'](arg1);
+}
+
+export function RemoveRolePermissions(arg1, arg2, arg3) {
+  return window['go']['weaviate']['Weaviate']['RemoveRolePermissions'](arg1, arg2, arg3);
 }
 
 export function RestoreBackup(arg1, arg2) {
