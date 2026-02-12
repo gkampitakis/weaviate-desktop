@@ -5,6 +5,8 @@ import { Tabs as AntdTabs } from "antd";
 import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
 import Backups from "./Backups/Backups";
+import Users from "./Users/Users";
+import Roles from "./Roles/Roles";
 
 export const ClusterName = "Cluster";
 
@@ -34,12 +36,12 @@ const Cluster = ({ connectionID }: Props) => {
       {
         key: "users",
         label: "Users",
-        children: <div>Users Tab Content</div>,
+        children: <Users connectionID={connectionID} />,
       },
       {
         key: "roles",
         label: "Roles",
-        children: <div>Roles Tab Content</div>,
+        children: <Roles connectionID={connectionID} />,
       }
     );
   }
