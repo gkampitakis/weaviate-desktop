@@ -14,9 +14,6 @@ import { useShallow } from "zustand/shallow";
 import { backupsQueryKey, backupRefetchInterval } from "./constants";
 import { Archive, SearchX } from "lucide-react";
 
-// Add search support if we have more items than what the screen can show
-// Add the cancel on the eclipsis as well
-
 interface Props {
   connectionID: number;
   backends: string[];

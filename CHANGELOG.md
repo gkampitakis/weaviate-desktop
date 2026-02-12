@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.12](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.11...v0.0.12) (2026-02-12)
+
+
+### Features
+
+* support user and role management ([#22](https://github.com/gkampitakis/weaviate-gui/issues/22)) ([4972522](https://github.com/gkampitakis/weaviate-gui/commit/4972522cd6e0f142ce61f248fc57c9c293b4e57e))
+* support save and connect ([#23](https://github.com/gkampitakis/weaviate-gui/issues/23)) ([bcb1adb](https://github.com/gkampitakis/weaviate-gui/commit/bcb1adb8bdb79ed0cd5d6a1d33a2f0c95cc33d6d))
+
 ## [0.0.11](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.10...v0.0.11) (2026-01-11)
 
 
