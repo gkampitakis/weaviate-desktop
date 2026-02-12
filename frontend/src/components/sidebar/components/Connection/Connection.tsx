@@ -31,6 +31,18 @@ export const Connection: React.FC<Props> = ({ connection, collapse }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(false);
   const [lastCollapse, setLastCollapse] = useState(collapse);
+  const [lastStatus, setLastStatus] = useState(status);
+
+  // Auto-expand when connection status changes to connected
+  if (
+    lastStatus !== ConnectionStatus.Connected &&
+    status === ConnectionStatus.Connected
+  ) {
+    setIsCollapsibleOpen(true);
+    setLastStatus(status);
+  } else if (lastStatus !== status) {
+    setLastStatus(status);
+  }
 
   // Synchronize state when collapse changes - this pattern is acceptable for derived state
   if (
@@ -65,8 +77,6 @@ export const Connection: React.FC<Props> = ({ connection, collapse }) => {
         duration: 5000,
         closeButton: true,
       });
-
-      setIsCollapsibleOpen(true);
     } catch (error) {
       toast.dismiss(loadingId);
 
