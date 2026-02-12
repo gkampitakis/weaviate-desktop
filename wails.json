@@ -2,7 +2,7 @@
  "$schema": "https://wails.io/schemas/config.v2.json",
  "name": "Weaviate Desktop",
  "info": {
-  "productVersion": "0.0.12"
+  "productVersion": "0.0.13"
  },
  "outputfilename": "weaviate-desktop",
  "frontend:install": "npm install",
