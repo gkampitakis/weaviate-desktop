@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.12](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.11...v0.0.12) (2026-02-12)
+
 ## [0.0.11](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.10...v0.0.11) (2026-01-11)
 
 
