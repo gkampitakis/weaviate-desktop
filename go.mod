@@ -10,12 +10,12 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/leaanthony/u v1.1.1
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.11.1
 	github.com/sigstore/sigstore-go v1.1.4
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/wailsapp/wails/v2 v2.11.0
-	github.com/weaviate/weaviate v1.35.2
+	github.com/weaviate/weaviate v1.35.7
 	github.com/weaviate/weaviate-go-client/v5 v5.6.1-0.20260211083036-565db5553c85
 	golang.org/x/sync v0.19.0
 	modernc.org/sqlite v1.42.2
