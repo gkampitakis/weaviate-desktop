@@ -333,6 +333,23 @@ func (w *Weaviate) NodesStatus(connectionID int64) (*weaviate_models.NodesStatus
 	return res, nil
 }
 
+func (w *Weaviate) GetModules(connectionID int64) (any, error) {
+	c, exists := w.clients[connectionID]
+	if !exists {
+		return nil, fmt.Errorf("connection doesn't exist %d", connectionID)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	res, err := c.w.Misc().MetaGetter().Do(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed querying modules: %w", err)
+	}
+
+	return res.Modules, nil
+}
+
 func (w *Weaviate) ClusterStatus(connectionID int64) (bool, error) {
 	c, exists := w.clients[connectionID]
 	if !exists {

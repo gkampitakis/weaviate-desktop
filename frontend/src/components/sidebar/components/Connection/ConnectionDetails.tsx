@@ -88,12 +88,14 @@ export const ConnectionDetails: React.FC<Props> = ({
     mode: "onChange",
     defaultValues,
   });
-  const { saveConnection, updateConnection } = useConnectionStore(
-    useShallow((state) => ({
-      saveConnection: state.save,
-      updateConnection: state.update,
-    }))
-  );
+  const { saveConnection, updateConnection, connectToConnection } =
+    useConnectionStore(
+      useShallow((state) => ({
+        saveConnection: state.save,
+        updateConnection: state.update,
+        connectToConnection: state.connect,
+      }))
+    );
   const updateTabsByConnection = useTabStore(
     (state) => state.updateByConnection
   );
@@ -133,6 +135,51 @@ export const ConnectionDetails: React.FC<Props> = ({
       reset();
     } catch (error) {
       errorReporting(error);
+    }
+  };
+
+  const [isSavingAndConnecting, setIsSavingAndConnecting] = useState(false);
+
+  const saveAndConnect: SubmitHandler<NewConnectionForm> = async ({
+    name,
+    uri,
+    apiKey,
+    color,
+    favorite,
+  }) => {
+    try {
+      setIsSavingAndConnecting(true);
+      if (isEditing) {
+        await updateConnection({
+          id: connection.id,
+          name,
+          uri: uri ? uri : connection.uri,
+          api_key: apiKey ? apiKey : connection.api_key,
+          color,
+          favorite,
+        });
+        if (connection.color !== color || connection.name !== name) {
+          updateTabsByConnection(connection.id, name, color);
+        }
+        await connectToConnection(connection.id);
+      } else {
+        const id = await saveConnection({
+          name,
+          uri,
+          status: ConnectionStatus.Disconnected,
+          favorite,
+          api_key: apiKey,
+          color: color,
+        });
+        await connectToConnection(id);
+      }
+
+      setOpen(false);
+      reset();
+    } catch (error) {
+      errorReporting(error);
+    } finally {
+      setIsSavingAndConnecting(false);
     }
   };
 
@@ -353,9 +400,21 @@ export const ConnectionDetails: React.FC<Props> = ({
                     status={testStatus}
                   />
                 )}
-                <Button disabled={!isValid || !isDirty} type="submit">
+                <Button disabled={!isValid || !isDirty} variant="secondary">
                   Save
                 </Button>
+                {!disableWhenConnected && (
+                  <Button
+                    disabled={!isValid || !isDirty || isSavingAndConnecting}
+                    type="submit"
+                    onClick={handleSubmit(saveAndConnect)}
+                  >
+                    {isSavingAndConnecting && (
+                      <LoaderCircle className="animate-spin" />
+                    )}
+                    Save & Connect
+                  </Button>
+                )}
               </div>
             </div>
           </DialogFooter>

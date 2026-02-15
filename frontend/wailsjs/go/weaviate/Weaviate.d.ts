@@ -3,6 +3,12 @@
 import {weaviate} from '../models';
 import {models} from '../models';
 
+export function ActivateApiKey(arg1:number,arg2:string):Promise<void>;
+
+export function AddRolePermissions(arg1:number,arg2:string,arg3:weaviate.w_Role):Promise<void>;
+
+export function AssignRolesToUser(arg1:number,arg2:string,arg3:Array<string>):Promise<void>;
+
 export function BackupModulesEnabled(arg1:number):Promise<Array<string>>;
 
 export function CancelBackup(arg1:number,arg2:string,arg3:string):Promise<void>;
@@ -13,15 +19,29 @@ export function Connect(arg1:number):Promise<void>;
 
 export function CreateBackup(arg1:number,arg2:weaviate.w_CreateBackupInput):Promise<void>;
 
+export function CreateRole(arg1:number,arg2:weaviate.w_Role):Promise<void>;
+
+export function CreateUser(arg1:number,arg2:string):Promise<string>;
+
+export function DeactivateApiKey(arg1:number,arg2:string,arg3:boolean):Promise<void>;
+
 export function DeleteCollection(arg1:number,arg2:string):Promise<void>;
 
 export function DeleteObject(arg1:number,arg2:string,arg3:string,arg4:string):Promise<void>;
 
+export function DeleteRole(arg1:number,arg2:string):Promise<void>;
+
+export function DeleteUser(arg1:number,arg2:string):Promise<void>;
+
 export function Disconnect(arg1:number):Promise<void>;
+
+export function GetCollection(arg1:number,arg2:string):Promise<models.w_Class>;
 
 export function GetCollections(arg1:number):Promise<Array<models.w_Class>>;
 
 export function GetCreationStatus(arg1:number,arg2:weaviate.w_GetCreationStatusInput):Promise<string>;
+
+export function GetModules(arg1:number):Promise<any>;
 
 export function GetObjectsPaginated(arg1:number,arg2:number,arg3:string,arg4:string,arg5:string):Promise<weaviate.w_PaginatedObjectResponse>;
 
@@ -33,9 +53,19 @@ export function GetTotalObjects(arg1:number,arg2:string,arg3:string):Promise<num
 
 export function ListBackups(arg1:number,arg2:Array<string>):Promise<Array<weaviate.w_Backup>>;
 
+export function ListRoles(arg1:number):Promise<Array<weaviate.w_Role>>;
+
+export function ListUsers(arg1:number):Promise<Array<weaviate.w_UserInfo>>;
+
 export function NodesStatus(arg1:number):Promise<models.w_NodesStatusResponse>;
 
+export function RemoveRolePermissions(arg1:number,arg2:string,arg3:weaviate.w_Role):Promise<void>;
+
 export function RestoreBackup(arg1:number,arg2:weaviate.w_RestoreBackupInput):Promise<void>;
+
+export function RevokeRolesFromUser(arg1:number,arg2:string,arg3:Array<string>):Promise<void>;
+
+export function RotateUserApiKey(arg1:number,arg2:string):Promise<string>;
 
 export function Search(arg1:number,arg2:string,arg3:string,arg4:string):Promise<weaviate.w_PaginatedObjectResponse>;
 
