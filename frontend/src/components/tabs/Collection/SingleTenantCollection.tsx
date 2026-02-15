@@ -16,7 +16,7 @@ import type { TabsProps } from "antd";
 import { weaviate } from "wailsjs/go/models";
 import SearchComponent from "./components/Search";
 import { Props } from "./types";
-import CollectionDetails from "./components/CollectionDetails";
+import CollectionDetails from "./components/CollectionDetails/index";
 import { objectsQueryKey, totalObjectsQueryKey } from "../constants";
 
 const SingleTenantCollection: React.FC<Props> = ({
@@ -202,7 +202,9 @@ const SingleTenantCollection: React.FC<Props> = ({
     {
       key: "details",
       label: "Details",
-      children: <CollectionDetails />,
+      children: (
+        <CollectionDetails connectionID={connection.id} collectionName={name} />
+      ),
     },
   ];
 

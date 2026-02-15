@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import RefreshButton from "@/components/ui/refresh-button";
+import { ErrorState } from "@/components/ui/error-state";
 import { errorReporting } from "@/lib/utils";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -61,41 +62,11 @@ const Roles = ({ connectionID }: Props) => {
 
   if (error) {
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-4">
-        <svg
-          className="h-10 w-10 text-red-500"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          viewBox="0 0 24 24"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="2"
-            fill="none"
-          />
-          <line
-            x1="12"
-            y1="8"
-            x2="12"
-            y2="13"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-          <circle cx="12" cy="16" r="1" fill="currentColor" />
-        </svg>
-        <p className="text-lg font-medium text-red-600">Failed loading roles</p>
-        <Button
-          variant="outline"
-          onClick={() => refetch()}
-          disabled={isFetching}
-        >
-          {isFetching ? "Retrying..." : "Retry"}
-        </Button>
-      </div>
+      <ErrorState
+        message="Failed loading roles"
+        onRetry={() => refetch()}
+        isRetrying={isFetching}
+      />
     );
   }
 

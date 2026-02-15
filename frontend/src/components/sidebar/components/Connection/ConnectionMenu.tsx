@@ -26,7 +26,9 @@ import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
 import { useTabStore } from "@/store/tab-store";
 import { errorReporting } from "@/lib/utils";
-import Cluster, { ClusterName } from "../../../tabs/Cluster/Cluster";
+import ClusterDetails, {
+  ClusterDetailsName,
+} from "../../../tabs/ClusterDetails/ClusterDetails";
 import GeneralTabLabel from "../../../tabs/components/GeneralTabLabel";
 import { useState } from "react";
 import { ConnectionDetails } from "./ConnectionDetails";
@@ -100,13 +102,13 @@ export const ConnectionMenu: React.FC<Props> = ({
       label: (
         <GeneralTabLabel
           icon={Database}
-          name={"Cluster " + name}
+          name={"Details " + name}
           color={connection.color}
         />
       ),
       connection: connection,
-      name: ClusterName,
-      children: <Cluster connectionID={id} />,
+      name: ClusterDetailsName,
+      children: <ClusterDetails connectionID={id} />,
     });
   };
 
@@ -159,7 +161,7 @@ export const ConnectionMenu: React.FC<Props> = ({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleClusterItem}>
-              <Database /> Cluster
+              <Database /> Cluster Details
             </DropdownMenuItem>
           </>
         )}
