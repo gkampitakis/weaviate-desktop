@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.14](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.13...v0.0.14) (2026-02-15)
+
+
+### Features
+
+* add support for showing collection details and modules enabled ([#24](https://github.com/gkampitakis/weaviate-gui/issues/24)) ([617acfc](https://github.com/gkampitakis/weaviate-gui/commit/617acfcaccaccd592e899e664c4901cf428eb6e6))
+
 ## [0.0.13](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.12...v0.0.13) (2026-02-12)
 
 ## [0.0.12](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.11...v0.0.12) (2026-02-12)
