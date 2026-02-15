@@ -20,7 +20,7 @@ import { ConnectionStatus } from "@/types/enums";
 
 interface ConnectionStore {
   connections: Connection[];
-  save: (c: Omit<Connection, "id">) => Promise<void>;
+  save: (c: Omit<Connection, "id">) => Promise<number>;
   update: (c: Connection) => Promise<void>;
   remove: (id: number) => Promise<void>;
   setFavorite: (id: number, favorite: boolean) => Promise<void>;
@@ -50,6 +50,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
     set((state) => ({
       connections: [...state.connections, { ...c, id }].sort(sortConnections),
     }));
+    return id;
   },
   update: async (c) => {
     await UpdateConnection(c);

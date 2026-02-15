@@ -3,7 +3,7 @@ export const backupsQueryKey = (connectionID: number) => [
   connectionID,
 ];
 
-export const backupRefetchInterval = 5 * 60000; // 5 minutes
+export const backupRefetchInterval = 30 * 60000; // 30 minutes
 
 export const backupCreationStatusQueryKey = (
   connectionID: number,
