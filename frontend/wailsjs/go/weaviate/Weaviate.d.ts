@@ -35,9 +35,13 @@ export function DeleteUser(arg1:number,arg2:string):Promise<void>;
 
 export function Disconnect(arg1:number):Promise<void>;
 
+export function GetCollection(arg1:number,arg2:string):Promise<models.w_Class>;
+
 export function GetCollections(arg1:number):Promise<Array<models.w_Class>>;
 
 export function GetCreationStatus(arg1:number,arg2:weaviate.w_GetCreationStatusInput):Promise<string>;
+
+export function GetModules(arg1:number):Promise<any>;
 
 export function GetObjectsPaginated(arg1:number,arg2:number,arg3:string,arg4:string,arg5:string):Promise<weaviate.w_PaginatedObjectResponse>;
 
