@@ -66,12 +66,20 @@ export function Disconnect(arg1) {
   return window['go']['weaviate']['Weaviate']['Disconnect'](arg1);
 }
 
+export function GetCollection(arg1, arg2) {
+  return window['go']['weaviate']['Weaviate']['GetCollection'](arg1, arg2);
+}
+
 export function GetCollections(arg1) {
   return window['go']['weaviate']['Weaviate']['GetCollections'](arg1);
 }
 
 export function GetCreationStatus(arg1, arg2) {
   return window['go']['weaviate']['Weaviate']['GetCreationStatus'](arg1, arg2);
+}
+
+export function GetModules(arg1) {
+  return window['go']['weaviate']['Weaviate']['GetModules'](arg1);
 }
 
 export function GetObjectsPaginated(arg1, arg2, arg3, arg4, arg5) {
