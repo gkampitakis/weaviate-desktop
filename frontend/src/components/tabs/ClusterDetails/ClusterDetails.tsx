@@ -1,18 +1,20 @@
 import { TabsProps } from "antd";
 import TabContainer from "../components/TabContainer";
-import Nodes from "./Nodes/Nodes";
+import ClusterInfo from "./Nodes/Nodes";
 import { Tabs as AntdTabs } from "antd";
 import { useConnectionStore } from "@/store/connection-store";
 import { useShallow } from "zustand/shallow";
 import Backups from "./Backups/Backups";
+import Users from "./Users/Users";
+import Roles from "./Roles/Roles";
 
-export const ClusterName = "Cluster";
+export const ClusterDetailsName = "ClusterDetails";
 
 interface Props {
   connectionID: number;
 }
 
-const Cluster = ({ connectionID }: Props) => {
+const ClusterDetails = ({ connectionID }: Props) => {
   const { getConnection } = useConnectionStore(
     useShallow((state) => ({
       getConnection: state.get,
@@ -22,9 +24,9 @@ const Cluster = ({ connectionID }: Props) => {
 
   const items: TabsProps["items"] = [
     {
-      key: "nodes",
-      label: "Nodes",
-      children: <Nodes connectionID={connectionID} />,
+      key: "cluster",
+      label: "Cluster",
+      children: <ClusterInfo connectionID={connectionID} />,
     },
   ];
 
@@ -34,12 +36,12 @@ const Cluster = ({ connectionID }: Props) => {
       {
         key: "users",
         label: "Users",
-        children: <div>Users Tab Content</div>,
+        children: <Users connectionID={connectionID} />,
       },
       {
         key: "roles",
         label: "Roles",
-        children: <div>Roles Tab Content</div>,
+        children: <Roles connectionID={connectionID} />,
       }
     );
   }
@@ -60,7 +62,7 @@ const Cluster = ({ connectionID }: Props) => {
   return (
     <TabContainer className="flex flex-col gap-1 overflow-y-auto">
       <AntdTabs
-        defaultActiveKey="nodes"
+        defaultActiveKey="cluster"
         items={items}
         className="custom-green-tabs flex h-full w-full flex-row"
         tabBarStyle={{
@@ -71,4 +73,4 @@ const Cluster = ({ connectionID }: Props) => {
   );
 };
 
-export default Cluster;
+export default ClusterDetails;
