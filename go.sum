@@ -388,8 +388,8 @@ github.com/wailsapp/wails/v2 v2.11.0 h1:seLacV8pqupq32IjS4Y7V8ucab0WZwtK6VvUVxSB
 github.com/wailsapp/wails/v2 v2.11.0/go.mod h1:jrf0ZaM6+GBc1wRmXsM8cIvzlg0karYin3erahI4+0k=
 github.com/weaviate/weaviate v1.36.2 h1:FwQ5R55TsY3373upjW6wepxj6GjM9k4JV3sQ4ds1D5Y=
 github.com/weaviate/weaviate v1.36.2/go.mod h1:evaxDTF6pa3Df8AoWQSWnBfdvolmKmRagtrt1CKzOWs=
-github.com/weaviate/weaviate-go-client/v5 v5.6.1-0.20260211083036-565db5553c85 h1:HbESBVoMkOUdGi0ewLSQ+U9wTnnsOzRcIKEn/WVdv+Y=
-github.com/weaviate/weaviate-go-client/v5 v5.6.1-0.20260211083036-565db5553c85/go.mod h1:RKpSa7y64bIXxQA3QpdR4trKR8+uW7YG99xBXskppyA=
+github.com/weaviate/weaviate-go-client/v5 v5.7.0 h1:G5vYdwUUGDJJMpEFJg5aHmI3eZqxdc2q0zQ80qT9www=
+github.com/weaviate/weaviate-go-client/v5 v5.7.0/go.mod h1:T/JDErjN074GrnYIa0AgK1TGUGP/6A/8vqXNPlv4c6E=
 github.com/zalando/go-keyring v0.2.3 h1:v9CUu9phlABObO4LPWycf+zwMG7nlbb3t/B5wa97yms=
 github.com/zalando/go-keyring v0.2.3/go.mod h1:HL4k+OXQfJUWaMnqyuSOc0drfGPX2b51Du6K+MRgZMk=
 github.com/zenizh/go-capturer v0.0.0-20211219060012-52ea6c8fed04 h1:qXafrlZL1WsJW5OokjraLLRURHiw0OzKHD/RNdspp4w=
