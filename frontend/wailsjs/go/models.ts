@@ -181,6 +181,7 @@ export namespace models {
 	export class w_Property {
 	    dataType: string[];
 	    description?: string;
+	    disableDuplicatedReferences?: boolean;
 	    indexFilterable?: boolean;
 	    indexInverted?: boolean;
 	    indexRangeFilters?: boolean;
@@ -198,6 +199,7 @@ export namespace models {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.dataType = source["dataType"];
 	        this.description = source["description"];
+	        this.disableDuplicatedReferences = source["disableDuplicatedReferences"];
 	        this.indexFilterable = source["indexFilterable"];
 	        this.indexInverted = source["indexInverted"];
 	        this.indexRangeFilters = source["indexRangeFilters"];
