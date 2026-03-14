@@ -2,6 +2,7 @@ package weaviate
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -13,9 +14,25 @@ import (
 	"github.com/weaviate/weaviate/entities/models"
 )
 
+// SearchOptions holds optional parameters for all search types.
+// Zero values mean "use default / not set".
+type SearchOptions struct {
+	// Limit is the maximum number of results to return (default 100).
+	Limit int
+	// Alpha controls the BM25/vector balance in Hybrid search (0.0–1.0, default 0.75).
+	Alpha float32
+	// FusionType is the fusion algorithm for Hybrid search: "rankedFusion" | "relativeScoreFusion".
+	FusionType string
+	// Distance threshold for nearText/nearVector (0 = not set).
+	Distance float32
+	// Certainty threshold for nearText/nearVector (0 = not set).
+	Certainty float32
+}
+
 func (w *Weaviate) Search(
 	connectionID int64,
-	collection, tenant, term string,
+	collection, tenant, searchType, query string,
+	opts SearchOptions,
 ) (*PaginatedObjectResponse, error) {
 	c, exists := w.clients[connectionID]
 	if !exists {
@@ -32,26 +49,69 @@ func (w *Weaviate) Search(
 		return nil, fmt.Errorf("failed retrieving schema for %s: %w", collection, err)
 	}
 
+	limit := opts.Limit
+	if limit <= 0 {
+		limit = 100
+	}
+
 	gqlQuery := c.w.GraphQL().Get().
 		WithClassName(collection).
-		WithLimit(100).
-		WithFields(getGQLFields(col.Properties)...).
-		WithBM25((&graphql.BM25ArgumentBuilder{}).WithQuery(term))
+		WithLimit(limit).
+		WithFields(getGQLFields(col.Properties)...)
+
+	switch searchType {
+	case "hybrid":
+		alpha := opts.Alpha
+		if alpha == 0 {
+			alpha = 0.75
+		}
+		h := (&graphql.HybridArgumentBuilder{}).WithQuery(query).WithAlpha(alpha)
+		if opts.FusionType != "" {
+			h = h.WithFusionType(graphql.FusionType(opts.FusionType))
+		}
+		gqlQuery = gqlQuery.WithHybrid(h)
+	case "nearText":
+		nt := (&graphql.NearTextArgumentBuilder{}).WithConcepts([]string{query})
+		if opts.Distance > 0 {
+			nt = nt.WithDistance(opts.Distance)
+		}
+		if opts.Certainty > 0 {
+			nt = nt.WithCertainty(opts.Certainty)
+		}
+		gqlQuery = gqlQuery.WithNearText(nt)
+	case "nearVector":
+		vector, err := parseVectorQuery(query)
+		if err != nil {
+			return nil, err
+		}
+		nv := (&graphql.NearVectorArgumentBuilder{}).WithVector(vector)
+		if opts.Distance > 0 {
+			nv = nv.WithDistance(opts.Distance)
+		}
+		if opts.Certainty > 0 {
+			nv = nv.WithCertainty(opts.Certainty)
+		}
+		gqlQuery = gqlQuery.WithNearVector(nv)
+	default: // "bm25"
+		gqlQuery = gqlQuery.WithBM25((&graphql.BM25ArgumentBuilder{}).WithQuery(query))
+	}
+
 	if tenant != "" {
 		gqlQuery = gqlQuery.WithTenant(tenant)
 	}
 
 	result, err := gqlQuery.Do(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed executing keyword search for %s: %w", term, err)
+		return nil, fmt.Errorf("failed executing %s search for %s: %w", searchType, query, err)
 	}
 	if len(result.Errors) > 0 {
-		return nil, handleGQLError(result, term)
+		return nil, handleGQLError(result, searchType, query)
 	}
 	if len(result.Data) == 0 {
 		slog.Debug(
-			"no results found for keyword search",
-			slog.String("term", term),
+			"no results found for search",
+			slog.String("query", query),
+			slog.String("searchType", searchType),
 			slog.String("collection", collection),
 		)
 	}
@@ -60,8 +120,9 @@ func (w *Weaviate) Search(
 
 	if len(objects) == 0 {
 		slog.Debug(
-			"no objects found for keyword search",
-			slog.String("term", term),
+			"no objects found for search",
+			slog.String("query", query),
+			slog.String("searchType", searchType),
 			slog.String("collection", collection),
 		)
 		return &PaginatedObjectResponse{
@@ -101,14 +162,22 @@ func (w *Weaviate) Search(
 	return response, nil
 }
 
-func handleGQLError(result *models.GraphQLResponse, term string) error {
+func handleGQLError(result *models.GraphQLResponse, searchType, query string) error {
 	errMsg := strings.Builder{}
 	for _, e := range result.Errors {
 		errMsg.WriteString(e.Message)
 		errMsg.WriteString(", ")
 	}
 
-	return fmt.Errorf("weaviate returned errors for keyword search %s: %s", term, errMsg.String())
+	return fmt.Errorf("weaviate returned errors for %s search %s: %s", searchType, query, errMsg.String())
+}
+
+func parseVectorQuery(query string) ([]float32, error) {
+	var vector []float32
+	if err := json.Unmarshal([]byte(query), &vector); err != nil {
+		return nil, fmt.Errorf("invalid vector: expected a JSON array of floats (e.g. [0.1, 0.2, ...]): %w", err)
+	}
+	return vector, nil
 }
 
 func getGQLFields(props []*models.Property) []graphql.Field {

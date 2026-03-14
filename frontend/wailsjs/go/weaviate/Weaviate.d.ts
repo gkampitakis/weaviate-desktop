@@ -67,7 +67,7 @@ export function RevokeRolesFromUser(arg1:number,arg2:string,arg3:Array<string>):
 
 export function RotateUserApiKey(arg1:number,arg2:string):Promise<string>;
 
-export function Search(arg1:number,arg2:string,arg3:string,arg4:string):Promise<weaviate.w_PaginatedObjectResponse>;
+export function Search(arg1:number,arg2:string,arg3:string,arg4:string,arg5:string,arg6:weaviate.w_SearchOptions):Promise<weaviate.w_PaginatedObjectResponse>;
 
 export function TestConnection(arg1:weaviate.w_TestConnectionInput):Promise<void>;
 

@@ -14,7 +14,7 @@ import { errorReporting } from "@/lib/utils";
 import { Tabs as AntdTabs } from "antd";
 import type { TabsProps } from "antd";
 import { weaviate } from "wailsjs/go/models";
-import SearchComponent from "./components/Search";
+import SearchComponent, { type SearchOptions } from "./components/Search";
 import { Props } from "./types";
 import CollectionDetails from "./components/CollectionDetails/index";
 import { objectsQueryKey, totalObjectsQueryKey } from "../constants";
@@ -136,7 +136,7 @@ const SingleTenantCollection: React.FC<Props> = ({
     setCursorHistory([]);
   };
 
-  const handleSearch = async (v: string) => {
+  const handleSearch = async (v: string, searchType: string, opts: SearchOptions) => {
     setSearching(true);
 
     try {
@@ -144,7 +144,9 @@ const SingleTenantCollection: React.FC<Props> = ({
         connection.id,
         name,
         "",
-        v
+        searchType,
+        v,
+        { Limit: opts.limit, Alpha: opts.alpha, FusionType: opts.fusionType, Distance: opts.distance, Certainty: opts.certainty }
       );
 
       setObjects(Objects);
