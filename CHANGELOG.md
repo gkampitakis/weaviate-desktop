@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.15](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.14...v0.0.15) (2026-03-14)
+
+
+### Features
+
+* improve tab interactions and add ctrl+t and ctrl+w ([179460c](https://github.com/gkampitakis/weaviate-gui/commit/179460c23f27e638ea83d9d85e03e7584272780e))
+* add support for all search types ([3251a65](https://github.com/gkampitakis/weaviate-gui/commit/3251a65b1cca20e005924ab7edac5ca130937ca2))
+
 ## [0.0.14](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.13...v0.0.14) (2026-02-15)
 
 
