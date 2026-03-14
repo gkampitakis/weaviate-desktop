@@ -45,9 +45,17 @@ export const useTabStore = create<TabStore>((set, get) => ({
   remove: (key) => {
     return set((state) => {
       const tabs = state.tabs.filter((t) => t.key !== key);
-      let newActiveKey = state.active;
 
-      if (tabs.length > 0 && key === newActiveKey) {
+      if (tabs.length === 0) {
+        const welcomeKey = (globalIdx++).toString();
+        return {
+          tabs: [{ key: welcomeKey, label: <GeneralTabLabel name={WelcomeName} />, name: WelcomeName, children: <Welcome /> }],
+          active: welcomeKey,
+        };
+      }
+
+      let newActiveKey = state.active;
+      if (key === newActiveKey) {
         newActiveKey = tabs[tabs.length - 1].key;
       }
 

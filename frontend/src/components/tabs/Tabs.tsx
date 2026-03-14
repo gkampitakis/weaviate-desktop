@@ -1,10 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Tabs as AntdTabs } from "antd";
 import { useTabStore } from "@/store/tab-store";
 import { useShallow } from "zustand/shallow";
 import { X } from "lucide-react";
 import Welcome from "./Welcome";
-import NewTab, { NewTabName } from "./NewTab";
 import GeneralTabLabel from "./components/GeneralTabLabel";
 import type { DragEndEvent } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
@@ -78,10 +77,13 @@ const Tabs = () => {
       return;
     }
 
+    const active = useTabStore.getState().getActiveTab();
+    if (!active) return;
     addNewTab({
-      label: <GeneralTabLabel name={NewTabName} />,
-      name: NewTabName,
-      children: <NewTab />,
+      label: active.label,
+      name: active.name,
+      children: active.children,
+      connection: active.connection,
     });
   };
 
@@ -94,6 +96,23 @@ const Tabs = () => {
     if (action === "add") newTab();
     else removeTab(targetKey);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+
+      if (e.key === "t") {
+        e.preventDefault();
+        newTab();
+      } else if (e.key === "w") {
+        e.preventDefault();
+        removeTab(activeTab);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeTab, tabs]);
 
   const sensor = useSensor(PointerSensor, {
     activationConstraint: { distance: 5 },
