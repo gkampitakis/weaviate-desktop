@@ -981,6 +981,26 @@ export namespace weaviate {
 		}
 	}
 	
+	export class w_SearchOptions {
+	    Limit: number;
+	    Alpha: number;
+	    FusionType: string;
+	    Distance: number;
+	    Certainty: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_SearchOptions(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Limit = source["Limit"];
+	        this.Alpha = source["Alpha"];
+	        this.FusionType = source["FusionType"];
+	        this.Distance = source["Distance"];
+	        this.Certainty = source["Certainty"];
+	    }
+	}
 	export class w_StatusResponse {
 	    status: string;
 	    error?: string;
