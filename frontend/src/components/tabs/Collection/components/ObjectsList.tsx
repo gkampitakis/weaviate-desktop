@@ -1,6 +1,6 @@
 import { weaviate } from "wailsjs/go/models";
 import JsonView from "@uiw/react-json-view";
-import { Check, Copy, LoaderCircle, Trash2 } from "lucide-react";
+import { Check, Copy, Database, LoaderCircle, SearchX, Trash2 } from "lucide-react";
 import { useState } from "react";
 import "./json-view-styles.css";
 import {
@@ -14,8 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DeleteObject } from "wailsjs/go/weaviate/Weaviate";
 import { errorReporting } from "@/lib/utils";
-import logo from "@/assets/images/no-data.svg";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface Props {
   objects: weaviate.w_WeaviateObject[];
@@ -38,24 +37,26 @@ const ObjectsList: React.FC<Props> = ({
 }) => {
   if (!objects.length) {
     return (
-      <div className="item-center flex h-full w-full flex-col items-center justify-center">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-4">
         {loading ? (
-          <LoaderCircle size="1.3em" className="animate-spin text-green-600" />
+          <LoaderCircle className="h-6 w-6 animate-spin text-muted-foreground" />
         ) : (
           <>
-            <img
-              className="pointer-events-none w-[200px] select-none"
-              alt="No Data Image"
-              src={logo}
-            />
-            <h2 className="text-primary mt-10 scroll-m-20 pb-2 text-2xl font-semibold tracking-tight transition-colors first:mt-0">
-              {isSearch ? "No results" : "This collection has no data"}
-            </h2>
-            <p className="text-primary">
-              {isSearch
-                ? "You can refine your query to get results back."
-                : "You can import data with ...."}
-            </p>
+            {isSearch ? (
+              <SearchX className="h-12 w-12 text-muted-foreground" />
+            ) : (
+              <Database className="h-12 w-12 text-muted-foreground" />
+            )}
+            <div className="text-center">
+              <p className="text-lg font-medium">
+                {isSearch ? "No results found" : "No objects yet"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {isSearch
+                  ? "Try refining your query to get results back."
+                  : "This collection has no data."}
+              </p>
+            </div>
           </>
         )}
       </div>
@@ -63,9 +64,9 @@ const ObjectsList: React.FC<Props> = ({
   }
 
   return (
-    <div className="overflow-y-auto" ref={ref}>
+    <div className="flex flex-col gap-2 overflow-y-auto" ref={ref}>
       {objects.map((object, id) => (
-        <Object
+        <ObjectCard
           connectionID={connectionID}
           key={id}
           object={object}
@@ -84,7 +85,7 @@ interface ObjectActionsProps {
   refetch: () => void;
 }
 
-const Object: React.FC<ObjectActionsProps> = ({
+const ObjectCard: React.FC<ObjectActionsProps> = ({
   object,
   tenant = "",
   connectionID,
@@ -92,20 +93,15 @@ const Object: React.FC<ObjectActionsProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
-  const Icon = copied ? Check : Copy;
+  const CopyIcon = copied ? Check : Copy;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { class: _, ...jsonValue } = object;
 
   const handleCopy = () => {
-    if (copied) {
-      return;
-    }
-
+    if (copied) return;
     setCopied(true);
     navigator.clipboard.writeText(JSON.stringify(object, null, "  "));
-    setTimeout(() => {
-      setCopied(false);
-    }, 2000);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDelete = () =>
@@ -121,7 +117,7 @@ const Object: React.FC<ObjectActionsProps> = ({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Remove</DialogTitle>
+            <DialogTitle>Remove object</DialogTitle>
             <DialogDescription>
               This will remove the object from the collection. This action
               cannot be undone. Are you sure you want to proceed?
@@ -137,43 +133,57 @@ const Object: React.FC<ObjectActionsProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Card className="mb-2 gap-0 py-0">
-        <CardTitle className="flex flex-row items-center justify-end gap-2 px-2 pt-4">
-          <Icon
-            onClick={handleCopy}
-            size="1.2em"
-            className={`cursor-pointer ${copied ? "text-green-600" : ""}`}
-          />
-          <Trash2
-            onClick={() => setOpen(true)}
-            size="1.2em"
-            className="cursor-pointer text-red-600"
-          />
-        </CardTitle>
-        <CardContent className="px-2">
-          <div className="object-container">
-            <div className="json-content">
-              <div className="json-view-wrapper">
-                <JsonView
-                  className="select-text"
-                  displayDataTypes={false}
-                  displayObjectSize={false}
-                  enableClipboard={false}
-                  collapsed={2}
-                  shortenTextAfterLength={120}
-                  value={jsonValue}
-                  highlightUpdates={false}
-                  style={{
-                    maxWidth: "100%",
-                    overflowWrap: "break-word",
-                    wordBreak: "break-all",
-                  }}
-                />
-              </div>
-            </div>
+
+      <div className="rounded-lg border bg-card">
+        <div className="flex items-center justify-between gap-2 px-3 py-2">
+          <span className="truncate font-mono text-xs text-muted-foreground">
+            {object.id}
+          </span>
+          <div className="flex flex-shrink-0 items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={handleCopy}
+              title="Copy as JSON"
+            >
+              <CopyIcon
+                className={`h-3.5 w-3.5 ${copied ? "text-green-600" : ""}`}
+              />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-destructive hover:text-destructive"
+              onClick={() => setOpen(true)}
+              title="Delete object"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <Separator />
+        <div className="json-view-wrapper p-3">
+          <JsonView
+            className="select-text"
+            displayDataTypes={false}
+            displayObjectSize={false}
+            enableClipboard={false}
+            collapsed={2}
+            shortenTextAfterLength={120}
+            value={jsonValue}
+            highlightUpdates={false}
+            style={{
+              maxWidth: "100%",
+              overflowWrap: "break-word",
+              wordBreak: "break-all",
+              fontSize: "0.8rem",
+              lineHeight: "1.6",
+              background: "transparent",
+            }}
+          />
+        </div>
+      </div>
     </>
   );
 };

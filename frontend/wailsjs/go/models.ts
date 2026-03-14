@@ -60,7 +60,46 @@ export namespace models {
 	        this.vectorizer = source["vectorizer"];
 	    }
 	}
+	export class w_ReplicationAsyncConfig {
+	    aliveNodesCheckingFrequency?: number;
+	    diffBatchSize?: number;
+	    diffPerNodeTimeout?: number;
+	    frequency?: number;
+	    frequencyWhilePropagating?: number;
+	    hashtreeHeight?: number;
+	    loggingFrequency?: number;
+	    maxWorkers?: number;
+	    prePropagationTimeout?: number;
+	    propagationBatchSize?: number;
+	    propagationConcurrency?: number;
+	    propagationDelay?: number;
+	    propagationLimit?: number;
+	    propagationTimeout?: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_ReplicationAsyncConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.aliveNodesCheckingFrequency = source["aliveNodesCheckingFrequency"];
+	        this.diffBatchSize = source["diffBatchSize"];
+	        this.diffPerNodeTimeout = source["diffPerNodeTimeout"];
+	        this.frequency = source["frequency"];
+	        this.frequencyWhilePropagating = source["frequencyWhilePropagating"];
+	        this.hashtreeHeight = source["hashtreeHeight"];
+	        this.loggingFrequency = source["loggingFrequency"];
+	        this.maxWorkers = source["maxWorkers"];
+	        this.prePropagationTimeout = source["prePropagationTimeout"];
+	        this.propagationBatchSize = source["propagationBatchSize"];
+	        this.propagationConcurrency = source["propagationConcurrency"];
+	        this.propagationDelay = source["propagationDelay"];
+	        this.propagationLimit = source["propagationLimit"];
+	        this.propagationTimeout = source["propagationTimeout"];
+	    }
+	}
 	export class w_ReplicationConfig {
+	    asyncConfig?: w_ReplicationAsyncConfig;
 	    asyncEnabled: boolean;
 	    deletionStrategy?: string;
 	    factor?: number;
@@ -71,10 +110,29 @@ export namespace models {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.asyncConfig = this.convertValues(source["asyncConfig"], w_ReplicationAsyncConfig);
 	        this.asyncEnabled = source["asyncEnabled"];
 	        this.deletionStrategy = source["deletionStrategy"];
 	        this.factor = source["factor"];
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class w_NestedProperty {
 	    dataType: string[];
@@ -523,6 +581,7 @@ export namespace models {
 		    return a;
 		}
 	}
+	
 	
 	
 	
