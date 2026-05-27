@@ -240,6 +240,9 @@ const Backups = ({ connectionID, backends }: Props) => {
         connectionID={connectionID}
         backends={backends}
         backupIds={backups?.map((b) => b.id) || []}
+        baseBackupCandidates={
+          backups?.filter((b) => b.status === "SUCCESS").map((b) => b.id) || []
+        }
         onSuccess={refetch}
       />
     </div>

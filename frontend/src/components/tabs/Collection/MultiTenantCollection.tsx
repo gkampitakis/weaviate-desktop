@@ -176,7 +176,11 @@ const MultiTenantCollection: React.FC<Props> = ({
     setCursorHistory([]);
   };
 
-  const handleSearch = async (v: string, searchType: string, opts: SearchOptions) => {
+  const handleSearch = async (
+    v: string,
+    searchType: string,
+    opts: SearchOptions
+  ) => {
     setSearching(true);
 
     try {
@@ -186,7 +190,13 @@ const MultiTenantCollection: React.FC<Props> = ({
         selectedTenant,
         searchType,
         v,
-        { Limit: opts.limit, Alpha: opts.alpha, FusionType: opts.fusionType, Distance: opts.distance, Certainty: opts.certainty }
+        {
+          Limit: opts.limit,
+          Alpha: opts.alpha,
+          FusionType: opts.fusionType,
+          Distance: opts.distance,
+          Certainty: opts.certainty,
+        }
       );
 
       setObjects(Objects);

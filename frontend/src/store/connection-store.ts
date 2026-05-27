@@ -14,8 +14,10 @@ import {
   DeleteCollection,
   Disconnect,
   GetCollections,
+  GetFeatures,
   UsersEnabled,
 } from "wailsjs/go/weaviate/Weaviate";
+import type { Features } from "@/types";
 import { ConnectionStatus } from "@/types/enums";
 
 interface ConnectionStore {
@@ -125,11 +127,13 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
   },
   connect: async (id: number) => {
     await Connect(id);
-    const [collections, usersEnabled, backupModules] = await Promise.all([
-      GetCollections(id),
-      UsersEnabled(id),
-      BackupModulesEnabled(id),
-    ]);
+    const [collections, usersEnabled, backupModules, features] =
+      await Promise.all([
+        GetCollections(id),
+        UsersEnabled(id),
+        BackupModulesEnabled(id),
+        GetFeatures(id) as Promise<Features>,
+      ]);
 
     set((state) => ({
       connections: state.connections.map((c) =>
@@ -139,6 +143,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
               status: ConnectionStatus.Connected,
               usersEnabled: usersEnabled,
               backupModules: backupModules,
+              features,
               collections: collections
                 .map((collection) => ({
                   name: collection.class!,
