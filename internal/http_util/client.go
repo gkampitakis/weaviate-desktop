@@ -6,13 +6,12 @@ import (
 )
 
 func GetClient(timeout time.Duration) *http.Client {
-	cl := http.DefaultClient
-	tr := http.DefaultTransport.(*http.Transport)
-	cl.Transport = tr
-
+	tr := http.DefaultTransport.(*http.Transport).Clone()
 	tr.MaxIdleConnsPerHost = 10
-	tr.MaxIdleConns = 100
-	cl.Timeout = timeout
+	tr.IdleConnTimeout = 15 * time.Second
 
-	return cl
+	return &http.Client{
+		Transport: tr,
+		Timeout:   timeout,
+	}
 }
