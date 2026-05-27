@@ -41,6 +41,8 @@ export function GetCollections(arg1:number):Promise<Array<models.w_Class>>;
 
 export function GetCreationStatus(arg1:number,arg2:weaviate.w_GetCreationStatusInput):Promise<string>;
 
+export function GetFeatures(arg1:number):Promise<weaviate.w_Features>;
+
 export function GetModules(arg1:number):Promise<any>;
 
 export function GetObjectsPaginated(arg1:number,arg2:number,arg3:string,arg4:string,arg5:string):Promise<weaviate.w_PaginatedObjectResponse>;

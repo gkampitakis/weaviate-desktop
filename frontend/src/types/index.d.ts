@@ -6,6 +6,7 @@ export interface Connection extends models.w_Connection {
   collections?: Collection[];
   usersEnabled?: boolean;
   backupModules?: string[];
+  features?: Features;
   backupInProgress?: boolean;
   backupRestore?: {
     id: string;
@@ -16,6 +17,10 @@ export interface Connection extends models.w_Connection {
     overwriteAlias?: boolean;
   };
 }
+
+export type FeatureKey = "incrementalBackup";
+
+export type Features = Partial<Record<FeatureKey, boolean>>;
 
 export interface Tab extends TabComponent {
   // which connection relates to this tab if so.

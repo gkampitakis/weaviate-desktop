@@ -78,6 +78,10 @@ export function GetCreationStatus(arg1, arg2) {
   return window['go']['weaviate']['Weaviate']['GetCreationStatus'](arg1, arg2);
 }
 
+export function GetFeatures(arg1) {
+  return window['go']['weaviate']['Weaviate']['GetFeatures'](arg1);
+}
+
 export function GetModules(arg1) {
   return window['go']['weaviate']['Weaviate']['GetModules'](arg1);
 }

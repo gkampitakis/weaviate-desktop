@@ -23,8 +23,9 @@ import (
 )
 
 type WClient struct {
-	w       *weaviate.Client
-	healthy bool
+	w        *weaviate.Client
+	healthy  bool
+	features Features
 }
 
 type Weaviate struct {
@@ -152,10 +153,12 @@ func (w *Weaviate) Connect(id int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err = client.w.Misc().MetaGetter().Do(ctx)
+	meta, err := client.w.Misc().MetaGetter().Do(ctx)
 	if err != nil {
 		return fmt.Errorf("failed connecting to %s: %w", connection.URI, err)
 	}
+
+	client.features = evaluateFeatures(meta.Version)
 
 	w.clients[id] = client
 	return nil

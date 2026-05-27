@@ -134,6 +134,22 @@ export namespace models {
 		    return a;
 		}
 	}
+	export class w_TextAnalyzerConfig {
+	    asciiFold?: boolean;
+	    asciiFoldIgnore?: string[];
+	    stopwordPreset?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new w_TextAnalyzerConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.asciiFold = source["asciiFold"];
+	        this.asciiFoldIgnore = source["asciiFoldIgnore"];
+	        this.stopwordPreset = source["stopwordPreset"];
+	    }
+	}
 	export class w_NestedProperty {
 	    dataType: string[];
 	    description?: string;
@@ -142,6 +158,7 @@ export namespace models {
 	    indexSearchable?: boolean;
 	    name?: string;
 	    nestedProperties?: w_NestedProperty[];
+	    textAnalyzer?: w_TextAnalyzerConfig;
 	    tokenization?: string;
 	
 	    static createFrom(source: any = {}) {
@@ -157,6 +174,7 @@ export namespace models {
 	        this.indexSearchable = source["indexSearchable"];
 	        this.name = source["name"];
 	        this.nestedProperties = this.convertValues(source["nestedProperties"], w_NestedProperty);
+	        this.textAnalyzer = this.convertValues(source["textAnalyzer"], w_TextAnalyzerConfig);
 	        this.tokenization = source["tokenization"];
 	    }
 	
@@ -189,6 +207,7 @@ export namespace models {
 	    moduleConfig?: any;
 	    name?: string;
 	    nestedProperties?: w_NestedProperty[];
+	    textAnalyzer?: w_TextAnalyzerConfig;
 	    tokenization?: string;
 	
 	    static createFrom(source: any = {}) {
@@ -207,6 +226,7 @@ export namespace models {
 	        this.moduleConfig = source["moduleConfig"];
 	        this.name = source["name"];
 	        this.nestedProperties = this.convertValues(source["nestedProperties"], w_NestedProperty);
+	        this.textAnalyzer = this.convertValues(source["textAnalyzer"], w_TextAnalyzerConfig);
 	        this.tokenization = source["tokenization"];
 	    }
 	
@@ -330,6 +350,7 @@ export namespace models {
 	    indexNullState?: boolean;
 	    indexPropertyLength?: boolean;
 	    indexTimestamps?: boolean;
+	    stopwordPresets?: Record<string, Array<string>>;
 	    stopwords?: w_StopwordConfig;
 	    tokenizerUserDict?: w_TokenizerUserDictConfig[];
 	    usingBlockMaxWAND?: boolean;
@@ -345,6 +366,7 @@ export namespace models {
 	        this.indexNullState = source["indexNullState"];
 	        this.indexPropertyLength = source["indexPropertyLength"];
 	        this.indexTimestamps = source["indexTimestamps"];
+	        this.stopwordPresets = source["stopwordPresets"];
 	        this.stopwords = this.convertValues(source["stopwords"], w_StopwordConfig);
 	        this.tokenizerUserDict = this.convertValues(source["tokenizerUserDict"], w_TokenizerUserDictConfig);
 	        this.usingBlockMaxWAND = source["usingBlockMaxWAND"];
@@ -604,6 +626,7 @@ export namespace models {
 	}
 	
 	
+	
 
 }
 
@@ -719,6 +742,7 @@ export namespace weaviate {
 	    exclude?: string[];
 	    compressionLevel?: string;
 	    cpuPercentage?: number;
+	    incrementalBaseBackupID?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new w_CreateBackupInput(source);
@@ -732,6 +756,7 @@ export namespace weaviate {
 	        this.exclude = source["exclude"];
 	        this.compressionLevel = source["compressionLevel"];
 	        this.cpuPercentage = source["cpuPercentage"];
+	        this.incrementalBaseBackupID = source["incrementalBaseBackupID"];
 	    }
 	}
 	export class w_DataPermission {

@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -29,6 +30,7 @@ import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { errorReporting } from "@/lib/utils";
 import { CreateBackup, GetCollections } from "wailsjs/go/weaviate/Weaviate";
 import { useConnectionStore } from "@/store/connection-store";
+import { useFeature } from "@/hooks/use-features";
 import MarkdownCode from "@/components/ui/md_code";
 import { collectionsQueryKey } from "../constants";
 
@@ -39,6 +41,7 @@ interface Props {
   backends: string[];
   onSuccess: () => void;
   backupIds: string[];
+  baseBackupCandidates: string[];
 }
 
 // Enum taken from Weaviate
@@ -59,6 +62,8 @@ interface FormData {
   excludeClasses: string[];
   compressionLevel: string;
   cpuPercentage: number;
+  incremental: boolean;
+  incrementalBaseBackupID: string;
 }
 
 export function CreateBackupDialog({
@@ -68,9 +73,14 @@ export function CreateBackupDialog({
   connectionID,
   onSuccess,
   backupIds,
+  baseBackupCandidates,
 }: Props) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const patchConnection = useConnectionStore((state) => state.patch);
+  const incrementalBackupSupported = useFeature(
+    connectionID,
+    "incrementalBackup"
+  );
 
   // Fetch collections only when advanced options is opened
   const { data: collectionData, isLoading: isLoadingCollections } = useQuery({
@@ -104,11 +114,14 @@ export function CreateBackupDialog({
       excludeClasses: [],
       compressionLevel: "DefaultCompression",
       cpuPercentage: 50,
+      incremental: false,
+      incrementalBaseBackupID: "",
     },
   });
 
   const includeClasses = watch("includeClasses");
   const excludeClasses = watch("excludeClasses");
+  const incremental = watch("incremental");
 
   const generateBackupId = () => {
     const now = new Date();
@@ -129,6 +142,10 @@ export function CreateBackupDialog({
           data.excludeClasses.length > 0 ? data.excludeClasses : undefined,
         compressionLevel: data.compressionLevel || undefined,
         cpuPercentage: data.cpuPercentage,
+        incrementalBaseBackupID:
+          data.incremental && data.incrementalBaseBackupID
+            ? data.incrementalBaseBackupID
+            : undefined,
       });
 
       // Success - close dialog and refresh
@@ -230,6 +247,82 @@ export function CreateBackupDialog({
                   <p className="text-destructive text-sm">
                     {errors.root.classes.message}
                   </p>
+                </div>
+              )}
+              {incrementalBackupSupported && (
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    <Controller
+                      name="incremental"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="incremental"
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            const next = checked === true;
+                            field.onChange(next);
+                            if (!next) {
+                              setValue("incrementalBaseBackupID", "");
+                            }
+                          }}
+                          disabled={baseBackupCandidates.length === 0}
+                          className="mt-0.5"
+                        />
+                      )}
+                    />
+                    <div className="space-y-1">
+                      <Label htmlFor="incremental" className="cursor-pointer">
+                        Incremental backup
+                      </Label>
+                      <p className="text-muted-foreground text-xs">
+                        Only files changed since the base backup will be
+                        included.
+                        {baseBackupCandidates.length === 0 &&
+                          " Requires at least one successful backup as a base."}
+                      </p>
+                    </div>
+                  </div>
+                  {incremental && (
+                    <div className="space-y-2 pl-6">
+                      <Label htmlFor="base-backup">
+                        Base backup{" "}
+                        <span className="text-destructive">*</span>
+                      </Label>
+                      <Controller
+                        name="incrementalBaseBackupID"
+                        control={control}
+                        rules={{
+                          validate: (value) =>
+                            !incremental ||
+                            value.length > 0 ||
+                            "Base backup is required for incremental backups",
+                        }}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger id="base-backup">
+                              <SelectValue placeholder="Select a base backup..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {baseBackupCandidates.map((id) => (
+                                <SelectItem key={id} value={id}>
+                                  {id}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {errors.incrementalBaseBackupID && (
+                        <p className="text-destructive text-sm">
+                          {errors.incrementalBaseBackupID.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
               {backends.length > 1 && (

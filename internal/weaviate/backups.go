@@ -97,18 +97,23 @@ func (w *Weaviate) ListBackups(connectionID int64, backends []string) ([]Backup,
 }
 
 type CreateBackupInput struct {
-	Backend          string   `json:"backend"`
-	ID               string   `json:"id"`
-	Include          []string `json:"include,omitempty"`
-	Exclude          []string `json:"exclude,omitempty"`
-	CompressionLevel string   `json:"compressionLevel,omitempty"`
-	CPUPercentage    int      `json:"cpuPercentage,omitempty"`
+	Backend                 string   `json:"backend"`
+	ID                      string   `json:"id"`
+	Include                 []string `json:"include,omitempty"`
+	Exclude                 []string `json:"exclude,omitempty"`
+	CompressionLevel        string   `json:"compressionLevel,omitempty"`
+	CPUPercentage           int      `json:"cpuPercentage,omitempty"`
+	IncrementalBaseBackupID string   `json:"incrementalBaseBackupID,omitempty"`
 }
 
 func (w *Weaviate) CreateBackup(connectionID int64, input CreateBackupInput) error {
 	c, exists := w.clients[connectionID]
 	if !exists {
 		return fmt.Errorf("connection doesn't exist %d", connectionID)
+	}
+
+	if input.IncrementalBaseBackupID != "" && !c.features[FeatureIncrementalBackup] {
+		return fmt.Errorf("incremental backups are not supported by this Weaviate version")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -118,6 +123,10 @@ func (w *Weaviate) CreateBackup(connectionID int64, input CreateBackupInput) err
 		WithBackend(input.Backend).
 		WithWaitForCompletion(false).
 		WithBackupID(input.ID)
+
+	if input.IncrementalBaseBackupID != "" {
+		creator = creator.WithIncrementalBaseBackupID(input.IncrementalBaseBackupID)
+	}
 
 	if len(input.Include) > 0 {
 		creator = creator.WithIncludeClassNames(input.Include...)
