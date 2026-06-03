@@ -17,6 +17,41 @@ export function errorReporting(error: unknown) {
   });
 }
 
+/**
+ * Extracts a human-readable message from a Weaviate backend error.
+ *
+ * Go wraps errors as "failed <action>: <raw>". The raw payload is often a
+ * Weaviate JSON body like {"error":[{"message":"..."}]}. This helper tries to
+ * pull out the first inner message; falls back to the full string.
+ */
+export function extractWeaviateError(error: unknown): string {
+  const raw = String(error);
+  // Try to locate a JSON fragment inside the string
+  const jsonStart = raw.indexOf("{");
+  if (jsonStart !== -1) {
+    try {
+      const parsed = JSON.parse(raw.slice(jsonStart)) as unknown;
+      if (
+        parsed &&
+        typeof parsed === "object" &&
+        "error" in parsed &&
+        Array.isArray((parsed as { error: unknown }).error) &&
+        (parsed as { error: { message?: unknown }[] }).error.length > 0
+      ) {
+        const msg = (parsed as { error: { message?: unknown }[] }).error[0]
+          .message;
+        if (typeof msg === "string" && msg.length > 0) return msg;
+      }
+    } catch {
+      // not valid JSON — fall through
+    }
+  }
+  // Strip the "failed <verb> <name>: " prefix so the banner isn't too wide
+  const colonIdx = raw.indexOf(": ");
+  if (colonIdx !== -1) return raw.slice(colonIdx + 2);
+  return raw;
+}
+
 export function formatGibToReadable(gib?: number): string {
   if (!gib || gib === 0) return "0 B";
 

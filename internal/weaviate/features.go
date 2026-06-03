@@ -12,10 +12,16 @@ type FeatureKey string
 
 const (
 	FeatureIncrementalBackup FeatureKey = "incrementalBackup"
+	FeatureHFreshIndex       FeatureKey = "hfreshIndex"
+	FeatureObjectTTL         FeatureKey = "objectTTL"
+	FeatureRotationalQuant   FeatureKey = "rotationalQuantization"
 )
 
 var featureMinVersions = map[FeatureKey]*semver.Version{
 	FeatureIncrementalBackup: semver.MustParse("1.37.0"),
+	FeatureHFreshIndex:       semver.MustParse("1.36.0"),
+	FeatureObjectTTL:         semver.MustParse("1.37.0"),
+	FeatureRotationalQuant:   semver.MustParse("1.32.0"),
 }
 
 type Features map[FeatureKey]bool
