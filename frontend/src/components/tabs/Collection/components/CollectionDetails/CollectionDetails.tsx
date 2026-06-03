@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { GetCollection } from "wailsjs/go/weaviate/Weaviate";
 import { errorReporting } from "@/lib/utils";
 import RefreshButton from "@/components/ui/refresh-button";
+import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import {
   Database,
@@ -10,6 +12,7 @@ import {
   Server,
   Users,
   Search,
+  Pencil,
 } from "lucide-react";
 import { collectionDetailsQueryKey } from "../constants";
 import { Section } from "./helpers";
@@ -21,6 +24,7 @@ import {
   MultiTenancySection,
   ModuleConfigSection,
 } from "./sections";
+import { EditCollectionDialog } from "./EditCollectionDialog";
 
 interface Props {
   connectionID: number;
@@ -31,6 +35,8 @@ const CollectionDetails: React.FC<Props> = ({
   connectionID,
   collectionName,
 }) => {
+  const [editOpen, setEditOpen] = useState(false);
+
   const {
     data: collection,
     isLoading,
@@ -88,6 +94,14 @@ const CollectionDetails: React.FC<Props> = ({
             tooltipText="Refresh collection details"
           />
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setEditOpen(true)}
+        >
+          <Pencil className="mr-2 h-3 w-3" />
+          Edit
+        </Button>
       </div>
       {collection.description && (
         <p className="text-muted-foreground text-sm">
@@ -96,7 +110,12 @@ const CollectionDetails: React.FC<Props> = ({
       )}
       <div className="space-y-4">
         <Section title="Properties" icon={Layers} defaultOpen={true}>
-          <PropertiesSection properties={collection.properties || []} />
+          <PropertiesSection
+            connectionID={connectionID}
+            collectionName={collection.class || collectionName}
+            properties={collection.properties || []}
+            onSuccess={() => refetch()}
+          />
         </Section>
         <Section title="Vector Configuration" icon={Search} defaultOpen={true}>
           <VectorConfigSection
@@ -130,6 +149,13 @@ const CollectionDetails: React.FC<Props> = ({
           <ModuleConfigSection moduleConfig={collection.moduleConfig} />
         </Section>
       </div>
+      <EditCollectionDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        connectionID={connectionID}
+        collection={collection}
+        onSuccess={() => refetch()}
+      />
     </div>
   );
 };

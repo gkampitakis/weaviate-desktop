@@ -1,7 +1,9 @@
 package weaviate
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -12,6 +14,7 @@ import (
 	"weaviate-desktop/internal/utils"
 
 	"github.com/stretchr/testify/assert"
+	weaviate_models "github.com/weaviate/weaviate/entities/models"
 )
 
 func TestWeaviate(t *testing.T) {
@@ -403,4 +406,222 @@ func TestWeaviate(t *testing.T) {
 			mockStorage.AssertExpectations(t)
 		})
 	})
+
+	t.Run("CreateCollection", func(t *testing.T) {
+		t.Run("should return error if connection doesn't exist", func(t *testing.T) {
+			mockStorage := NewMockStorage(t)
+			weaviate := New(mockStorage, Configuration{StatusUpdateInterval: time.Hour})
+
+			err := weaviate.CreateCollection(connectionID, &weaviate_models.Class{Class: "Foo"})
+
+			assert.EqualError(t, err, "connection doesn't exist 1")
+		})
+
+		t.Run("should return error if class is nil or unnamed", func(t *testing.T) {
+			weaviate := connectedWeaviate(t, connectionID, nil)
+
+			err := weaviate.CreateCollection(connectionID, nil)
+			assert.EqualError(t, err, "collection name is required")
+
+			err = weaviate.CreateCollection(connectionID, &weaviate_models.Class{})
+			assert.EqualError(t, err, "collection name is required")
+		})
+
+		t.Run("should POST class definition to /v1/schema", func(t *testing.T) {
+			var received weaviate_models.Class
+			weaviate := connectedWeaviate(t, connectionID, func(w http.ResponseWriter, r *http.Request) bool {
+				if r.URL.Path == "/v1/schema" && r.Method == http.MethodPost {
+					body, _ := io.ReadAll(r.Body)
+					assert.NoError(t, json.Unmarshal(body, &received))
+					w.WriteHeader(http.StatusOK)
+					w.Write(body)
+					return true
+				}
+				return false
+			})
+
+			class := &weaviate_models.Class{
+				Class:       "Movies",
+				Description: "Movie collection",
+				Vectorizer:  "none",
+			}
+
+			assert.NoError(t, weaviate.CreateCollection(connectionID, class))
+			assert.Equal(t, "Movies", received.Class)
+			assert.Equal(t, "Movie collection", received.Description)
+			assert.Equal(t, "none", received.Vectorizer)
+		})
+
+		t.Run("should surface server error message", func(t *testing.T) {
+			weaviate := connectedWeaviate(t, connectionID, func(w http.ResponseWriter, r *http.Request) bool {
+				if r.URL.Path == "/v1/schema" && r.Method == http.MethodPost {
+					w.WriteHeader(http.StatusUnprocessableEntity)
+					w.Write([]byte(`{"error":[{"message":"class name already exists"}]}`))
+					return true
+				}
+				return false
+			})
+
+			err := weaviate.CreateCollection(connectionID, &weaviate_models.Class{Class: "Movies"})
+
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "failed creating collection Movies")
+			assert.Contains(t, err.Error(), "class name already exists")
+		})
+	})
+
+	t.Run("UpdateCollection", func(t *testing.T) {
+		t.Run("should return error if connection doesn't exist", func(t *testing.T) {
+			mockStorage := NewMockStorage(t)
+			weaviate := New(mockStorage, Configuration{StatusUpdateInterval: time.Hour})
+
+			err := weaviate.UpdateCollection(connectionID, &weaviate_models.Class{Class: "Foo"})
+
+			assert.EqualError(t, err, "connection doesn't exist 1")
+		})
+
+		t.Run("should return error if class is nil or unnamed", func(t *testing.T) {
+			weaviate := connectedWeaviate(t, connectionID, nil)
+
+			assert.EqualError(t,
+				weaviate.UpdateCollection(connectionID, nil),
+				"collection name is required",
+			)
+		})
+
+		t.Run("should PUT class definition to /v1/schema/{class}", func(t *testing.T) {
+			var received weaviate_models.Class
+			weaviate := connectedWeaviate(t, connectionID, func(w http.ResponseWriter, r *http.Request) bool {
+				if r.URL.Path == "/v1/schema/Movies" && r.Method == http.MethodPut {
+					body, _ := io.ReadAll(r.Body)
+					assert.NoError(t, json.Unmarshal(body, &received))
+					w.WriteHeader(http.StatusOK)
+					w.Write(body)
+					return true
+				}
+				return false
+			})
+
+			class := &weaviate_models.Class{Class: "Movies", Description: "Updated"}
+
+			assert.NoError(t, weaviate.UpdateCollection(connectionID, class))
+			assert.Equal(t, "Movies", received.Class)
+			assert.Equal(t, "Updated", received.Description)
+		})
+
+		t.Run("should surface server error message", func(t *testing.T) {
+			weaviate := connectedWeaviate(t, connectionID, func(w http.ResponseWriter, r *http.Request) bool {
+				if r.URL.Path == "/v1/schema/Movies" && r.Method == http.MethodPut {
+					w.WriteHeader(http.StatusUnprocessableEntity)
+					w.Write([]byte(`{"error":[{"message":"vectorizer is immutable"}]}`))
+					return true
+				}
+				return false
+			})
+
+			err := weaviate.UpdateCollection(connectionID, &weaviate_models.Class{Class: "Movies"})
+
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "failed updating collection Movies")
+			assert.Contains(t, err.Error(), "vectorizer is immutable")
+		})
+	})
+
+	t.Run("AddProperty", func(t *testing.T) {
+		t.Run("should return error if connection doesn't exist", func(t *testing.T) {
+			mockStorage := NewMockStorage(t)
+			weaviate := New(mockStorage, Configuration{StatusUpdateInterval: time.Hour})
+
+			err := weaviate.AddProperty(connectionID, "Movies", &weaviate_models.Property{Name: "title"})
+
+			assert.EqualError(t, err, "connection doesn't exist 1")
+		})
+
+		t.Run("should return error if property is nil or unnamed", func(t *testing.T) {
+			weaviate := connectedWeaviate(t, connectionID, nil)
+
+			assert.EqualError(t,
+				weaviate.AddProperty(connectionID, "Movies", nil),
+				"property name is required",
+			)
+			assert.EqualError(t,
+				weaviate.AddProperty(connectionID, "Movies", &weaviate_models.Property{}),
+				"property name is required",
+			)
+		})
+
+		t.Run("should POST property to /v1/schema/{class}/properties", func(t *testing.T) {
+			var received weaviate_models.Property
+			weaviate := connectedWeaviate(t, connectionID, func(w http.ResponseWriter, r *http.Request) bool {
+				if r.URL.Path == "/v1/schema/Movies/properties" && r.Method == http.MethodPost {
+					body, _ := io.ReadAll(r.Body)
+					assert.NoError(t, json.Unmarshal(body, &received))
+					w.WriteHeader(http.StatusOK)
+					w.Write(body)
+					return true
+				}
+				return false
+			})
+
+			prop := &weaviate_models.Property{Name: "title", DataType: []string{"text"}}
+
+			assert.NoError(t, weaviate.AddProperty(connectionID, "Movies", prop))
+			assert.Equal(t, "title", received.Name)
+			assert.Equal(t, []string{"text"}, received.DataType)
+		})
+
+		t.Run("should surface server error message", func(t *testing.T) {
+			weaviate := connectedWeaviate(t, connectionID, func(w http.ResponseWriter, r *http.Request) bool {
+				if r.URL.Path == "/v1/schema/Movies/properties" && r.Method == http.MethodPost {
+					w.WriteHeader(http.StatusUnprocessableEntity)
+					w.Write([]byte(`{"error":[{"message":"property already exists"}]}`))
+					return true
+				}
+				return false
+			})
+
+			err := weaviate.AddProperty(connectionID, "Movies", &weaviate_models.Property{Name: "title"})
+
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "failed adding property title to Movies")
+			assert.Contains(t, err.Error(), "property already exists")
+		})
+	})
+}
+
+// connectedWeaviate builds a Weaviate with a real SDK client pointed at a mock
+// HTTP server. The handler is invoked for every request; if it returns false
+// the test fails. /v1/meta is always served to satisfy Connect().
+func connectedWeaviate(
+	t *testing.T,
+	connectionID int64,
+	handler func(http.ResponseWriter, *http.Request) bool,
+) *Weaviate {
+	t.Helper()
+
+	mockServer := http_util.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/meta" && r.Method == http.MethodGet {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"version":"1.37.0"}`))
+			return
+		}
+		if handler != nil && handler(w, r) {
+			return
+		}
+		t.Logf("unexpected request to %s with method %s", r.URL.Path, r.Method)
+		t.Fail()
+	}))
+	t.Cleanup(mockServer.Close)
+
+	mockStorage := NewMockStorage(t)
+	mockStorage.EXPECT().GetConnection(connectionID, true).Return(&models.Connection{
+		URI: mockServer.URL,
+	}, nil)
+
+	weaviate := New(mockStorage, Configuration{StatusUpdateInterval: time.Hour})
+	if err := weaviate.Connect(connectionID); err != nil {
+		t.Fatalf("failed to connect: %v", err)
+	}
+
+	return weaviate
 }

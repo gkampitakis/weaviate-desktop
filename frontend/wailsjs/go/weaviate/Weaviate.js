@@ -6,6 +6,10 @@ export function ActivateApiKey(arg1, arg2) {
   return window['go']['weaviate']['Weaviate']['ActivateApiKey'](arg1, arg2);
 }
 
+export function AddProperty(arg1, arg2, arg3) {
+  return window['go']['weaviate']['Weaviate']['AddProperty'](arg1, arg2, arg3);
+}
+
 export function AddRolePermissions(arg1, arg2, arg3) {
   return window['go']['weaviate']['Weaviate']['AddRolePermissions'](arg1, arg2, arg3);
 }
@@ -32,6 +36,10 @@ export function Connect(arg1) {
 
 export function CreateBackup(arg1, arg2) {
   return window['go']['weaviate']['Weaviate']['CreateBackup'](arg1, arg2);
+}
+
+export function CreateCollection(arg1, arg2) {
+  return window['go']['weaviate']['Weaviate']['CreateCollection'](arg1, arg2);
 }
 
 export function CreateRole(arg1, arg2) {
@@ -140,6 +148,10 @@ export function Search(arg1, arg2, arg3, arg4, arg5, arg6) {
 
 export function TestConnection(arg1) {
   return window['go']['weaviate']['Weaviate']['TestConnection'](arg1);
+}
+
+export function UpdateCollection(arg1, arg2) {
+  return window['go']['weaviate']['Weaviate']['UpdateCollection'](arg1, arg2);
 }
 
 export function UsersEnabled(arg1) {

@@ -12,6 +12,7 @@ interface Props {
   icon: React.ElementType;
   children: React.ReactNode;
   defaultOpen?: boolean;
+  action?: React.ReactNode;
 }
 
 export const Section = ({
@@ -19,6 +20,7 @@ export const Section = ({
   icon: Icon,
   children,
   defaultOpen = true,
+  action,
 }: Props) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -27,14 +29,17 @@ export const Section = ({
       <Card className="overflow-hidden">
         <CollapsibleTrigger asChild>
           <CardHeader className="hover:bg-muted/50 cursor-pointer py-3 transition-colors">
-            <div className="flex items-center gap-2">
-              {isOpen ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-              <Icon className="h-4 w-4" />
-              <CardTitle className="text-sm">{title}</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {isOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                <Icon className="h-4 w-4" />
+                <CardTitle className="text-sm">{title}</CardTitle>
+              </div>
+              {action}
             </div>
           </CardHeader>
         </CollapsibleTrigger>

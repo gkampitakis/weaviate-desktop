@@ -20,6 +20,7 @@ import {
 } from "@/lib/dynamic-colors";
 import ConnectionAction from "./ConnectionAction";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { CreateCollectionDialog } from "./components/CreateCollectionDialog";
 
 interface Props {
   connection: ConnectionI;
@@ -32,6 +33,7 @@ export const Connection: React.FC<Props> = ({ connection, collapse }) => {
   const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(false);
   const [lastCollapse, setLastCollapse] = useState(collapse);
   const [lastStatus, setLastStatus] = useState(status);
+  const [createOpen, setCreateOpen] = useState(false);
 
   // Auto-expand when connection status changes to connected
   if (
@@ -56,12 +58,16 @@ export const Connection: React.FC<Props> = ({ connection, collapse }) => {
     setLastCollapse(collapse);
   }
 
-  const { connect } = useConnectionStore(
+  const { connect, updateCollections } = useConnectionStore(
     useShallow((state) => ({
       connect: state.connect,
+      updateCollections: state.updateCollections,
     }))
   );
   const isConnected = status === ConnectionStatus.Connected;
+  const existingClassNames = (collections || [])
+    .map((c) => c.name)
+    .filter(Boolean) as string[];
 
   const handleConnect = async () => {
     const loadingId = toast.loading(`Connecting to ${name}`, {
@@ -122,7 +128,18 @@ export const Connection: React.FC<Props> = ({ connection, collapse }) => {
             </Button>
           )}
           <div className="flex justify-end gap-2">
-            <ConnectionAction hovered={isHovered} color={color} icon={Plus} />
+            {isConnected && (
+              <ConnectionAction
+                hovered={isHovered}
+                color={color}
+                icon={Plus}
+                title="Create collection"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCreateOpen(true);
+                }}
+              />
+            )}
             <DropdownMenuTrigger>
               <ConnectionAction
                 hovered={isHovered}
@@ -141,6 +158,17 @@ export const Connection: React.FC<Props> = ({ connection, collapse }) => {
         collections={collections}
         color={connectionColorBgHv[color]}
       />
+      {isConnected && (
+        <CreateCollectionDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          connectionID={id}
+          existingClassNames={existingClassNames}
+          onSuccess={() => {
+            updateCollections(id).catch(errorReporting);
+          }}
+        />
+      )}
     </Collapsible>
   );
 };

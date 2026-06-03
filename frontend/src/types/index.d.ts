@@ -18,7 +18,11 @@ export interface Connection extends models.w_Connection {
   };
 }
 
-export type FeatureKey = "incrementalBackup";
+export type FeatureKey =
+  | "incrementalBackup"
+  | "hfreshIndex"
+  | "objectTTL"
+  | "rotationalQuantization";
 
 export type Features = Partial<Record<FeatureKey, boolean>>;
 
