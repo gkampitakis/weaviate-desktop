@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.17](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.16...v0.0.17) (2026-06-03)
+
+
+### Features
+
+* add support for creating and editing a collection ([#53](https://github.com/gkampitakis/weaviate-gui/issues/53)) ([897d708](https://github.com/gkampitakis/weaviate-gui/commit/897d708b6ff6f3f4cc1d29eb76d1647699e33c67))
+* add support for triggering incremental backups ([#52](https://github.com/gkampitakis/weaviate-gui/issues/52)) ([094cc7d](https://github.com/gkampitakis/weaviate-gui/commit/094cc7d6effc515253f3d8f2f420d40feef2d456))
+
 ## [0.0.16](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.15...v0.0.16) (2026-03-14)
 
 ## [0.0.15](https://github.com/gkampitakis/weaviate-gui/compare/v0.0.14...v0.0.15) (2026-03-14)
