@@ -19,13 +19,16 @@ import (
 	"github.com/weaviate/weaviate-go-client/v5/weaviate"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/auth"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/graphql"
+	weaviate_grpc "github.com/weaviate/weaviate-go-client/v5/weaviate/grpc"
 	weaviate_models "github.com/weaviate/weaviate/entities/models"
 )
 
 type WClient struct {
-	w        *weaviate.Client
-	healthy  bool
-	features Features
+	w           *weaviate.Client
+	healthy     bool
+	grpcHealthy bool
+	grpcConfig  weaviate_grpc.Config
+	features    Features
 }
 
 type Weaviate struct {
@@ -118,9 +121,12 @@ func (w *Weaviate) getClientFromConnection(c *models.Connection) (*WClient, erro
 		return nil, fmt.Errorf("failed parsing connection URI: %w", err)
 	}
 
+	grpcConfig := resolveGrpcConfig(u, c.GrpcEndpoint)
+
 	cfg := weaviate.Config{
-		Host:   u.Host,
-		Scheme: u.Scheme,
+		Host:       u.Host,
+		Scheme:     u.Scheme,
+		GrpcConfig: &grpcConfig,
 	}
 	if c.ApiKey != nil {
 		cfg.AuthConfig = auth.ApiKey{Value: *c.ApiKey}
@@ -132,8 +138,9 @@ func (w *Weaviate) getClientFromConnection(c *models.Connection) (*WClient, erro
 	}
 
 	return &WClient{
-		healthy: true,
-		w:       client,
+		healthy:    true,
+		w:          client,
+		grpcConfig: grpcConfig,
 	}, nil
 }
 
@@ -162,6 +169,20 @@ func (w *Weaviate) Connect(id int64) error {
 	}
 
 	client.features = evaluateFeatures(meta.Version)
+
+	grpcCtx, grpcCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer grpcCancel()
+
+	if err := probeGrpc(grpcCtx, client.grpcConfig); err != nil {
+		slog.Warn(
+			"grpc endpoint unreachable, grpc features disabled",
+			slog.Int64("connectionID", id),
+			slog.String("grpcEndpoint", client.grpcConfig.Host),
+			slog.Any("error", err),
+		)
+	} else {
+		client.grpcHealthy = true
+	}
 
 	w.clients[id] = client
 	return nil

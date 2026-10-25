@@ -451,6 +451,7 @@ export namespace models {
 	    favorite: boolean;
 	    api_key?: string;
 	    color: string;
+	    grpc_endpoint?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new w_Connection(source);
@@ -464,6 +465,7 @@ export namespace models {
 	        this.favorite = source["favorite"];
 	        this.api_key = source["api_key"];
 	        this.color = source["color"];
+	        this.grpc_endpoint = source["grpc_endpoint"];
 	    }
 	}
 	
