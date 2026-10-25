@@ -47,6 +47,7 @@ const SingleTenantCollection: React.FC<Props> = ({
   >();
   const [searchExecutionTime, setSearchExecutionTime] = useState<string>();
   const [searchError, setSearchError] = useState<string>();
+  const [searchPending, setSearchPending] = useState(false);
   const [similarObjectId, setSimilarObjectId] = useState<string | undefined>();
   // Active search snapshot, retained so Next/Prev can re-run with a new offset.
   const [lastSearch, setLastSearch] = useState<{
@@ -181,6 +182,7 @@ const SingleTenantCollection: React.FC<Props> = ({
   ) => {
     setSearching(true);
     setSearchError(undefined);
+    setSearchPending(true);
     setLastSearch({ query: v, searchType, opts });
     setSearchPage(page);
 
@@ -211,6 +213,8 @@ const SingleTenantCollection: React.FC<Props> = ({
       setSearchError(extractWeaviateError(error));
       setObjects([]);
       setSearchExecutionTime(undefined);
+    } finally {
+      setSearchPending(false);
     }
   };
 
@@ -262,6 +266,7 @@ const SingleTenantCollection: React.FC<Props> = ({
 
   const resetSearch = () => {
     setSearching(false);
+    setSearchPending(false);
     setSearchExecutionTime(undefined);
     setSearchError(undefined);
     setSimilarObjectId(undefined);
@@ -293,6 +298,7 @@ const SingleTenantCollection: React.FC<Props> = ({
           <SearchComponent
             handleSearch={handleSearch}
             resetSearch={resetSearch}
+            searchPending={searchPending}
             executionTime={searchExecutionTime || ""}
             changeId={`${connection.id}-${name}`}
             connectionId={connection.id}
@@ -326,7 +332,7 @@ const SingleTenantCollection: React.FC<Props> = ({
                   searchPage={searchPage}
                   resultsOnPage={resultsOnPage}
                   hasMore={searchHasMore}
-                  loading={loading}
+                  loading={searchPending}
                 />
               ) : (
                 <Pagination
@@ -357,7 +363,7 @@ const SingleTenantCollection: React.FC<Props> = ({
             />
             {viewMode === "table" ? (
               <ObjectsTable
-                loading={loading}
+                loading={loading || searchPending}
                 objects={objects || []}
                 connectionID={connection.id}
                 isSearch={searching}
@@ -369,7 +375,7 @@ const SingleTenantCollection: React.FC<Props> = ({
               />
             ) : (
               <ObjectsList
-                loading={loading}
+                loading={loading || searchPending}
                 objects={objects || []}
                 connectionID={connection.id}
                 isSearch={searching}

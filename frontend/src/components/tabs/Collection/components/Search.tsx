@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Columns3,
   History as HistoryIcon,
+  LoaderCircle,
   Search as SearchIcon,
   Sparkles,
   X,
@@ -99,6 +100,7 @@ export const SEARCH_RESULT_CAP = 10000;
 interface Props {
   handleSearch: (query: string, searchType: SearchType, opts: SearchOptions) => void;
   resetSearch: () => void;
+  searchPending: boolean;
   executionTime: string;
   children: React.ReactNode;
   changeId: string;
@@ -151,6 +153,7 @@ const shortenObjectId = (id: string): string => {
 const Search: React.FC<Props> = ({
   handleSearch,
   resetSearch,
+  searchPending,
   executionTime,
   changeId,
   children,
@@ -241,7 +244,7 @@ const Search: React.FC<Props> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || searchPending) return;
     if (searchType === "nearVector") {
       const err = validateVector(searchQuery);
       if (err) { setVectorError(err); return; }
@@ -463,9 +466,16 @@ const Search: React.FC<Props> = ({
               type="submit"
               size="sm"
               className="h-9 shrink-0"
-              disabled={!canSubmit}
+              disabled={!canSubmit || searchPending}
             >
-              Search
+              {searchPending ? (
+                <>
+                  <LoaderCircle className="size-3.5 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                "Search"
+              )}
             </Button>
           </div>
 
