@@ -39,12 +39,20 @@ export const objectsQueryKey = (
 export const totalObjectsQueryKey = (
   connectionID: number,
   collectionName: string,
-  tenant?: string
+  tenant?: string,
+  where?: unknown
 ) => {
+  const items: unknown[] = ["totalObjects", connectionID, collectionName];
+
   if (tenant) {
-    return ["totalObjects", connectionID, collectionName, tenant];
+    items.push(tenant);
   }
-  return ["totalObjects", connectionID, collectionName];
+
+  if (where) {
+    items.push(where);
+  }
+
+  return items;
 };
 
 export const nodeStatusQueryKey = (connectionID: number) => [

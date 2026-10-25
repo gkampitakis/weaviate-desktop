@@ -114,8 +114,8 @@ export function GetTenants(arg1, arg2) {
   return window['go']['weaviate']['Weaviate']['GetTenants'](arg1, arg2);
 }
 
-export function GetTotalObjects(arg1, arg2, arg3) {
-  return window['go']['weaviate']['Weaviate']['GetTotalObjects'](arg1, arg2, arg3);
+export function GetTotalObjects(arg1, arg2, arg3, arg4) {
+  return window['go']['weaviate']['Weaviate']['GetTotalObjects'](arg1, arg2, arg3, arg4);
 }
 
 export function GrpcAvailable(arg1) {

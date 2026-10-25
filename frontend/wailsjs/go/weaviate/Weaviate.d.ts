@@ -59,7 +59,7 @@ export function GetRestoreStatus(arg1:number,arg2:string,arg3:string):Promise<we
 
 export function GetTenants(arg1:number,arg2:string):Promise<Array<models.w_Tenant>>;
 
-export function GetTotalObjects(arg1:number,arg2:string,arg3:string):Promise<number>;
+export function GetTotalObjects(arg1:number,arg2:string,arg3:string,arg4:weaviate.w_WhereFilter):Promise<number>;
 
 export function GrpcAvailable(arg1:number):Promise<boolean>;
 

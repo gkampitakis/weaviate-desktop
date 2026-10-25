@@ -4,11 +4,14 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/url"
 	"strings"
+	"time"
 
 	weaviate_grpc "github.com/weaviate/weaviate-go-client/v5/weaviate/grpc"
+	pb "github.com/weaviate/weaviate/grpc/generated/protocol/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -86,22 +89,71 @@ func grpcCredentials(c weaviate_grpc.Config) credentials.TransportCredentials {
 	return insecure.NewCredentials()
 }
 
-func probeGrpc(ctx context.Context, c weaviate_grpc.Config) error {
+type grpcAggregator interface {
+	Aggregate(
+		ctx context.Context,
+		in *pb.AggregateRequest,
+		opts ...grpc.CallOption,
+	) (*pb.AggregateReply, error)
+}
+
+func dialGrpc(c weaviate_grpc.Config) (*grpc.ClientConn, error) {
 	conn, err := grpc.NewClient(
 		grpcAddress(c),
 		grpc.WithTransportCredentials(grpcCredentials(c)),
 	)
 	if err != nil {
-		return fmt.Errorf("failed creating grpc client for %s: %w", c.Host, err)
+		return nil, fmt.Errorf("failed creating grpc client for %s: %w", c.Host, err)
 	}
-	defer conn.Close()
 
+	return conn, nil
+}
+
+func checkGrpcHealth(ctx context.Context, conn grpc.ClientConnInterface, host string) error {
 	if _, err := grpc_health_v1.NewHealthClient(conn).
 		Check(ctx, &grpc_health_v1.HealthCheckRequest{}); err != nil {
-		return fmt.Errorf("failed health checking grpc endpoint %s: %w", c.Host, err)
+		return fmt.Errorf("failed health checking grpc endpoint %s: %w", host, err)
 	}
 
 	return nil
+}
+
+func (w *Weaviate) attachGrpc(id int64, client *WClient) {
+	conn, err := dialGrpc(client.grpcConfig)
+	if err != nil {
+		slog.Warn(
+			"failed creating grpc client, grpc features disabled",
+			slog.Int64("connectionID", id),
+			slog.String("grpcEndpoint", client.grpcConfig.Host),
+			slog.Any("error", err),
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := checkGrpcHealth(ctx, conn, client.grpcConfig.Host); err != nil {
+		slog.Warn(
+			"grpc endpoint unreachable, grpc features disabled",
+			slog.Int64("connectionID", id),
+			slog.String("grpcEndpoint", client.grpcConfig.Host),
+			slog.Any("error", err),
+		)
+		closeGrpcConn(conn)
+
+		return
+	}
+
+	client.grpcHealthy = true
+	client.grpcConn = conn
+	client.grpcClient = pb.NewWeaviateClient(conn)
+}
+
+func closeGrpcConn(conn *grpc.ClientConn) {
+	if err := conn.Close(); err != nil {
+		slog.Warn("failed closing grpc connection", slog.Any("error", err))
+	}
 }
 
 func (w *Weaviate) GrpcAvailable(connectionID int64) (bool, error) {

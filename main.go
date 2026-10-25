@@ -37,7 +37,7 @@ func main() {
 		log.Fatalf("failed initializing storage: %v", err)
 	}
 
-	w := weaviate.New(sqlStorage, weaviate.Configuration{
+	w, weaviateCloser := weaviate.New(sqlStorage, weaviate.Configuration{
 		StatusUpdateInterval: 30 * time.Second,
 	})
 
@@ -74,6 +74,7 @@ func main() {
 			appUpdater.SetRuntimeContext(ctx)
 		},
 		OnShutdown: func(_ context.Context) {
+			weaviateCloser()
 			_ = dbCloser()
 		},
 		DragAndDrop: &options.DragAndDrop{
