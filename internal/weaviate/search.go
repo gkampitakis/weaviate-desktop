@@ -98,62 +98,9 @@ func (w *Weaviate) Search(
 		gqlQuery = gqlQuery.WithOffset(opts.Offset)
 	}
 
-	switch searchType {
-	case "hybrid":
-		alpha := opts.Alpha
-		if alpha == 0 {
-			alpha = 0.75
-		}
-		h := (&graphql.HybridArgumentBuilder{}).WithQuery(query).WithAlpha(alpha)
-		if opts.FusionType != "" {
-			h = h.WithFusionType(graphql.FusionType(opts.FusionType))
-		}
-		if len(opts.TargetVectors) > 0 {
-			h = h.WithTargetVectors(opts.TargetVectors...)
-		}
-		gqlQuery = gqlQuery.WithHybrid(h)
-	case "nearText":
-		nt := (&graphql.NearTextArgumentBuilder{}).WithConcepts([]string{query})
-		if opts.Distance > 0 {
-			nt = nt.WithDistance(opts.Distance)
-		}
-		if opts.Certainty > 0 {
-			nt = nt.WithCertainty(opts.Certainty)
-		}
-		if len(opts.TargetVectors) > 0 {
-			nt = nt.WithTargetVectors(opts.TargetVectors...)
-		}
-		gqlQuery = gqlQuery.WithNearText(nt)
-	case "nearVector":
-		vector, err := parseVectorQuery(query)
-		if err != nil {
-			return nil, err
-		}
-		nv := (&graphql.NearVectorArgumentBuilder{}).WithVector(vector)
-		if opts.Distance > 0 {
-			nv = nv.WithDistance(opts.Distance)
-		}
-		if opts.Certainty > 0 {
-			nv = nv.WithCertainty(opts.Certainty)
-		}
-		if len(opts.TargetVectors) > 0 {
-			nv = nv.WithTargetVectors(opts.TargetVectors...)
-		}
-		gqlQuery = gqlQuery.WithNearVector(nv)
-	case "nearObject":
-		no := (&graphql.NearObjectArgumentBuilder{}).WithID(query)
-		if opts.Distance > 0 {
-			no = no.WithDistance(opts.Distance)
-		}
-		if opts.Certainty > 0 {
-			no = no.WithCertainty(opts.Certainty)
-		}
-		if len(opts.TargetVectors) > 0 {
-			no = no.WithTargetVectors(opts.TargetVectors...)
-		}
-		gqlQuery = gqlQuery.WithNearObject(no)
-	default: // "bm25"
-		gqlQuery = gqlQuery.WithBM25((&graphql.BM25ArgumentBuilder{}).WithQuery(query))
+	gqlQuery, err = applySearchOperator(gqlQuery, searchType, query, opts)
+	if err != nil {
+		return nil, err
 	}
 
 	if tenant != "" {
@@ -198,12 +145,105 @@ func (w *Weaviate) Search(
 		}, nil
 	}
 
-	response := &PaginatedObjectResponse{
-		Objects:       make([]WeaviateObject, 0, len(objects)),
+	return &PaginatedObjectResponse{
+		Objects:       buildSearchObjects(objects, collection, searchType),
 		TotalResults:  len(objects),
 		ExecutionTime: time.Since(now).String(),
+	}, nil
+}
+
+func applySearchOperator(
+	gqlQuery *graphql.GetBuilder,
+	searchType, query string,
+	opts SearchOptions,
+) (*graphql.GetBuilder, error) {
+	switch searchType {
+	case "hybrid":
+		return gqlQuery.WithHybrid(buildHybridArgument(query, opts)), nil
+	case "nearText":
+		return gqlQuery.WithNearText(buildNearTextArgument(query, opts)), nil
+	case "nearVector":
+		nv, err := buildNearVectorArgument(query, opts)
+		if err != nil {
+			return nil, err
+		}
+		return gqlQuery.WithNearVector(nv), nil
+	case "nearObject":
+		return gqlQuery.WithNearObject(buildNearObjectArgument(query, opts)), nil
+	default: // "bm25"
+		return gqlQuery.WithBM25((&graphql.BM25ArgumentBuilder{}).WithQuery(query)), nil
+	}
+}
+
+func buildHybridArgument(query string, opts SearchOptions) *graphql.HybridArgumentBuilder {
+	alpha := opts.Alpha
+	if alpha == 0 {
+		alpha = 0.75
+	}
+	h := (&graphql.HybridArgumentBuilder{}).WithQuery(query).WithAlpha(alpha)
+	if opts.FusionType != "" {
+		h = h.WithFusionType(graphql.FusionType(opts.FusionType))
+	}
+	if len(opts.TargetVectors) > 0 {
+		h = h.WithTargetVectors(opts.TargetVectors...)
 	}
 
+	return h
+}
+
+func buildNearTextArgument(query string, opts SearchOptions) *graphql.NearTextArgumentBuilder {
+	nt := (&graphql.NearTextArgumentBuilder{}).WithConcepts([]string{query})
+	if opts.Distance > 0 {
+		nt = nt.WithDistance(opts.Distance)
+	}
+	if opts.Certainty > 0 {
+		nt = nt.WithCertainty(opts.Certainty)
+	}
+	if len(opts.TargetVectors) > 0 {
+		nt = nt.WithTargetVectors(opts.TargetVectors...)
+	}
+
+	return nt
+}
+
+func buildNearVectorArgument(
+	query string,
+	opts SearchOptions,
+) (*graphql.NearVectorArgumentBuilder, error) {
+	vector, err := parseVectorQuery(query)
+	if err != nil {
+		return nil, err
+	}
+	nv := (&graphql.NearVectorArgumentBuilder{}).WithVector(vector)
+	if opts.Distance > 0 {
+		nv = nv.WithDistance(opts.Distance)
+	}
+	if opts.Certainty > 0 {
+		nv = nv.WithCertainty(opts.Certainty)
+	}
+	if len(opts.TargetVectors) > 0 {
+		nv = nv.WithTargetVectors(opts.TargetVectors...)
+	}
+
+	return nv, nil
+}
+
+func buildNearObjectArgument(query string, opts SearchOptions) *graphql.NearObjectArgumentBuilder {
+	no := (&graphql.NearObjectArgumentBuilder{}).WithID(query)
+	if opts.Distance > 0 {
+		no = no.WithDistance(opts.Distance)
+	}
+	if opts.Certainty > 0 {
+		no = no.WithCertainty(opts.Certainty)
+	}
+	if len(opts.TargetVectors) > 0 {
+		no = no.WithTargetVectors(opts.TargetVectors...)
+	}
+
+	return no
+}
+
+func buildSearchObjects(objects []any, collection, searchType string) []WeaviateObject {
 	// Weaviate populates _additional.score for bm25/hybrid and
 	// _additional.distance/certainty for the near* family. It will, however,
 	// still return zero-valued fields for the signals that don't apply (e.g.
@@ -212,35 +252,39 @@ func (w *Weaviate) Search(
 	// meaningful for the chosen search type.
 	keepScore, keepVectorSignals := relevantSignals(searchType)
 
+	out := make([]WeaviateObject, 0, len(objects))
 	for _, obj := range objects {
-		if objMap, ok := obj.(map[string]any); ok {
-			additional, _ := objMap["_additional"].(map[string]any)
-			object := WeaviateObject{
-				Class: collection,
-				LastUpdateTimeUnix: utils.MustParseInt[int64](
-					additional["lastUpdateTimeUnix"].(string),
-				),
-				CreationTimeUnix: utils.MustParseInt[int64](
-					additional["creationTimeUnix"].(string),
-				),
-				ID:         additional["id"].(string),
-				Properties: objMap,
-			}
-			if keepScore {
-				object.Score = coerceFloat(additional["score"])
-			}
-			if keepVectorSignals {
-				object.Distance = coerceFloat(additional["distance"])
-				object.Certainty = coerceFloat(additional["certainty"])
-			}
-			// Remove the _additional field from properties
-			delete(object.Properties.(map[string]any), "_additional")
-			// Add the object to the response
-			response.Objects = append(response.Objects, object)
+		objMap, ok := obj.(map[string]any)
+		if !ok {
+			continue
 		}
+
+		additional, _ := objMap["_additional"].(map[string]any)
+		object := WeaviateObject{
+			Class: collection,
+			LastUpdateTimeUnix: utils.MustParseInt[int64](
+				additional["lastUpdateTimeUnix"].(string),
+			),
+			CreationTimeUnix: utils.MustParseInt[int64](
+				additional["creationTimeUnix"].(string),
+			),
+			ID:         additional["id"].(string),
+			Properties: objMap,
+		}
+		if keepScore {
+			object.Score = coerceFloat(additional["score"])
+		}
+		if keepVectorSignals {
+			object.Distance = coerceFloat(additional["distance"])
+			object.Certainty = coerceFloat(additional["certainty"])
+		}
+		// Remove the _additional field from properties
+		delete(object.Properties.(map[string]any), "_additional")
+		// Add the object to the response
+		out = append(out, object)
 	}
 
-	return response, nil
+	return out
 }
 
 // relevantSignals returns which relevance signals are meaningful for a given
@@ -411,42 +455,61 @@ func buildWhereBuilder(f *WhereFilter) (*filters.WhereBuilder, error) {
 		return wb.WithValueBoolean(f.ValueBoolean), nil
 	}
 
+	return applyLeafValue(wb, f, op)
+}
+
+func applyLeafValue(
+	wb *filters.WhereBuilder,
+	f *WhereFilter,
+	op filters.WhereOperator,
+) (*filters.WhereBuilder, error) {
+	if op == filters.ContainsAny || op == filters.ContainsAll {
+		return applyContainsValue(wb, f)
+	}
+
+	return applySingleValue(wb, f)
+}
+
+func applyContainsValue(wb *filters.WhereBuilder, f *WhereFilter) (*filters.WhereBuilder, error) {
 	switch f.ValueType {
 	case "text":
-		if op == filters.ContainsAny || op == filters.ContainsAll {
-			vals := f.ValueTexts
-			if len(vals) == 0 && f.ValueText != "" {
-				vals = []string{f.ValueText}
-			}
-			return wb.WithValueText(vals...), nil
+		vals := f.ValueTexts
+		if len(vals) == 0 && f.ValueText != "" {
+			vals = []string{f.ValueText}
 		}
+		return wb.WithValueText(vals...), nil
+	case "string":
+		vals := f.ValueTexts
+		if len(vals) == 0 && f.ValueString != "" {
+			vals = []string{f.ValueString}
+		}
+		return wb.WithValueString(vals...), nil
+	case "int":
+		vals := f.ValueInts
+		if len(vals) == 0 {
+			vals = []int64{f.ValueInt}
+		}
+		return wb.WithValueInt(vals...), nil
+	case "number":
+		vals := f.ValueNumbers
+		if len(vals) == 0 {
+			vals = []float64{f.ValueNumber}
+		}
+		return wb.WithValueNumber(vals...), nil
+	default:
+		return applySingleValue(wb, f)
+	}
+}
+
+func applySingleValue(wb *filters.WhereBuilder, f *WhereFilter) (*filters.WhereBuilder, error) {
+	switch f.ValueType {
+	case "text":
 		return wb.WithValueText(f.ValueText), nil
 	case "string":
-		if op == filters.ContainsAny || op == filters.ContainsAll {
-			vals := f.ValueTexts
-			if len(vals) == 0 && f.ValueString != "" {
-				vals = []string{f.ValueString}
-			}
-			return wb.WithValueString(vals...), nil
-		}
 		return wb.WithValueString(f.ValueString), nil
 	case "int":
-		if op == filters.ContainsAny || op == filters.ContainsAll {
-			vals := f.ValueInts
-			if len(vals) == 0 {
-				vals = []int64{f.ValueInt}
-			}
-			return wb.WithValueInt(vals...), nil
-		}
 		return wb.WithValueInt(f.ValueInt), nil
 	case "number":
-		if op == filters.ContainsAny || op == filters.ContainsAll {
-			vals := f.ValueNumbers
-			if len(vals) == 0 {
-				vals = []float64{f.ValueNumber}
-			}
-			return wb.WithValueNumber(vals...), nil
-		}
 		return wb.WithValueNumber(f.ValueNumber), nil
 	case "boolean":
 		return wb.WithValueBoolean(f.ValueBoolean), nil
