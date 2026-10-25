@@ -201,7 +201,7 @@ func TestGrpcAvailable(t *testing.T) {
 	})
 }
 
-func TestProbeGrpc(t *testing.T) {
+func TestCheckGrpcHealth(t *testing.T) {
 	t.Run("should succeed against a serving grpc endpoint", func(t *testing.T) {
 		listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
 		assert.NoError(t, err)
@@ -212,10 +212,15 @@ func TestProbeGrpc(t *testing.T) {
 		go func() { _ = server.Serve(listener) }()
 		t.Cleanup(server.Stop)
 
+		cfg := weaviate_grpc.Config{Host: listener.Addr().String()}
+		conn, err := dialGrpc(cfg)
+		assert.NoError(t, err)
+		t.Cleanup(func() { _ = conn.Close() })
+
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		assert.NoError(t, probeGrpc(ctx, weaviate_grpc.Config{Host: listener.Addr().String()}))
+		assert.NoError(t, checkGrpcHealth(ctx, conn, cfg.Host))
 	})
 
 	t.Run("should fail against a closed grpc endpoint", func(t *testing.T) {
@@ -224,10 +229,115 @@ func TestProbeGrpc(t *testing.T) {
 		address := listener.Addr().String()
 		assert.NoError(t, listener.Close())
 
+		cfg := weaviate_grpc.Config{Host: address}
+		conn, err := dialGrpc(cfg)
+		assert.NoError(t, err)
+		t.Cleanup(func() { _ = conn.Close() })
+
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 
-		err = probeGrpc(ctx, weaviate_grpc.Config{Host: address})
+		err = checkGrpcHealth(ctx, conn, cfg.Host)
 		assert.ErrorContains(t, err, "failed health checking grpc endpoint")
+	})
+}
+
+func TestAttachGrpc(t *testing.T) {
+	t.Run("should keep the connection and mark the client healthy", func(t *testing.T) {
+		listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
+		assert.NoError(t, err)
+
+		server := grpc.NewServer()
+		grpc_health_v1.RegisterHealthServer(server, health.NewServer())
+
+		go func() { _ = server.Serve(listener) }()
+		t.Cleanup(server.Stop)
+
+		w := &Weaviate{clients: map[int64]*WClient{}}
+		client := &WClient{
+			grpcConfig: weaviate_grpc.Config{Host: listener.Addr().String()},
+		}
+
+		w.attachGrpc(1, client)
+
+		assert.True(t, client.grpcHealthy)
+		assert.NotNil(t, client.grpcConn)
+		assert.NotNil(t, client.grpcClient)
+
+		client.closeGrpc()
+
+		assert.False(t, client.grpcHealthy)
+		assert.Nil(t, client.grpcConn)
+		assert.Nil(t, client.grpcClient)
+	})
+
+	t.Run("should leave the client unhealthy when the endpoint is closed", func(t *testing.T) {
+		listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
+		assert.NoError(t, err)
+		address := listener.Addr().String()
+		assert.NoError(t, listener.Close())
+
+		w := &Weaviate{clients: map[int64]*WClient{}}
+		client := &WClient{grpcConfig: weaviate_grpc.Config{Host: address}}
+
+		w.attachGrpc(1, client)
+
+		assert.False(t, client.grpcHealthy)
+		assert.Nil(t, client.grpcConn)
+		assert.Nil(t, client.grpcClient)
+	})
+}
+
+func TestCloseClients(t *testing.T) {
+	t.Run("should close every held grpc connection", func(t *testing.T) {
+		listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
+		assert.NoError(t, err)
+
+		server := grpc.NewServer()
+		grpc_health_v1.RegisterHealthServer(server, health.NewServer())
+
+		go func() { _ = server.Serve(listener) }()
+		t.Cleanup(server.Stop)
+
+		cfg := weaviate_grpc.Config{Host: listener.Addr().String()}
+		w := &Weaviate{clients: map[int64]*WClient{}}
+
+		for _, id := range []int64{1, 2} {
+			client := &WClient{grpcConfig: cfg}
+			w.attachGrpc(id, client)
+			assert.True(t, client.grpcHealthy)
+			w.clients[id] = client
+		}
+
+		w.closeClients()
+
+		for _, client := range w.clients {
+			assert.Nil(t, client.grpcConn)
+			assert.False(t, client.grpcHealthy)
+		}
+	})
+
+	t.Run("should be a no-op for a client without a grpc connection", func(t *testing.T) {
+		w := &Weaviate{clients: map[int64]*WClient{1: {}}}
+
+		w.closeClients()
+
+		assert.Nil(t, w.clients[1].grpcConn)
+	})
+}
+
+func TestGrpcHeaders(t *testing.T) {
+	t.Run("should return nil without an api key", func(t *testing.T) {
+		assert.Nil(t, grpcHeaders(nil))
+		assert.Nil(t, grpcHeaders(utils.Pointer("")))
+		assert.Nil(t, grpcHeaders(utils.Pointer("   ")))
+	})
+
+	t.Run("should carry the api key as a bearer token", func(t *testing.T) {
+		assert.Equal(
+			t,
+			map[string]string{"authorization": "Bearer mock-key"},
+			grpcHeaders(utils.Pointer("mock-key")),
+		)
 	})
 }

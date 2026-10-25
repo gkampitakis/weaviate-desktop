@@ -21,6 +21,7 @@ import (
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/graphql"
 	weaviate_grpc "github.com/weaviate/weaviate-go-client/v5/weaviate/grpc"
 	weaviate_models "github.com/weaviate/weaviate/entities/models"
+	"google.golang.org/grpc"
 )
 
 type WClient struct {
@@ -28,6 +29,9 @@ type WClient struct {
 	healthy     bool
 	grpcHealthy bool
 	grpcConfig  weaviate_grpc.Config
+	grpcConn    *grpc.ClientConn
+	grpcClient  grpcAggregator
+	grpcHeaders map[string]string
 	version     string
 	features    Features
 }
@@ -58,7 +62,7 @@ type Configuration struct {
 	StatusUpdateInterval time.Duration
 }
 
-func New(s Storage, c Configuration) *Weaviate {
+func New(s Storage, c Configuration) (*Weaviate, func()) {
 	w := &Weaviate{
 		storage:    s,
 		clients:    map[int64]*WClient{},
@@ -67,7 +71,24 @@ func New(s Storage, c Configuration) *Weaviate {
 
 	go w.updateClusterStatus(c.StatusUpdateInterval)
 
-	return w
+	return w, w.closeClients
+}
+
+func (w *Weaviate) closeClients() {
+	for _, c := range w.clients {
+		c.closeGrpc()
+	}
+}
+
+func (c *WClient) closeGrpc() {
+	if c.grpcConn == nil {
+		return
+	}
+
+	closeGrpcConn(c.grpcConn)
+	c.grpcConn = nil
+	c.grpcClient = nil
+	c.grpcHealthy = false
 }
 
 func (w *Weaviate) updateClusterStatus(d time.Duration) {
@@ -139,10 +160,19 @@ func (w *Weaviate) getClientFromConnection(c *models.Connection) (*WClient, erro
 	}
 
 	return &WClient{
-		healthy:    true,
-		w:          client,
-		grpcConfig: grpcConfig,
+		healthy:     true,
+		w:           client,
+		grpcConfig:  grpcConfig,
+		grpcHeaders: grpcHeaders(c.ApiKey),
 	}, nil
+}
+
+func grpcHeaders(apiKey *string) map[string]string {
+	if apiKey == nil || strings.TrimSpace(*apiKey) == "" {
+		return nil
+	}
+
+	return map[string]string{"authorization": "Bearer " + *apiKey}
 }
 
 func (w *Weaviate) Connect(id int64) error {
@@ -172,19 +202,7 @@ func (w *Weaviate) Connect(id int64) error {
 	client.version = meta.Version
 	client.features = evaluateFeatures(meta.Version)
 
-	grpcCtx, grpcCancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer grpcCancel()
-
-	if err := probeGrpc(grpcCtx, client.grpcConfig); err != nil {
-		slog.Warn(
-			"grpc endpoint unreachable, grpc features disabled",
-			slog.Int64("connectionID", id),
-			slog.String("grpcEndpoint", client.grpcConfig.Host),
-			slog.Any("error", err),
-		)
-	} else {
-		client.grpcHealthy = true
-	}
+	w.attachGrpc(id, client)
 
 	w.clients[id] = client
 	return nil
@@ -474,11 +492,12 @@ func (w *Weaviate) GetCollections(connectionID int64) ([]*weaviate_models.Class,
 }
 
 func (w *Weaviate) Disconnect(id int64) error {
-	_, exists := w.clients[id]
+	c, exists := w.clients[id]
 	if !exists {
 		return nil
 	}
 
+	c.closeGrpc()
 	delete(w.clients, id)
 	return nil
 }

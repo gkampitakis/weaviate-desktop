@@ -32,7 +32,7 @@ func TestWeaviate(t *testing.T) {
 				GetConnection(connectionID, true).
 				Return(nil, fmt.Errorf("mock-error"))
 
-			weaviate := New(mockStorage, Configuration{
+			weaviate, _ := New(mockStorage, Configuration{
 				StatusUpdateInterval: time.Hour,
 			})
 
@@ -92,7 +92,7 @@ func TestWeaviate(t *testing.T) {
 					URI: mockServer.URL + "/v1/objects",
 				}, nil)
 
-				weaviate := New(mockStorage, Configuration{
+				weaviate, _ := New(mockStorage, Configuration{
 					StatusUpdateInterval: time.Hour,
 				})
 
@@ -157,7 +157,7 @@ func TestWeaviate(t *testing.T) {
 				ApiKey: utils.Pointer("mock-api-key"),
 			}, nil)
 
-			weaviate := New(mockStorage, Configuration{
+			weaviate, _ := New(mockStorage, Configuration{
 				StatusUpdateInterval: time.Hour,
 			})
 
@@ -210,7 +210,7 @@ func TestWeaviate(t *testing.T) {
 				URI: mockServer.URL + "/v1/objects",
 			}, nil)
 
-			weaviate := New(mockStorage, Configuration{
+			weaviate, _ := New(mockStorage, Configuration{
 				StatusUpdateInterval: time.Hour,
 			})
 
@@ -252,7 +252,7 @@ func TestWeaviate(t *testing.T) {
 			)
 			t.Cleanup(mockServer.Close)
 
-			weaviate := New(mockStorage, Configuration{
+			weaviate, _ := New(mockStorage, Configuration{
 				StatusUpdateInterval: time.Hour,
 			})
 
@@ -269,7 +269,7 @@ func TestWeaviate(t *testing.T) {
 	t.Run("Connect & Disconnect", func(t *testing.T) {
 		t.Run("disconnect should remove client from map", func(t *testing.T) {
 			mockStorage := NewMockStorage(t)
-			weaviate := New(mockStorage, Configuration{
+			weaviate, _ := New(mockStorage, Configuration{
 				StatusUpdateInterval: time.Hour,
 			})
 
@@ -292,7 +292,7 @@ func TestWeaviate(t *testing.T) {
 
 		t.Run("disconnect should return nil if client doesn't exist", func(t *testing.T) {
 			mockStorage := NewMockStorage(t)
-			weaviate := New(mockStorage, Configuration{
+			weaviate, _ := New(mockStorage, Configuration{
 				StatusUpdateInterval: time.Hour,
 			})
 
@@ -308,7 +308,7 @@ func TestWeaviate(t *testing.T) {
 
 		t.Run("should return nil if client already exists", func(t *testing.T) {
 			mockStorage := NewMockStorage(t)
-			weaviate := New(mockStorage, Configuration{
+			weaviate, _ := New(mockStorage, Configuration{
 				StatusUpdateInterval: time.Hour,
 			})
 
@@ -328,7 +328,7 @@ func TestWeaviate(t *testing.T) {
 				GetConnection(connectionID, true).
 				Return(nil, fmt.Errorf("mock-error"))
 
-			weaviate := New(mockStorage, Configuration{
+			weaviate, _ := New(mockStorage, Configuration{
 				StatusUpdateInterval: time.Hour,
 			})
 
@@ -361,7 +361,7 @@ func TestWeaviate(t *testing.T) {
 					ApiKey: utils.Pointer("mock-api-key"),
 				}, nil)
 
-			weaviate := New(mockStorage, Configuration{
+			weaviate, _ := New(mockStorage, Configuration{
 				StatusUpdateInterval: time.Hour,
 			})
 
@@ -394,7 +394,7 @@ func TestWeaviate(t *testing.T) {
 					URI: mockServer.URL,
 				}, nil)
 
-			weaviate := New(mockStorage, Configuration{
+			weaviate, _ := New(mockStorage, Configuration{
 				StatusUpdateInterval: time.Hour,
 			})
 
@@ -410,7 +410,7 @@ func TestWeaviate(t *testing.T) {
 	t.Run("CreateCollection", func(t *testing.T) {
 		t.Run("should return error if connection doesn't exist", func(t *testing.T) {
 			mockStorage := NewMockStorage(t)
-			weaviate := New(mockStorage, Configuration{StatusUpdateInterval: time.Hour})
+			weaviate, _ := New(mockStorage, Configuration{StatusUpdateInterval: time.Hour})
 
 			err := weaviate.CreateCollection(connectionID, &weaviate_models.Class{Class: "Foo"})
 
@@ -473,7 +473,7 @@ func TestWeaviate(t *testing.T) {
 	t.Run("UpdateCollection", func(t *testing.T) {
 		t.Run("should return error if connection doesn't exist", func(t *testing.T) {
 			mockStorage := NewMockStorage(t)
-			weaviate := New(mockStorage, Configuration{StatusUpdateInterval: time.Hour})
+			weaviate, _ := New(mockStorage, Configuration{StatusUpdateInterval: time.Hour})
 
 			err := weaviate.UpdateCollection(connectionID, &weaviate_models.Class{Class: "Foo"})
 
@@ -530,7 +530,7 @@ func TestWeaviate(t *testing.T) {
 	t.Run("AddProperty", func(t *testing.T) {
 		t.Run("should return error if connection doesn't exist", func(t *testing.T) {
 			mockStorage := NewMockStorage(t)
-			weaviate := New(mockStorage, Configuration{StatusUpdateInterval: time.Hour})
+			weaviate, _ := New(mockStorage, Configuration{StatusUpdateInterval: time.Hour})
 
 			err := weaviate.AddProperty(connectionID, "Movies", &weaviate_models.Property{Name: "title"})
 
@@ -618,7 +618,7 @@ func connectedWeaviate(
 		URI: mockServer.URL,
 	}, nil)
 
-	weaviate := New(mockStorage, Configuration{StatusUpdateInterval: time.Hour})
+	weaviate, _ := New(mockStorage, Configuration{StatusUpdateInterval: time.Hour})
 	if err := weaviate.Connect(connectionID); err != nil {
 		t.Fatalf("failed to connect: %v", err)
 	}
