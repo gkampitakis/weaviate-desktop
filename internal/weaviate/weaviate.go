@@ -3,7 +3,6 @@ package weaviate
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -18,7 +17,6 @@ import (
 
 	"github.com/weaviate/weaviate-go-client/v5/weaviate"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/auth"
-	"github.com/weaviate/weaviate-go-client/v5/weaviate/graphql"
 	weaviate_grpc "github.com/weaviate/weaviate-go-client/v5/weaviate/grpc"
 	weaviate_models "github.com/weaviate/weaviate/entities/models"
 	"google.golang.org/grpc"
@@ -206,49 +204,6 @@ func (w *Weaviate) Connect(id int64) error {
 
 	w.clients[id] = client
 	return nil
-}
-
-func (w *Weaviate) GetTotalObjects(connectionID int64, collection, tenant string) (int64, error) {
-	c, exists := w.clients[connectionID]
-	if !exists {
-		return -1, fmt.Errorf("connection doesn't exist %d", connectionID)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	meta := graphql.Field{
-		Name: "meta", Fields: []graphql.Field{
-			{Name: "count"},
-		},
-	}
-
-	get := c.w.GraphQL().Aggregate().
-		WithClassName(collection).
-		WithFields(meta)
-
-	if tenant != "" {
-		get = get.WithTenant(tenant)
-	}
-
-	result, err := get.Do(ctx)
-	if err != nil {
-		return -1, fmt.Errorf("failed aggregating total objects for %s: %w", collection, err)
-	}
-	if len(result.Errors) != 0 {
-		err := strings.Builder{}
-
-		for _, e := range result.Errors {
-			err.WriteString(e.Message)
-			err.WriteString(",")
-		}
-
-		return -1, errors.New(err.String())
-	}
-
-	return int64(
-		result.Data["Aggregate"].(map[string]any)[collection].([]any)[0].(map[string]any)["meta"].(map[string]any)["count"].(float64),
-	), nil
 }
 
 // GetObject fetches a single object by id from a collection (optionally
