@@ -53,9 +53,10 @@ const TenantList: React.FC<Props> = ({ tenants, selected, setTenant }) => {
                   <CommandItem
                     key={tenant.name}
                     value={tenant.name}
-                    onSelect={(currentValue) => {
-                      setTenant(currentValue === selected ? "" : currentValue);
+                    onSelect={() => {
                       setOpen(false);
+                      if (tenant.name === selected) return;
+                      setTenant(tenant.name!);
                     }}
                   >
                     <Check

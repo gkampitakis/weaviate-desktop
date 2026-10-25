@@ -5,4 +5,4 @@ export interface Props {
   selectedTab?: InnerTabs;
 }
 
-export type InnerTabs = "objects" | "details" | "tenants";
+export type InnerTabs = "objects" | "details";

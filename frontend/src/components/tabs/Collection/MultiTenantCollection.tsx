@@ -441,15 +441,6 @@ const MultiTenantCollection: React.FC<Props> = ({
         <CollectionDetails connectionID={connection.id} collectionName={name} />
       ),
     },
-    {
-      key: "tenants",
-      label: "Tenants",
-      children: (
-        <div className="p-4">
-          <p className="text-gray-500"></p>
-        </div>
-      ),
-    },
   ];
 
   return (
