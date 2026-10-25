@@ -15,6 +15,7 @@ const (
 	FeatureHFreshIndex       FeatureKey = "hfreshIndex"
 	FeatureObjectTTL         FeatureKey = "objectTTL"
 	FeatureRotationalQuant   FeatureKey = "rotationalQuantization"
+	FeatureGrpcSearch        FeatureKey = "grpcSearch"
 )
 
 var featureMinVersions = map[FeatureKey]*semver.Version{
@@ -22,6 +23,7 @@ var featureMinVersions = map[FeatureKey]*semver.Version{
 	FeatureHFreshIndex:       semver.MustParse("1.36.0"),
 	FeatureObjectTTL:         semver.MustParse("1.37.0"),
 	FeatureRotationalQuant:   semver.MustParse("1.32.0"),
+	FeatureGrpcSearch:        semver.MustParse("1.29.0"),
 }
 
 type Features map[FeatureKey]bool

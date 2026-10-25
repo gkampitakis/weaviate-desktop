@@ -22,7 +22,8 @@ export type FeatureKey =
   | "incrementalBackup"
   | "hfreshIndex"
   | "objectTTL"
-  | "rotationalQuantization";
+  | "rotationalQuantization"
+  | "grpcSearch";
 
 export type Features = Partial<Record<FeatureKey, boolean>>;
 
