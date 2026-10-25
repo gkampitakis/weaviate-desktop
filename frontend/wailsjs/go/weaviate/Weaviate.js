@@ -54,6 +54,10 @@ export function DeactivateApiKey(arg1, arg2, arg3) {
   return window['go']['weaviate']['Weaviate']['DeactivateApiKey'](arg1, arg2, arg3);
 }
 
+export function DefaultGrpcEndpoint(arg1) {
+  return window['go']['weaviate']['Weaviate']['DefaultGrpcEndpoint'](arg1);
+}
+
 export function DeleteCollection(arg1, arg2) {
   return window['go']['weaviate']['Weaviate']['DeleteCollection'](arg1, arg2);
 }
@@ -112,6 +116,10 @@ export function GetTenants(arg1, arg2) {
 
 export function GetTotalObjects(arg1, arg2, arg3) {
   return window['go']['weaviate']['Weaviate']['GetTotalObjects'](arg1, arg2, arg3);
+}
+
+export function GrpcAvailable(arg1) {
+  return window['go']['weaviate']['Weaviate']['GrpcAvailable'](arg1);
 }
 
 export function ListBackups(arg1, arg2) {

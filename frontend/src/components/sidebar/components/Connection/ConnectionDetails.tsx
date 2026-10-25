@@ -17,7 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
-import { TestConnection } from "wailsjs/go/weaviate/Weaviate";
+import {
+  DefaultGrpcEndpoint,
+  TestConnection,
+} from "wailsjs/go/weaviate/Weaviate";
 import { useEffect, useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Check, Eye, EyeOff, LoaderCircle, Star, X } from "lucide-react";
@@ -31,6 +34,7 @@ import {
 import { Connection } from "@/types";
 import { useShallow } from "zustand/shallow";
 import { useTabStore } from "@/store/tab-store";
+import { useDebounce } from "use-debounce";
 
 interface Props {
   open: boolean;
@@ -44,6 +48,7 @@ interface NewConnectionForm {
   uri: string;
   name: string;
   apiKey?: string;
+  grpcEndpoint?: string;
   color: string;
   favorite: boolean;
 }
@@ -66,6 +71,7 @@ export const ConnectionDetails: React.FC<Props> = ({
         favorite: connection.favorite,
         name: connection.name,
         uri: connection.uri,
+        grpcEndpoint: connection.grpc_endpoint,
       }
     : {
         color: connectionColors[0].value, // Default to "No color"
@@ -84,10 +90,24 @@ export const ConnectionDetails: React.FC<Props> = ({
     formState: { errors, isValid, isDirty },
     getValues,
     reset,
+    watch,
   } = useForm<NewConnectionForm>({
     mode: "onChange",
     defaultValues,
   });
+  const [debouncedUri] = useDebounce(watch("uri"), 300);
+  const [derivedGrpcEndpoint, setDerivedGrpcEndpoint] = useState("");
+
+  useEffect(() => {
+    if (!debouncedUri) {
+      setDerivedGrpcEndpoint("");
+      return;
+    }
+
+    DefaultGrpcEndpoint(debouncedUri)
+      .then(setDerivedGrpcEndpoint)
+      .catch(() => setDerivedGrpcEndpoint(""));
+  }, [debouncedUri]);
   const { saveConnection, updateConnection, connectToConnection } =
     useConnectionStore(
       useShallow((state) => ({
@@ -104,6 +124,7 @@ export const ConnectionDetails: React.FC<Props> = ({
     name,
     uri,
     apiKey,
+    grpcEndpoint,
     color,
     favorite,
   }) => {
@@ -114,6 +135,7 @@ export const ConnectionDetails: React.FC<Props> = ({
           name,
           uri: uri ? uri : connection.uri,
           api_key: apiKey ? apiKey : connection.api_key,
+          grpc_endpoint: grpcEndpoint?.trim() || undefined,
           color,
           favorite,
         });
@@ -127,6 +149,7 @@ export const ConnectionDetails: React.FC<Props> = ({
           status: ConnectionStatus.Disconnected,
           favorite,
           api_key: apiKey,
+          grpc_endpoint: grpcEndpoint?.trim() || undefined,
           color: color,
         });
       }
@@ -144,6 +167,7 @@ export const ConnectionDetails: React.FC<Props> = ({
     name,
     uri,
     apiKey,
+    grpcEndpoint,
     color,
     favorite,
   }) => {
@@ -155,6 +179,7 @@ export const ConnectionDetails: React.FC<Props> = ({
           name,
           uri: uri ? uri : connection.uri,
           api_key: apiKey ? apiKey : connection.api_key,
+          grpc_endpoint: grpcEndpoint?.trim() || undefined,
           color,
           favorite,
         });
@@ -169,6 +194,7 @@ export const ConnectionDetails: React.FC<Props> = ({
           status: ConnectionStatus.Disconnected,
           favorite,
           api_key: apiKey,
+          grpc_endpoint: grpcEndpoint?.trim() || undefined,
           color: color,
         });
         await connectToConnection(id);
@@ -350,6 +376,17 @@ export const ConnectionDetails: React.FC<Props> = ({
               placeholder="e.g. http://localhost:8080"
             />
             <FieldError message={errors.uri?.message} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label>gRPC Endpoint</Label>
+            <Input
+              id="grpcEndpoint"
+              {...register("grpcEndpoint", {
+                disabled: disableWhenConnected,
+              })}
+              placeholder={derivedGrpcEndpoint || "e.g. localhost:50051"}
+            />
+            <FieldError message={errors.grpcEndpoint?.message} />
           </div>
           <Separator />
           <h1 className="text-sm font-semibold text-gray-500">

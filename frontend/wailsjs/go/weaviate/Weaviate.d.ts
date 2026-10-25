@@ -29,6 +29,8 @@ export function CreateUser(arg1:number,arg2:string):Promise<string>;
 
 export function DeactivateApiKey(arg1:number,arg2:string,arg3:boolean):Promise<void>;
 
+export function DefaultGrpcEndpoint(arg1:string):Promise<string>;
+
 export function DeleteCollection(arg1:number,arg2:string):Promise<void>;
 
 export function DeleteObject(arg1:number,arg2:string,arg3:string,arg4:string):Promise<void>;
@@ -58,6 +60,8 @@ export function GetRestoreStatus(arg1:number,arg2:string,arg3:string):Promise<we
 export function GetTenants(arg1:number,arg2:string):Promise<Array<models.w_Tenant>>;
 
 export function GetTotalObjects(arg1:number,arg2:string,arg3:string):Promise<number>;
+
+export function GrpcAvailable(arg1:number):Promise<boolean>;
 
 export function ListBackups(arg1:number,arg2:Array<string>):Promise<Array<weaviate.w_Backup>>;
 

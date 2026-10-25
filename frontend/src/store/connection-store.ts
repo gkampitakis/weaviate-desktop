@@ -47,6 +47,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
         favorite: c.favorite,
         api_key: c.api_key,
         color: c.color,
+        grpc_endpoint: c.grpc_endpoint,
       })
     );
     set((state) => ({
