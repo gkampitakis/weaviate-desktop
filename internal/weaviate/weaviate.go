@@ -28,6 +28,7 @@ type WClient struct {
 	healthy     bool
 	grpcHealthy bool
 	grpcConfig  weaviate_grpc.Config
+	version     string
 	features    Features
 }
 
@@ -168,6 +169,7 @@ func (w *Weaviate) Connect(id int64) error {
 		return fmt.Errorf("failed connecting to %s: %w", connection.URI, err)
 	}
 
+	client.version = meta.Version
 	client.features = evaluateFeatures(meta.Version)
 
 	grpcCtx, grpcCancel := context.WithTimeout(context.Background(), 5*time.Second)
