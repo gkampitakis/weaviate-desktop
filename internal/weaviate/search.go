@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"weaviate-desktop/internal/utils"
 
@@ -333,6 +335,9 @@ func getGQLFields(props []*models.Property, projection []string, includeRelevanc
 				continue
 			}
 		}
+		if isCrossReference(prop.DataType) {
+			continue
+		}
 		fields = append(fields, graphql.Field{
 			Name:   prop.Name,
 			Fields: getNestedFields(prop.NestedProperties),
@@ -457,6 +462,14 @@ func buildWhereBuilder(f *WhereFilter) (*filters.WhereBuilder, error) {
 	default:
 		return nil, fmt.Errorf("unsupported valueType %q", f.ValueType)
 	}
+}
+
+func isCrossReference(dataType []string) bool {
+	if len(dataType) == 0 || dataType[0] == "" {
+		return false
+	}
+	r, _ := utf8.DecodeRuneInString(dataType[0])
+	return unicode.IsUpper(r)
 }
 
 func getNestedFields(nestedProps []*models.NestedProperty) []graphql.Field {

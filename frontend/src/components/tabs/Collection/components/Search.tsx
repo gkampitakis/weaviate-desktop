@@ -25,6 +25,7 @@ import {
   type RecentSearch,
 } from "@/store/explorer-history-store";
 import WhereFilterBuilder, {
+  isCrossReference,
   leavesToFilter,
   type SchemaProperty,
   type WhereLeaf,
@@ -594,9 +595,13 @@ const FieldsPicker: React.FC<{
   value: string[];
   onChange: (next: string[]) => void;
 }> = ({ schema, value, onChange }) => {
-  const names = useMemo(() => schema.map((p) => p.name).filter(Boolean), [
-    schema,
-  ]);
+  const names = useMemo(
+    () =>
+      schema
+        .filter((p) => p.name && !isCrossReference(p.dataType))
+        .map((p) => p.name),
+    [schema]
+  );
   // Empty value === "all selected" semantically — we keep the set empty on
   // the wire so the backend short-circuits to full projection.
   const selected = value.length === 0 ? new Set(names) : new Set(value);

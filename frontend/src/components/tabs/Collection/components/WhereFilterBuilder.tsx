@@ -112,15 +112,6 @@ const OPERATORS_FOR: Record<WhereValueType, WhereOperator[]> = {
   ],
 };
 
-const NUMERIC_TYPES = new Set([
-  "int",
-  "number",
-  "int[]",
-  "number[]",
-  "uuid",
-  "uuid[]",
-]);
-
 /** Map a Weaviate dataType (first element of `dataType[]`) to our internal value type. */
 export const valueTypeFor = (dataType: string): WhereValueType => {
   const dt = (dataType || "").toLowerCase().replace(/\[]$/, "");
@@ -145,6 +136,10 @@ export const valueTypeFor = (dataType: string): WhereValueType => {
   }
 };
 
+/** A property pointing at another class — every built-in dataType is lowercase. */
+export const isCrossReference = (dataType: string): boolean =>
+  /^\p{Lu}/u.test(dataType);
+
 /** Filter the schema down to properties that we can sensibly filter on. */
 export const filterableProperties = (
   props: SchemaProperty[]
@@ -153,12 +148,7 @@ export const filterableProperties = (
     if (!p.name || !p.dataType) return false;
     if (p.dataType.startsWith("[]")) return false;
     // Cross-references (PascalCase class name) — skip for MVP, would need path traversal.
-    const first = p.dataType[0];
-    if (first && first === first.toUpperCase() && /[A-Z]/.test(first)) {
-      // text/int/number/etc. all start lowercase; numeric arrays handled above.
-      // Anything starting with a capital is a reference type — skip.
-      if (!NUMERIC_TYPES.has(p.dataType.toLowerCase())) return false;
-    }
+    if (isCrossReference(p.dataType)) return false;
     return true;
   });
 
