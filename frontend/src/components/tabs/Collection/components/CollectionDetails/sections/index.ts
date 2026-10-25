@@ -4,3 +4,4 @@ export { InvertedIndexSection } from "./InvertedIndexSection";
 export { ReplicationShardingSection } from "./ReplicationShardingSection";
 export { MultiTenancySection } from "./MultiTenancySection";
 export { ModuleConfigSection } from "./ModuleConfigSection";
+export { ObjectTTLSection } from "./ObjectTTLSection";

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/incompatible-library */
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -184,25 +184,11 @@ export function EditCollectionDialog({
         autoTenantActivation?: boolean;
       }
     | undefined;
-  const ttl = (collection as unknown as {
-    objectTtlConfig?: {
-      enabled?: boolean;
-      defaultTtl?: number;
-      deleteOn?: string;
-      filterExpiredObjects?: boolean;
-    };
-  }).objectTtlConfig;
+  const ttl = collection.objectTtlConfig;
 
-  const ttlSeed = secondsToBest(ttl?.defaultTtl ?? 86400);
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    reset,
-    watch,
-  } = useForm<FormData>({
-    defaultValues: {
+  const defaults = useMemo<FormData>(() => {
+    const ttlSeed = secondsToBest(ttl?.defaultTtl ?? 86400);
+    return {
       description: collection.description || "",
       bm25B: invertedIndex?.bm25?.b ?? 0.75,
       bm25K1: invertedIndex?.bm25?.k1 ?? 1.2,
@@ -221,10 +207,40 @@ export function EditCollectionDialog({
       ttlUnit: ttlSeed.unit,
       ttlDeleteOn: ttl?.deleteOn ?? "_creationTimeUnix",
       ttlFilterExpired: ttl?.filterExpiredObjects ?? false,
-    },
-  });
+    };
+  }, [
+    collection,
+    invertedIndex,
+    replication,
+    multiTenancy,
+    ttl,
+    compressionSeed,
+    flatCompressionSeed,
+    hnswCompressionSeed,
+  ]);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting, isDirty },
+    reset,
+    watch,
+  } = useForm<FormData>({ defaultValues: defaults });
+
+  // Re-seed the form each time the dialog is opened so it reflects the latest
+  // collection state. Without this, defaultValues are captured once on mount
+  // and never refresh, leaving e.g. TTL fields blank when TTL is configured.
+  useEffect(() => {
+    if (open) reset(defaults);
+  }, [open, defaults, reset]);
 
   const ttlOn = watch("ttlEnabled");
+  const watchedReplicationFactor = watch("replicationFactor");
+  const seededReplicationFactor = replication?.factor ?? 1;
+  const showReplicationWarning =
+    typeof watchedReplicationFactor === "number" &&
+    watchedReplicationFactor > nodeCount;
+  const showSeededRfBanner = seededReplicationFactor > nodeCount;
   const filterableProperties = (collection.properties || [])
     .filter((p) => p.indexFilterable !== false && p.name)
     .map((p) => ({ name: p.name as string, dataType: p.dataType?.[0] || "" }))
@@ -237,7 +253,6 @@ export function EditCollectionDialog({
     });
 
   const onSubmit = async (data: FormData) => {
-    if (data.replicationFactor > nodeCount) data.replicationFactor = nodeCount;
     setSubmitError(null);
     try {
       const ttlPatch = ttlSupported
@@ -256,18 +271,26 @@ export function EditCollectionDialog({
       let vectorIndexPatch: Record<string, unknown> | undefined;
       if (!isHFresh) {
         if (isDynamic) {
-          vectorIndexPatch = {
-            ...(vectorIndexCfg || {}),
-            flat: {
-              ...((vectorIndexCfg?.flat as Record<string, unknown>) || {}),
-              ...quantizerPatch(data.flatCompression),
-            },
-            hnsw: {
-              ...((vectorIndexCfg?.hnsw as Record<string, unknown>) || {}),
-              ...quantizerPatch(data.hnswCompression),
-            },
-          };
-        } else {
+          const flatChanged = data.flatCompression !== flatCompressionSeed;
+          const hnswChanged = data.hnswCompression !== hnswCompressionSeed;
+          if (flatChanged || hnswChanged) {
+            vectorIndexPatch = {
+              ...(vectorIndexCfg || {}),
+              ...(flatChanged && {
+                flat: {
+                  ...((vectorIndexCfg?.flat as Record<string, unknown>) || {}),
+                  ...quantizerPatch(data.flatCompression),
+                },
+              }),
+              ...(hnswChanged && {
+                hnsw: {
+                  ...((vectorIndexCfg?.hnsw as Record<string, unknown>) || {}),
+                  ...quantizerPatch(data.hnswCompression),
+                },
+              }),
+            };
+          }
+        } else if (data.compression !== compressionSeed) {
           vectorIndexPatch = {
             ...(vectorIndexCfg || {}),
             ...quantizerPatch(data.compression),
@@ -321,7 +344,17 @@ export function EditCollectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[min(96vw,1100px)] sm:max-w-[min(96vw,1100px)] overflow-y-auto">
+      <DialogContent
+        className="max-h-[90vh] w-[min(96vw,1100px)] sm:max-w-[min(96vw,1100px)] overflow-y-auto"
+        onInteractOutside={(e) => {
+          // Sonner toasts render in a portal, so clicking the error toast
+          // would otherwise dismiss the dialog and lose the user's edits.
+          const target = e.target as HTMLElement | null;
+          if (target?.closest("[data-sonner-toaster]")) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Edit {collection.class}</DialogTitle>
         </DialogHeader>
@@ -517,9 +550,11 @@ export function EditCollectionDialog({
                   control={control}
                   rules={{
                     min: { value: 1, message: "Must be at least 1" },
-                    max: {
-                      value: nodeCount,
-                      message: `Max ${nodeCount} (cluster has ${nodeCount} node${nodeCount === 1 ? "" : "s"})`,
+                    validate: (value) => {
+                      if (typeof value !== "number" || Number.isNaN(value)) {
+                        return "Must be a number";
+                      }
+                      return true;
                     },
                   }}
                   render={({ field }) => (
@@ -528,7 +563,6 @@ export function EditCollectionDialog({
                       id="edit-replication-factor"
                       type="number"
                       min="1"
-                      max={nodeCount}
                       onChange={(e) =>
                         field.onChange(parseInt(e.target.value, 10))
                       }
@@ -544,6 +578,13 @@ export function EditCollectionDialog({
                 {errors.replicationFactor && (
                   <p className="text-destructive text-sm">
                     {errors.replicationFactor.message}
+                  </p>
+                )}
+                {!errors.replicationFactor && showReplicationWarning && (
+                  <p className="text-xs text-amber-600 dark:text-amber-500">
+                    Cluster has fewer nodes available than this
+                    collection&apos;s replication factor. Some nodes may be
+                    restarting. Please retry once all nodes are online.
                   </p>
                 )}
               </div>
@@ -756,6 +797,16 @@ export function EditCollectionDialog({
             </fieldset>
           )}
 
+          {showSeededRfBanner && (
+            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-700 dark:text-amber-400">
+              This collection&apos;s replication factor (
+              {seededReplicationFactor}) is greater than the number of
+              currently available nodes ({nodeCount}). The cluster may be in
+              the middle of a rolling restart. Saving may fail until all nodes
+              are back online.
+            </div>
+          )}
+
           <DialogFooter>
             <Button
               type="button"
@@ -765,7 +816,7 @@ export function EditCollectionDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={!isDirty || isSubmitting}>
               {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>

@@ -8,36 +8,60 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, LoaderCircle } from "lucide-react";
 
-interface Props {
+interface BrowseProps {
+  mode?: "browse";
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+}
+
+interface SearchProps {
+  mode: "search";
+  searchPage: number;
+  resultsOnPage: number;
+  hasMore: boolean;
+  /** True when next page would cross Weaviate's server-side cap. */
+  capReached?: boolean;
+}
+
+type CommonProps = {
   className?: string;
   pageSize: number;
   setPageSize: (p: number) => void;
   next: () => void;
   previous: () => void;
-  currentPage: number;
-  totalPages: number;
-  totalCount: number;
   loading?: boolean;
   disabled?: boolean;
-}
+};
 
-const Pagination: React.FC<Props> = ({
-  className,
-  pageSize,
-  setPageSize,
-  next,
-  previous,
-  currentPage,
-  totalPages,
-  totalCount,
-  disabled = false,
-  loading,
-}) => {
-  const disabledNext =
-    loading || totalPages === 0 || currentPage === totalPages || disabled;
+type Props = CommonProps & (BrowseProps | SearchProps);
 
-  const disabledPrevious =
-    loading || totalPages === 0 || currentPage === 1 || disabled;
+const Pagination: React.FC<Props> = (props) => {
+  const {
+    className,
+    pageSize,
+    setPageSize,
+    next,
+    previous,
+    disabled = false,
+    loading,
+  } = props;
+
+  const isSearch = props.mode === "search";
+
+  const disabledNext = isSearch
+    ? loading || disabled || !props.hasMore
+    : loading || props.totalPages === 0 || props.currentPage === props.totalPages || disabled;
+
+  const disabledPrevious = isSearch
+    ? loading || disabled || props.searchPage === 1
+    : loading || props.totalPages === 0 || props.currentPage === 1 || disabled;
+
+  const label = isSearch
+    ? `Page ${props.searchPage} · ${props.resultsOnPage} result${props.resultsOnPage === 1 ? "" : "s"}`
+    : props.totalPages === 0
+      ? "0 of 0"
+      : `${props.currentPage} - ${props.totalPages} of ${props.totalCount}`;
 
   return (
     <div
@@ -55,9 +79,7 @@ const Pagination: React.FC<Props> = ({
         }}
       >
         <span className={`flex text-center ${disabled ? "opacity-50" : ""}`}>
-          {totalPages === 0
-            ? "0 of 0"
-            : `${currentPage} - ${totalPages} of ${totalCount}`}
+          {label}
         </span>
         <ChevronLeft
           className={`rounded-full p-1 transition ${
