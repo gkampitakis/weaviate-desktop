@@ -5,27 +5,64 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/graphql"
+	weaviate_grpc "github.com/weaviate/weaviate-go-client/v5/weaviate/grpc"
 	weaviate_models "github.com/weaviate/weaviate/entities/models"
+	pb "github.com/weaviate/weaviate/grpc/generated/protocol/v1"
+	"github.com/weaviate/weaviate/usecases/byteops"
 )
 
-func fieldNames(fields []graphql.Field) []string {
-	names := make([]string, 0, len(fields))
-	for _, f := range fields {
-		names = append(names, f.Name)
-	}
-	return names
-}
-
-func findField(fields []graphql.Field, name string) *graphql.Field {
-	for i := range fields {
-		if fields[i].Name == name {
-			return &fields[i]
+func TestRequireGrpcSearch(t *testing.T) {
+	t.Run("should reject a server below the gRPC search floor", func(t *testing.T) {
+		c := &WClient{
+			version:     "1.28.16",
+			features:    evaluateFeatures("1.28.16"),
+			grpcHealthy: true,
 		}
-	}
-	return nil
+
+		assert.EqualError(
+			t,
+			c.requireGrpcSearch(),
+			`search runs over gRPC and requires Weaviate 1.29.0 or newer, but this server reports "1.28.16": upgrade the server to search`,
+		)
+	})
+
+	t.Run("should reject a server with an unparseable version", func(t *testing.T) {
+		c := &WClient{
+			version:     "unknown",
+			features:    evaluateFeatures("unknown"),
+			grpcHealthy: true,
+		}
+
+		assert.ErrorContains(t, c.requireGrpcSearch(), "requires Weaviate 1.29.0 or newer")
+	})
+
+	t.Run("should reject an unreachable grpc endpoint", func(t *testing.T) {
+		c := &WClient{
+			version:     "1.37.2",
+			features:    evaluateFeatures("1.37.2"),
+			grpcConfig:  weaviate_grpc.Config{Host: "localhost:50051"},
+			grpcHealthy: false,
+		}
+
+		assert.EqualError(
+			t,
+			c.requireGrpcSearch(),
+			"search runs over gRPC but the endpoint localhost:50051 was unreachable when this connection was established: fix the gRPC endpoint and reconnect",
+		)
+	})
+
+	t.Run("should pass on a supported and reachable server", func(t *testing.T) {
+		c := &WClient{
+			version:     "1.29.0",
+			features:    evaluateFeatures("1.29.0"),
+			grpcHealthy: true,
+		}
+
+		assert.NoError(t, c.requireGrpcSearch())
+	})
 }
 
-func TestGetGQLFields(t *testing.T) {
+func TestProjectedProperties(t *testing.T) {
 	props := []*weaviate_models.Property{
 		{Name: "title", DataType: []string{"text"}},
 		{Name: "count", DataType: []string{"int"}},
@@ -42,77 +79,365 @@ func TestGetGQLFields(t *testing.T) {
 		},
 	}
 
-	t.Run("should skip cross-reference properties", func(t *testing.T) {
-		tests := []struct {
-			name       string
-			props      []*weaviate_models.Property
-			projection []string
-			expected   []string
-		}{
-			{
-				name:     "drops references from the full projection",
-				props:    props,
-				expected: []string{"title", "count", "tags", "location", "address", "_additional"},
+	tests := []struct {
+		name       string
+		props      []*weaviate_models.Property
+		projection []string
+		expected   []string
+	}{
+		{
+			name:     "sends no projection when none was requested",
+			props:    props,
+			expected: nil,
+		},
+		{
+			name:       "drops cross-references that were explicitly projected",
+			props:      props,
+			projection: []string{"title", "author", "mentions"},
+			expected:   []string{"title"},
+		},
+		{
+			name:       "keeps object properties by name so the server expands them",
+			props:      props,
+			projection: []string{"address", "tags"},
+			expected:   []string{"tags", "address"},
+		},
+		{
+			name:       "drops names that are not in the schema",
+			props:      props,
+			projection: []string{"title", "nope"},
+			expected:   []string{"title"},
+		},
+		{
+			name: "keeps properties without a data type",
+			props: []*weaviate_models.Property{
+				{Name: "orphan"},
+				{Name: "blank", DataType: []string{""}},
 			},
-			{
-				name:       "drops references that were explicitly projected",
-				props:      props,
-				projection: []string{"title", "author", "mentions"},
-				expected:   []string{"title", "_additional"},
+			projection: []string{"orphan", "blank"},
+			expected:   []string{"orphan", "blank"},
+		},
+		{
+			name: "returns an empty projection when only references were picked",
+			props: []*weaviate_models.Property{
+				{Name: "author", DataType: []string{"Author"}},
 			},
-			{
-				name: "keeps properties without a data type",
-				props: []*weaviate_models.Property{
-					{Name: "orphan"},
-					{Name: "blank", DataType: []string{""}},
-				},
-				expected: []string{"orphan", "blank", "_additional"},
-			},
-			{
-				name: "drops a collection whose only property is a reference",
-				props: []*weaviate_models.Property{
-					{Name: "author", DataType: []string{"Author"}},
-				},
-				expected: []string{"_additional"},
-			},
-		}
+			projection: []string{"author"},
+			expected:   []string{},
+		},
+	}
 
-		for _, test := range tests {
-			t.Run(test.name, func(t *testing.T) {
-				fields := getGQLFields(test.props, test.projection, false)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, projectedProperties(test.props, test.projection))
+		})
+	}
+}
 
-				assert.Equal(t, test.expected, fieldNames(fields))
-			})
-		}
+func TestSearchMetadata(t *testing.T) {
+	tests := []struct {
+		searchType string
+		score      bool
+		vector     bool
+	}{
+		{searchType: "bm25", score: true},
+		{searchType: "hybrid", score: true},
+		{searchType: "", score: true},
+		{searchType: "nearText", vector: true},
+		{searchType: "nearVector", vector: true},
+		{searchType: "nearObject", vector: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.searchType, func(t *testing.T) {
+			metadata := searchMetadata(test.searchType)
+
+			assert.True(t, metadata.ID)
+			assert.True(t, metadata.CreationTimeUnix)
+			assert.True(t, metadata.LastUpdateTimeUnix)
+			assert.Equal(t, test.score, metadata.Score)
+			assert.Equal(t, test.vector, metadata.Distance)
+			assert.Equal(t, test.vector, metadata.Certainty)
+		})
+	}
+}
+
+func TestBuildSearchObjects(t *testing.T) {
+	results := []graphql.SearchResult{
+		{
+			ID:         "4f9c",
+			Properties: map[string]any{"title": "hello"},
+			Metadata: graphql.MetadataResult{
+				CreationTimeUnix:   1700000000,
+				LastUpdateTimeUnix: 1700000001,
+				Score:              0.5,
+				Distance:           0.25,
+				Certainty:          0.875,
+			},
+		},
+	}
+
+	t.Run("should keep only the score for keyword searches", func(t *testing.T) {
+		objects := buildSearchObjects(results, "Article", "bm25")
+
+		assert.Len(t, objects, 1)
+		assert.Equal(t, "4f9c", objects[0].ID)
+		assert.Equal(t, "Article", objects[0].Class)
+		assert.Equal(t, int64(1700000000), objects[0].CreationTimeUnix)
+		assert.Equal(t, int64(1700000001), objects[0].LastUpdateTimeUnix)
+		assert.Equal(t, map[string]any{"title": "hello"}, objects[0].Properties)
+		assert.Equal(t, 0.5, *objects[0].Score)
+		assert.Nil(t, objects[0].Distance)
+		assert.Nil(t, objects[0].Certainty)
 	})
 
-	t.Run("should keep nested fields for object properties", func(t *testing.T) {
-		fields := getGQLFields(props, nil, false)
+	t.Run("should keep only the vector signals for vector searches", func(t *testing.T) {
+		objects := buildSearchObjects(results, "Article", "nearText")
 
-		address := findField(fields, "address")
-
-		assert.NotNil(t, address)
-		assert.Equal(t, []string{"city"}, fieldNames(address.Fields))
+		assert.Len(t, objects, 1)
+		assert.Nil(t, objects[0].Score)
+		assert.Equal(t, 0.25, *objects[0].Distance)
+		assert.Equal(t, 0.875, *objects[0].Certainty)
 	})
 
-	t.Run("should request relevance signals only when asked", func(t *testing.T) {
-		withRelevance := findField(getGQLFields(props, nil, true), "_additional")
-		withoutRelevance := findField(getGQLFields(props, nil, false), "_additional")
+	t.Run("should return an empty slice for no results", func(t *testing.T) {
+		assert.Equal(t, []WeaviateObject{}, buildSearchObjects(nil, "Article", "bm25"))
+	})
+}
 
-		assert.NotNil(t, withRelevance)
-		assert.NotNil(t, withoutRelevance)
-		assert.Equal(t, []string{
-			"creationTimeUnix",
-			"id",
-			"lastUpdateTimeUnix",
-			"score",
-			"distance",
-			"certainty",
-		}, fieldNames(withRelevance.Fields))
+func TestPlainProperties(t *testing.T) {
+	t.Run("should pass scalars through", func(t *testing.T) {
+		assert.Equal(t, map[string]any{
+			"title":  "hello",
+			"rating": 4.5,
+			"count":  int64(3),
+			"active": true,
+		}, plainProperties(map[string]any{
+			"title":  "hello",
+			"rating": 4.5,
+			"count":  int64(3),
+			"active": true,
+		}))
+	})
+
+	t.Run("should null out values it cannot represent", func(t *testing.T) {
 		assert.Equal(
 			t,
-			[]string{"creationTimeUnix", "id", "lastUpdateTimeUnix"},
-			fieldNames(withoutRelevance.Fields),
+			map[string]any{"weird": nil},
+			plainProperties(map[string]any{"weird": struct{}{}}),
 		)
 	})
+
+	t.Run("should flatten geo coordinates", func(t *testing.T) {
+		geo := &pb.GeoCoordinate{Latitude: 52.37, Longitude: 4.89}
+
+		assert.Equal(t, map[string]any{
+			"location": map[string]any{
+				"latitude":  float32(52.37),
+				"longitude": float32(4.89),
+			},
+		}, plainProperties(map[string]any{"location": geo}))
+	})
+
+	t.Run("should flatten phone numbers", func(t *testing.T) {
+		phone := &pb.PhoneNumber{
+			CountryCode:            31,
+			DefaultCountry:         "NL",
+			Input:                  "020 1234567",
+			InternationalFormatted: "+31 20 1234567",
+			National:               201234567,
+			NationalFormatted:      "020 1234567",
+			Valid:                  true,
+		}
+
+		assert.Equal(t, map[string]any{
+			"countryCode":            uint64(31),
+			"defaultCountry":         "NL",
+			"input":                  "020 1234567",
+			"internationalFormatted": "+31 20 1234567",
+			"national":               uint64(201234567),
+			"nationalFormatted":      "020 1234567",
+			"valid":                  true,
+		}, plainValue(phone))
+	})
+
+	t.Run("should flatten nested objects", func(t *testing.T) {
+		nested := &pb.Properties{Fields: map[string]*pb.Value{
+			"city": {Kind: &pb.Value_TextValue{TextValue: "Amsterdam"}},
+			"geo": {Kind: &pb.Value_ObjectValue{ObjectValue: &pb.Properties{
+				Fields: map[string]*pb.Value{
+					"zip": {Kind: &pb.Value_IntValue{IntValue: 1011}},
+				},
+			}}},
+			"missing": {Kind: &pb.Value_NullValue{}},
+		}}
+
+		assert.Equal(t, map[string]any{
+			"address": map[string]any{
+				"city":    "Amsterdam",
+				"geo":     map[string]any{"zip": int64(1011)},
+				"missing": nil,
+			},
+		}, plainProperties(map[string]any{"address": nested}))
+	})
+}
+
+func TestPbValue(t *testing.T) {
+	tests := []struct {
+		name     string
+		value    *pb.Value
+		expected any
+	}{
+		{
+			name:     "text",
+			value:    &pb.Value{Kind: &pb.Value_TextValue{TextValue: "hello"}},
+			expected: "hello",
+		},
+		{
+			name:     "number",
+			value:    &pb.Value{Kind: &pb.Value_NumberValue{NumberValue: 4.5}},
+			expected: 4.5,
+		},
+		{
+			name:     "int",
+			value:    &pb.Value{Kind: &pb.Value_IntValue{IntValue: 7}},
+			expected: int64(7),
+		},
+		{
+			name:     "bool",
+			value:    &pb.Value{Kind: &pb.Value_BoolValue{BoolValue: true}},
+			expected: true,
+		},
+		{
+			name:     "date",
+			value:    &pb.Value{Kind: &pb.Value_DateValue{DateValue: "2026-01-01T00:00:00Z"}},
+			expected: "2026-01-01T00:00:00Z",
+		},
+		{
+			name:     "uuid",
+			value:    &pb.Value{Kind: &pb.Value_UuidValue{UuidValue: "4f9c"}},
+			expected: "4f9c",
+		},
+		{
+			name:     "blob",
+			value:    &pb.Value{Kind: &pb.Value_BlobValue{BlobValue: "aGk="}},
+			expected: "aGk=",
+		},
+		{
+			name:     "null",
+			value:    &pb.Value{Kind: &pb.Value_NullValue{}},
+			expected: nil,
+		},
+		{
+			name:     "unset",
+			value:    &pb.Value{},
+			expected: nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, pbValue(test.value))
+		})
+	}
+}
+
+func TestPbList(t *testing.T) {
+	tests := []struct {
+		name     string
+		list     *pb.ListValue
+		expected any
+	}{
+		{
+			name: "text values",
+			list: &pb.ListValue{Kind: &pb.ListValue_TextValues{
+				TextValues: &pb.TextValues{Values: []string{"a", "b"}},
+			}},
+			expected: []string{"a", "b"},
+		},
+		{
+			name: "date values",
+			list: &pb.ListValue{Kind: &pb.ListValue_DateValues{
+				DateValues: &pb.DateValues{Values: []string{"2026-01-01T00:00:00Z"}},
+			}},
+			expected: []string{"2026-01-01T00:00:00Z"},
+		},
+		{
+			name: "uuid values",
+			list: &pb.ListValue{Kind: &pb.ListValue_UuidValues{
+				UuidValues: &pb.UuidValues{Values: []string{"4f9c"}},
+			}},
+			expected: []string{"4f9c"},
+		},
+		{
+			name: "bool values",
+			list: &pb.ListValue{Kind: &pb.ListValue_BoolValues{
+				BoolValues: &pb.BoolValues{Values: []bool{true, false}},
+			}},
+			expected: []bool{true, false},
+		},
+		{
+			name: "number values are decoded from their packed bytes",
+			list: &pb.ListValue{Kind: &pb.ListValue_NumberValues{
+				NumberValues: &pb.NumberValues{
+					Values: byteops.Fp64SliceToBytes([]float64{1.5, 2.5}),
+				},
+			}},
+			expected: []float64{1.5, 2.5},
+		},
+		{
+			name: "int values are decoded from their packed bytes",
+			list: &pb.ListValue{Kind: &pb.ListValue_IntValues{
+				IntValues: &pb.IntValues{
+					Values: byteops.IntsToByteVector([]float64{3, 4}),
+				},
+			}},
+			expected: []int64{3, 4},
+		},
+		{
+			name: "object values",
+			list: &pb.ListValue{Kind: &pb.ListValue_ObjectValues{
+				ObjectValues: &pb.ObjectValues{Values: []*pb.Properties{
+					{Fields: map[string]*pb.Value{
+						"city": {Kind: &pb.Value_TextValue{TextValue: "Amsterdam"}},
+					}},
+				}},
+			}},
+			expected: []map[string]any{{"city": "Amsterdam"}},
+		},
+		{
+			name:     "unset",
+			list:     &pb.ListValue{},
+			expected: nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, pbList(test.list))
+		})
+	}
+}
+
+func TestIsCrossReference(t *testing.T) {
+	tests := []struct {
+		name     string
+		dataType []string
+		expected bool
+	}{
+		{name: "no data type", dataType: nil, expected: false},
+		{name: "blank data type", dataType: []string{""}, expected: false},
+		{name: "primitive", dataType: []string{"text"}, expected: false},
+		{name: "primitive array", dataType: []string{"text[]"}, expected: false},
+		{name: "geo", dataType: []string{"geoCoordinates"}, expected: false},
+		{name: "nested object", dataType: []string{"object"}, expected: false},
+		{name: "single reference", dataType: []string{"Author"}, expected: true},
+		{name: "multi reference", dataType: []string{"Article", "Blog"}, expected: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, isCrossReference(test.dataType))
+		})
+	}
 }
