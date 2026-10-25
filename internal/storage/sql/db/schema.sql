@@ -4,10 +4,11 @@ CREATE TABLE IF NOT EXISTS "connections" (
 	"uri"	TEXT NOT NULL,
 	"favorite"	BOOLEAN DEFAULT FALSE,
 	"api_key"	TEXT,
-	"color"	TEXT,
+	"color"	TEXT, "grpc_endpoint" TEXT,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "schema_migrations" (version varchar(128) primary key);
 -- Dbmate schema migrations
 INSERT INTO "schema_migrations" (version) VALUES
-  ('20250705103958');
+  ('20250705103958'),
+  ('20261025135123');

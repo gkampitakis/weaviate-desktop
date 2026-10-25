@@ -131,8 +131,8 @@ func (s *Storage) SaveConnection(c models.Connection) (int64, error) {
 	}
 
 	q := `
-		INSERT INTO connections (name, uri, api_key, color, favorite)
-		VALUES (:name, :uri, :api_key, :color, :favorite)
+		INSERT INTO connections (name, uri, api_key, color, favorite, grpc_endpoint)
+		VALUES (:name, :uri, :api_key, :color, :favorite, :grpc_endpoint)
 		RETURNING id;
 	`
 
@@ -158,7 +158,7 @@ func (s *Storage) UpdateConnection(c models.Connection) error {
 
 	q := `
 		UPDATE connections
-		SET name = :name, uri = :uri, api_key = :api_key, color = :color, favorite = :favorite
+		SET name = :name, uri = :uri, api_key = :api_key, color = :color, favorite = :favorite, grpc_endpoint = :grpc_endpoint
 		WHERE id = :id;
 	`
 	result, err := s.db.NamedExecContext(ctx, q, c)

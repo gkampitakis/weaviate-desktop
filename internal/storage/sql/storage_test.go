@@ -22,8 +22,15 @@ func TestStorage(t *testing.T) {
 			encrypter := NewMockEncrypter(t)
 
 			rows := sqlmock.NewRows(
-				[]string{"id", "name", "uri", "favorite", "api_key"},
-			).AddRow(1, "Test Connection", "http://localhost", false, "encrypted-key")
+				[]string{"id", "name", "uri", "favorite", "api_key", "grpc_endpoint"},
+			).AddRow(
+				1,
+				"Test Connection",
+				"http://localhost",
+				false,
+				"encrypted-key",
+				"localhost:50051",
+			)
 
 			mock.ExpectQuery("SELECT \\* FROM connections").WillReturnRows(rows)
 
@@ -39,11 +46,12 @@ func TestStorage(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Len(t, connections, 1)
 			assert.Equal(t, models.Connection{
-				ID:       1,
-				URI:      "http://localhost",
-				Name:     "Test Connection",
-				Favorite: false,
-				ApiKey:   utils.Pointer("test-key"),
+				ID:           1,
+				URI:          "http://localhost",
+				Name:         "Test Connection",
+				Favorite:     false,
+				ApiKey:       utils.Pointer("test-key"),
+				GrpcEndpoint: utils.Pointer("localhost:50051"),
 			}, connections[0])
 			assert.NoError(t, mock.ExpectationsWereMet())
 			encrypter.AssertExpectations(t)
@@ -114,7 +122,14 @@ func TestStorage(t *testing.T) {
 			encrypter := NewMockEncrypter(t)
 
 			mock.ExpectExec("INSERT INTO connections").
-				WithArgs("Test Connection", "http://localhost", "encrypted-key", "red", true).
+				WithArgs(
+					"Test Connection",
+					"http://localhost",
+					"encrypted-key",
+					"red",
+					true,
+					"localhost:50051",
+				).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 
 			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
@@ -126,11 +141,12 @@ func TestStorage(t *testing.T) {
 			}
 
 			connection := models.Connection{
-				Name:     "Test Connection",
-				URI:      "http://localhost",
-				ApiKey:   utils.Pointer("test-key"),
-				Color:    "red",
-				Favorite: true,
+				Name:         "Test Connection",
+				URI:          "http://localhost",
+				ApiKey:       utils.Pointer("test-key"),
+				Color:        "red",
+				Favorite:     true,
+				GrpcEndpoint: utils.Pointer("localhost:50051"),
 			}
 
 			id, err := storage.SaveConnection(connection)
@@ -148,7 +164,7 @@ func TestStorage(t *testing.T) {
 			encrypter := NewMockEncrypter(t)
 
 			mock.ExpectExec("INSERT INTO connections").
-				WithArgs("Test Connection", "http://localhost", "encrypted-key", "", false).
+				WithArgs("Test Connection", "http://localhost", "encrypted-key", "", false, nil).
 				WillReturnError(errors.New("mock error"))
 
 			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
@@ -182,7 +198,15 @@ func TestStorage(t *testing.T) {
 			encrypter := NewMockEncrypter(t)
 
 			mock.ExpectExec("UPDATE connections").
-				WithArgs("Test Connection", "http://localhost", "encrypted-key", "red", true, 5).
+				WithArgs(
+					"Test Connection",
+					"http://localhost",
+					"encrypted-key",
+					"red",
+					true,
+					"localhost:50051",
+					5,
+				).
 				WillReturnResult(sqlmock.NewResult(0, 1))
 
 			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
@@ -194,12 +218,13 @@ func TestStorage(t *testing.T) {
 			}
 
 			connection := models.Connection{
-				ID:       5,
-				Name:     "Test Connection",
-				URI:      "http://localhost",
-				ApiKey:   utils.Pointer("test-key"),
-				Color:    "red",
-				Favorite: true,
+				ID:           5,
+				Name:         "Test Connection",
+				URI:          "http://localhost",
+				ApiKey:       utils.Pointer("test-key"),
+				Color:        "red",
+				Favorite:     true,
+				GrpcEndpoint: utils.Pointer("localhost:50051"),
 			}
 
 			assert.NoError(t, storage.UpdateConnection(connection))
@@ -215,7 +240,7 @@ func TestStorage(t *testing.T) {
 			encrypter := NewMockEncrypter(t)
 
 			mock.ExpectExec("UPDATE connections").
-				WithArgs("Test Connection", "http://localhost", "encrypted-key", "red", true, 5).
+				WithArgs("Test Connection", "http://localhost", "encrypted-key", "red", true, nil, 5).
 				WillReturnError(errors.New("mock error"))
 
 			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
@@ -252,7 +277,7 @@ func TestStorage(t *testing.T) {
 			encrypter := NewMockEncrypter(t)
 
 			mock.ExpectExec("UPDATE connections").
-				WithArgs("Test Connection", "http://localhost", "encrypted-key", "red", true, 5).
+				WithArgs("Test Connection", "http://localhost", "encrypted-key", "red", true, nil, 5).
 				WillReturnResult(sqlmock.NewResult(0, 0))
 
 			encrypter.EXPECT().Encrypt("test-key").Return("encrypted-key", nil)
