@@ -49,6 +49,8 @@ export function GetFeatures(arg1:number):Promise<weaviate.w_Features>;
 
 export function GetModules(arg1:number):Promise<any>;
 
+export function GetObject(arg1:number,arg2:string,arg3:string,arg4:string):Promise<weaviate.w_WeaviateObject>;
+
 export function GetObjectsPaginated(arg1:number,arg2:number,arg3:string,arg4:string,arg5:string):Promise<weaviate.w_PaginatedObjectResponse>;
 
 export function GetRestoreStatus(arg1:number,arg2:string,arg3:string):Promise<weaviate.w_StatusResponse>;
@@ -78,5 +80,7 @@ export function Search(arg1:number,arg2:string,arg3:string,arg4:string,arg5:stri
 export function TestConnection(arg1:weaviate.w_TestConnectionInput):Promise<void>;
 
 export function UpdateCollection(arg1:number,arg2:models.w_Class):Promise<void>;
+
+export function UpdateObject(arg1:number,arg2:string,arg3:string,arg4:string,arg5:Record<string, any>):Promise<void>;
 
 export function UsersEnabled(arg1:number):Promise<boolean>;

@@ -35,12 +35,15 @@ type Weaviate struct {
 }
 
 type WeaviateObject struct {
-	ID                 string `json:"id"`
-	Class              string `json:"class"`
-	LastUpdateTimeUnix int64  `json:"lastUpdateTimeUnix,omitempty"`
-	CreationTimeUnix   int64  `json:"creationTimeUnix,omitempty"`
-	Tenant             string `json:"tenant,omitempty"`
-	Properties         any    `json:"properties,omitempty"`
+	ID                 string   `json:"id"`
+	Class              string   `json:"class"`
+	LastUpdateTimeUnix int64    `json:"lastUpdateTimeUnix,omitempty"`
+	CreationTimeUnix   int64    `json:"creationTimeUnix,omitempty"`
+	Tenant             string   `json:"tenant,omitempty"`
+	Properties         any      `json:"properties,omitempty"`
+	Score              *float64 `json:"score,omitempty"`
+	Distance           *float64 `json:"distance,omitempty"`
+	Certainty          *float64 `json:"certainty,omitempty"`
 }
 
 type Storage interface {
@@ -207,6 +210,49 @@ func (w *Weaviate) GetTotalObjects(connectionID int64, collection, tenant string
 	), nil
 }
 
+// GetObject fetches a single object by id from a collection (optionally
+// scoped to a tenant). Used by the "Show similar" preview in the UI so the
+// user can inspect the source object that the nearObject search was anchored
+// to. Properties are surfaced as a generic map so the existing JSON tree
+// renderer can display them without further marshalling.
+func (w *Weaviate) GetObject(
+	connectionID int64,
+	collection, id, tenant string,
+) (*WeaviateObject, error) {
+	c, exists := w.clients[connectionID]
+	if !exists {
+		return nil, fmt.Errorf("connection doesn't exist %d", connectionID)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	getter := c.w.Data().ObjectsGetter().
+		WithClassName(collection).
+		WithID(id)
+	if tenant != "" {
+		getter = getter.WithTenant(tenant)
+	}
+
+	objs, err := getter.Do(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed retrieving object %s/%s: %w", collection, id, err)
+	}
+	if len(objs) == 0 {
+		return nil, fmt.Errorf("object not found: %s/%s", collection, id)
+	}
+
+	obj := objs[0]
+	return &WeaviateObject{
+		ID:                 string(obj.ID),
+		Class:              obj.Class,
+		LastUpdateTimeUnix: obj.LastUpdateTimeUnix,
+		CreationTimeUnix:   obj.CreationTimeUnix,
+		Tenant:             obj.Tenant,
+		Properties:         obj.Properties,
+	}, nil
+}
+
 func (w *Weaviate) DeleteObject(connectionID int64, collection, id, tenant string) error {
 	c, exists := w.clients[connectionID]
 	if !exists {
@@ -222,6 +268,31 @@ func (w *Weaviate) DeleteObject(connectionID int64, collection, id, tenant strin
 	}
 
 	return deleteObject.Do(ctx)
+}
+
+func (w *Weaviate) UpdateObject(
+	connectionID int64,
+	collection, id, tenant string,
+	properties map[string]any,
+) error {
+	c, exists := w.clients[connectionID]
+	if !exists {
+		return fmt.Errorf("connection doesn't exist %d", connectionID)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	updater := c.w.Data().Updater().
+		WithMerge().
+		WithClassName(collection).
+		WithID(id).
+		WithProperties(properties)
+	if tenant != "" {
+		updater = updater.WithTenant(tenant)
+	}
+
+	return updater.Do(ctx)
 }
 
 type PaginatedObjectResponse struct {

@@ -400,7 +400,7 @@ export namespace models {
 	    properties: w_Property[];
 	    replicationConfig?: w_ReplicationConfig;
 	    shardingConfig?: any;
-	    vectorConfig?: Record<string, VectorConfig>;
+	    vectorConfig?: Record<string, w_VectorConfig>;
 	    vectorIndexConfig?: any;
 	    vectorIndexType?: string;
 	    vectorizer?: string;
@@ -826,6 +826,9 @@ export namespace weaviate {
 	    creationTimeUnix?: number;
 	    tenant?: string;
 	    properties?: any;
+	    score?: number;
+	    distance?: number;
+	    certainty?: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new w_WeaviateObject(source);
@@ -839,6 +842,9 @@ export namespace weaviate {
 	        this.creationTimeUnix = source["creationTimeUnix"];
 	        this.tenant = source["tenant"];
 	        this.properties = source["properties"];
+	        this.score = source["score"];
+	        this.distance = source["distance"];
+	        this.certainty = source["certainty"];
 	    }
 	}
 	export class w_PaginatedObjectResponse {
@@ -1008,12 +1014,70 @@ export namespace weaviate {
 		}
 	}
 	
+	export class w_WhereFilter {
+	    operator: string;
+	    path?: string[];
+	    valueType?: string;
+	    valueText?: string;
+	    valueString?: string;
+	    valueInt?: number;
+	    valueNumber?: number;
+	    valueBoolean?: boolean;
+	    valueDate?: string;
+	    valueTexts?: string[];
+	    valueInts?: number[];
+	    valueNumbers?: number[];
+	    operands?: w_WhereFilter[];
+	
+	    static createFrom(source: any = {}) {
+	        return new w_WhereFilter(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.operator = source["operator"];
+	        this.path = source["path"];
+	        this.valueType = source["valueType"];
+	        this.valueText = source["valueText"];
+	        this.valueString = source["valueString"];
+	        this.valueInt = source["valueInt"];
+	        this.valueNumber = source["valueNumber"];
+	        this.valueBoolean = source["valueBoolean"];
+	        this.valueDate = source["valueDate"];
+	        this.valueTexts = source["valueTexts"];
+	        this.valueInts = source["valueInts"];
+	        this.valueNumbers = source["valueNumbers"];
+	        this.operands = this.convertValues(source["operands"], w_WhereFilter);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class w_SearchOptions {
 	    Limit: number;
+	    Offset: number;
 	    Alpha: number;
 	    FusionType: string;
 	    Distance: number;
 	    Certainty: number;
+	    Where?: w_WhereFilter;
+	    Properties: string[];
+	    TargetVectors: string[];
 	
 	    static createFrom(source: any = {}) {
 	        return new w_SearchOptions(source);
@@ -1022,11 +1086,33 @@ export namespace weaviate {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.Limit = source["Limit"];
+	        this.Offset = source["Offset"];
 	        this.Alpha = source["Alpha"];
 	        this.FusionType = source["FusionType"];
 	        this.Distance = source["Distance"];
 	        this.Certainty = source["Certainty"];
+	        this.Where = this.convertValues(source["Where"], w_WhereFilter);
+	        this.Properties = source["Properties"];
+	        this.TargetVectors = source["TargetVectors"];
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class w_StatusResponse {
 	    status: string;
@@ -1099,6 +1185,7 @@ export namespace weaviate {
 		    return a;
 		}
 	}
+	
 	
 
 }

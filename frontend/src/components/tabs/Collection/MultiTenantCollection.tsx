@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import {
+  GetCollection,
   GetObjectsPaginated,
   GetTenants,
   GetTotalObjects,
@@ -15,7 +16,15 @@ import { errorReporting } from "@/lib/utils";
 import { Tabs as AntdTabs } from "antd";
 import type { TabsProps } from "antd";
 import { weaviate } from "wailsjs/go/models";
-import SearchComponent, { type SearchOptions } from "./components/Search";
+import SearchComponent, {
+  toWireOptions,
+  SEARCH_RESULT_CAP,
+  SHOW_SIMILAR_DEFAULT_OPTS,
+  type SearchOptions,
+  type SearchType,
+} from "./components/Search";
+import ObjectsTable from "./components/ObjectsTable";
+import ResultsToolbar from "./components/ResultsToolbar";
 import { Props } from "./types";
 import CollectionDetails from "./components/CollectionDetails/index";
 import {
@@ -23,6 +32,11 @@ import {
   tenantsQueryKey,
   totalObjectsQueryKey,
 } from "@/components/tabs/constants";
+import { collectionDetailsQueryKey } from "./components/constants";
+import {
+  useExplorerHistoryStore,
+  useResultsViewMode,
+} from "@/store/explorer-history-store";
 
 const MultiTenantCollection: React.FC<Props> = ({
   collection,
@@ -38,7 +52,17 @@ const MultiTenantCollection: React.FC<Props> = ({
     weaviate.w_WeaviateObject[] | undefined
   >();
   const [searchExecutionTime, setSearchExecutionTime] = useState<string>();
+  const [similarObjectId, setSimilarObjectId] = useState<string | undefined>();
+  const [lastSearch, setLastSearch] = useState<{
+    query: string;
+    searchType: string;
+    opts: SearchOptions;
+  } | null>(null);
+  const [searchPage, setSearchPage] = useState(1);
   const objectsContainerRef = useRef<HTMLDivElement>(null);
+  const pushSearch = useExplorerHistoryStore((s) => s.pushSearch);
+  const setViewMode = useExplorerHistoryStore((s) => s.setViewMode);
+  const viewMode = useResultsViewMode(connection.id, name, selectedTenant);
 
   const scrollToTop = () => {
     // Use the ref to scroll to top smoothly
@@ -55,6 +79,13 @@ const MultiTenantCollection: React.FC<Props> = ({
     // reset cursor history when changing tenant
     setCursorHistory([]);
   };
+
+  // Fetch collection details (shared cache key with the Details tab) to read TTL config.
+  const { data: collectionDetails } = useQuery({
+    queryKey: collectionDetailsQueryKey(connection.id, name),
+    queryFn: () => GetCollection(connection.id, name),
+    retry: false,
+  });
 
   // Fetch tenants
   const { data: tenants, isLoading: loadingTenant } = useQuery({
@@ -176,12 +207,19 @@ const MultiTenantCollection: React.FC<Props> = ({
     setCursorHistory([]);
   };
 
-  const handleSearch = async (
+  const runSearch = async (
     v: string,
     searchType: string,
-    opts: SearchOptions
+    opts: SearchOptions,
+    {
+      pushHistory = true,
+      page = 1,
+      limit = pageSize,
+    }: { pushHistory?: boolean; page?: number; limit?: number } = {}
   ) => {
     setSearching(true);
+    setLastSearch({ query: v, searchType, opts });
+    setSearchPage(page);
 
     try {
       const { ExecutionTime, Objects } = await Search(
@@ -190,28 +228,92 @@ const MultiTenantCollection: React.FC<Props> = ({
         selectedTenant,
         searchType,
         v,
-        {
-          Limit: opts.limit,
-          Alpha: opts.alpha,
-          FusionType: opts.fusionType,
-          Distance: opts.distance,
-          Certainty: opts.certainty,
-        }
+        toWireOptions(opts, { limit, offset: (page - 1) * limit })
       );
 
       setObjects(Objects);
       scrollToTop();
       setSearchExecutionTime(ExecutionTime);
+
+      if (pushHistory) {
+        pushSearch({
+          connectionId: connection.id,
+          collectionName: name,
+          tenant: selectedTenant,
+          searchType: searchType as SearchType,
+          query: v,
+          options: opts,
+        });
+      }
     } catch (error) {
       errorReporting(error);
       setSearching(false);
     }
   };
 
+  const handleSearch = (
+    v: string,
+    searchType: string,
+    opts: SearchOptions
+  ) => {
+    setSimilarObjectId(undefined);
+    return runSearch(v, searchType, opts, { page: 1 });
+  };
+
+  // pushHistory is on so the entry shows up in Recent Searches and the
+  // user can restore it later (which re-activates the chip).
+  const handleShowSimilar = (objectId: string) => {
+    setSimilarObjectId(objectId);
+    runSearch(objectId, "nearObject", SHOW_SIMILAR_DEFAULT_OPTS, {
+      pushHistory: true,
+      page: 1,
+    });
+  };
+
+  const handleSearchNext = () => {
+    if (!lastSearch) return;
+    runSearch(lastSearch.query, lastSearch.searchType, lastSearch.opts, {
+      pushHistory: false,
+      page: searchPage + 1,
+    });
+  };
+
+  const handleSearchPrevious = () => {
+    if (!lastSearch || searchPage <= 1) return;
+    runSearch(lastSearch.query, lastSearch.searchType, lastSearch.opts, {
+      pushHistory: false,
+      page: searchPage - 1,
+    });
+  };
+
+  const handleSearchPageSizeChange = (p: number) => {
+    setPageSize(p);
+    if (lastSearch) {
+      runSearch(lastSearch.query, lastSearch.searchType, lastSearch.opts, {
+        pushHistory: false,
+        page: 1,
+        limit: p,
+      });
+    }
+  };
+
   const resetSearch = () => {
     setSearching(false);
     setSearchExecutionTime(undefined);
+    setSimilarObjectId(undefined);
+    setLastSearch(null);
+    setSearchPage(1);
+    refetchObjects();
+    refetchTotal();
   };
+
+  const resultsOnPage = objects?.length ?? 0;
+  const nextPageWithinCap =
+    searchPage * pageSize + pageSize <= SEARCH_RESULT_CAP;
+  const searchHasMore =
+    searching && resultsOnPage === pageSize && nextPageWithinCap;
+  const capReached =
+    searching && resultsOnPage === pageSize && !nextPageWithinCap;
 
   const items: TabsProps["items"] = [
     {
@@ -222,9 +324,28 @@ const MultiTenantCollection: React.FC<Props> = ({
           <SearchComponent
             handleSearch={handleSearch}
             resetSearch={resetSearch}
-            searchObjects={objects?.length || 0}
             executionTime={searchExecutionTime || ""}
             changeId={`${connection.id}-${name}`}
+            connectionId={connection.id}
+            collectionName={name}
+            tenant={selectedTenant}
+            similarObjectId={similarObjectId}
+            onClearSimilar={() => {
+              setSimilarObjectId(undefined);
+              resetSearch();
+            }}
+            onRestoreSimilar={handleShowSimilar}
+            schemaProperties={(collectionDetails?.properties || [])
+              .map((p) => ({
+                name: p.name ?? "",
+                dataType: p.dataType?.[0] ?? "",
+              }))
+              .filter((p) => p.name)}
+            vectorTargets={
+              collectionDetails?.vectorConfig
+                ? Object.keys(collectionDetails.vectorConfig)
+                : undefined
+            }
           >
             <div className="mb-2 flex flex-row items-center justify-between">
               <TenantList
@@ -232,25 +353,71 @@ const MultiTenantCollection: React.FC<Props> = ({
                 setTenant={selectTenant}
                 tenants={tenants}
               />
-              <Pagination
-                pageSize={pageSize}
-                setPageSize={handlePageSizeChange}
-                next={handleNext}
-                previous={handlePrevious}
-                currentPage={cursorHistory.length + 1}
-                totalCount={totalObjects}
-                totalPages={totalPages}
-                loading={loading}
-              />
+              {searching ? (
+                <Pagination
+                  mode="search"
+                  pageSize={pageSize}
+                  setPageSize={handleSearchPageSizeChange}
+                  next={handleSearchNext}
+                  previous={handleSearchPrevious}
+                  searchPage={searchPage}
+                  resultsOnPage={resultsOnPage}
+                  hasMore={searchHasMore}
+                  loading={loading}
+                />
+              ) : (
+                <Pagination
+                  pageSize={pageSize}
+                  setPageSize={handlePageSizeChange}
+                  next={handleNext}
+                  previous={handlePrevious}
+                  currentPage={cursorHistory.length + 1}
+                  totalCount={totalObjects}
+                  totalPages={totalPages}
+                  loading={loading}
+                />
+              )}
             </div>
-            <ObjectsList
-              loading={loading}
-              objects={objects || []}
+            <ResultsToolbar
+              viewMode={viewMode}
+              onViewModeChange={(m) =>
+                setViewMode(connection.id, name, selectedTenant, m)
+              }
+              similarObjectId={similarObjectId}
+              onClearSimilar={() => {
+                setSimilarObjectId(undefined);
+                resetSearch();
+              }}
+              capReached={capReached}
               connectionID={connection.id}
-              isSearch={searching}
-              refetch={refetch}
-              ref={objectsContainerRef}
+              collectionName={name}
+              tenant={selectedTenant}
             />
+            {viewMode === "table" ? (
+              <ObjectsTable
+                loading={loading}
+                objects={objects || []}
+                connectionID={connection.id}
+                tenant={selectedTenant}
+                isSearch={searching}
+                objectTtlConfig={collectionDetails?.objectTtlConfig}
+                refetch={refetch}
+                ref={objectsContainerRef}
+                onShowSimilar={handleShowSimilar}
+              />
+            ) : (
+              <ObjectsList
+                loading={loading}
+                objects={objects || []}
+                connectionID={connection.id}
+                tenant={selectedTenant}
+                isSearch={searching}
+                objectTtlConfig={collectionDetails?.objectTtlConfig}
+                refetch={refetch}
+                ref={objectsContainerRef}
+                onShowSimilar={handleShowSimilar}
+              />
+            )}
           </SearchComponent>
         </div>
       ),

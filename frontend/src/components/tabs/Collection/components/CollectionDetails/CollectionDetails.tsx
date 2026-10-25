@@ -13,6 +13,7 @@ import {
   Users,
   Search,
   Pencil,
+  Clock,
 } from "lucide-react";
 import { collectionDetailsQueryKey } from "../constants";
 import { Section } from "./helpers";
@@ -23,8 +24,10 @@ import {
   ReplicationShardingSection,
   MultiTenancySection,
   ModuleConfigSection,
+  ObjectTTLSection,
 } from "./sections";
 import { EditCollectionDialog } from "./EditCollectionDialog";
+import { useFeature } from "@/hooks/use-features";
 
 interface Props {
   connectionID: number;
@@ -36,6 +39,7 @@ const CollectionDetails: React.FC<Props> = ({
   collectionName,
 }) => {
   const [editOpen, setEditOpen] = useState(false);
+  const ttlSupported = useFeature(connectionID, "objectTTL");
 
   const {
     data: collection,
@@ -141,6 +145,11 @@ const CollectionDetails: React.FC<Props> = ({
         <Section title="Multi-tenancy" icon={Users} defaultOpen={false}>
           <MultiTenancySection config={collection.multiTenancyConfig} />
         </Section>
+        {ttlSupported && collection.objectTtlConfig && (
+          <Section title="Object TTL" icon={Clock} defaultOpen={false}>
+            <ObjectTTLSection config={collection.objectTtlConfig} />
+          </Section>
+        )}
         <Section
           title="Module Configuration"
           icon={Settings}

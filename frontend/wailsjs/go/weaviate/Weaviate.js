@@ -94,6 +94,10 @@ export function GetModules(arg1) {
   return window['go']['weaviate']['Weaviate']['GetModules'](arg1);
 }
 
+export function GetObject(arg1, arg2, arg3, arg4) {
+  return window['go']['weaviate']['Weaviate']['GetObject'](arg1, arg2, arg3, arg4);
+}
+
 export function GetObjectsPaginated(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['weaviate']['Weaviate']['GetObjectsPaginated'](arg1, arg2, arg3, arg4, arg5);
 }
@@ -152,6 +156,10 @@ export function TestConnection(arg1) {
 
 export function UpdateCollection(arg1, arg2) {
   return window['go']['weaviate']['Weaviate']['UpdateCollection'](arg1, arg2);
+}
+
+export function UpdateObject(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['weaviate']['Weaviate']['UpdateObject'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function UsersEnabled(arg1) {

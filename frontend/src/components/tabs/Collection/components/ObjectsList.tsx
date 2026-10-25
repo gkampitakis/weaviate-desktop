@@ -1,7 +1,18 @@
-import { weaviate } from "wailsjs/go/models";
+import { models, weaviate } from "wailsjs/go/models";
 import JsonView from "@uiw/react-json-view";
-import { Check, Copy, Database, LoaderCircle, SearchX, Trash2 } from "lucide-react";
-import { useState } from "react";
+import {
+  Check,
+  Clock,
+  Copy,
+  Database,
+  LoaderCircle,
+  Pencil,
+  SearchX,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import "./json-view-styles.css";
 import {
   Dialog,
@@ -12,9 +23,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { DeleteObject } from "wailsjs/go/weaviate/Weaviate";
-import { errorReporting } from "@/lib/utils";
+import { cn, errorReporting } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import EditObjectDrawer from "./EditObjectDrawer";
+import { computeExpiry, type ExpiryStatus } from "./formatExpiry";
+import { VectorPill } from "./VectorPill";
+import {
+  parseSentinel,
+  transformWithExpansions,
+  type VectorPillRegistry,
+} from "./vectorPillTransform";
+import { ScoreBadge, pickPrimarySignal } from "./scoreBadge";
 
 interface Props {
   objects: weaviate.w_WeaviateObject[];
@@ -23,8 +48,17 @@ interface Props {
   refetch: () => void;
   loading: boolean;
   isSearch: boolean;
+  objectTtlConfig?: models.w_ObjectTTLConfig;
   ref: React.Ref<HTMLDivElement> | undefined;
+  onShowSimilar?: (objectId: string) => void;
 }
+
+const expiryIconClass: Record<ExpiryStatus, string> = {
+  ok: "text-muted-foreground",
+  soon: "text-amber-500",
+  imminent: "text-destructive",
+  expired: "text-destructive",
+};
 
 const ObjectsList: React.FC<Props> = ({
   objects,
@@ -32,9 +66,31 @@ const ObjectsList: React.FC<Props> = ({
   connectionID,
   loading,
   isSearch,
+  objectTtlConfig,
   refetch,
   ref,
+  onShowSimilar,
 }) => {
+  const internalRef = useRef<HTMLDivElement>(null);
+  const setRefs = useCallback(
+    (node: HTMLDivElement | null) => {
+      internalRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref && "current" in ref) {
+        (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }
+    },
+    [ref]
+  );
+
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const virtualizer = useVirtualizer({
+    count: objects.length,
+    getScrollElement: () => internalRef.current,
+    estimateSize: () => 240,
+    overscan: 4,
+  });
+
   if (!objects.length) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-4">
@@ -63,39 +119,100 @@ const ObjectsList: React.FC<Props> = ({
     );
   }
 
+  const items = virtualizer.getVirtualItems();
+
   return (
-    <div className="flex flex-col gap-2 overflow-y-auto" ref={ref}>
-      {objects.map((object, id) => (
-        <ObjectCard
-          connectionID={connectionID}
-          key={id}
-          object={object}
-          tenant={tenant}
-          refetch={refetch}
-        />
-      ))}
+    <div
+      ref={setRefs}
+      className="min-h-0 flex-1 overflow-y-auto"
+      style={{ contain: "strict" }}
+    >
+      <div
+        style={{
+          height: virtualizer.getTotalSize(),
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {items.map((virtualRow) => {
+          const obj = objects[virtualRow.index];
+          return (
+            <div
+              key={virtualRow.key}
+              data-index={virtualRow.index}
+              ref={virtualizer.measureElement}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: `translateY(${virtualRow.start}px)`,
+                paddingBottom: 8,
+              }}
+            >
+              <ObjectCard
+                connectionID={connectionID}
+                object={obj}
+                tenant={tenant}
+                refetch={refetch}
+                objectTtlConfig={objectTtlConfig}
+                onShowSimilar={onShowSimilar}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
 
-interface ObjectActionsProps {
+interface ObjectCardProps {
   object: weaviate.w_WeaviateObject;
   tenant?: string;
   connectionID: number;
   refetch: () => void;
+  objectTtlConfig?: models.w_ObjectTTLConfig;
+  onShowSimilar?: (objectId: string) => void;
 }
 
-const ObjectCard: React.FC<ObjectActionsProps> = ({
+const ObjectCard: React.FC<ObjectCardProps> = ({
   object,
   tenant = "",
   connectionID,
   refetch,
+  objectTtlConfig,
+  onShowSimilar,
 }) => {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(
+    () => new Set()
+  );
   const CopyIcon = copied ? Check : Copy;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { class: _, ...jsonValue } = object;
+
+  // Strip metadata fields from the rendered JSON body. `class` is implicit
+  // (already in the breadcrumb) and `score`/`distance`/`certainty` are
+  // surfaced by the <ScoreBadge> in the header — duplicating them here is
+  // noise.
+  const jsonValue = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { class: _c, score: _s, distance: _d, certainty: _ct, ...rest } =
+      object;
+    return rest;
+  }, [object]);
+
+  // Re-build the transformed tree (with vector arrays replaced by sentinels)
+  // every time the value or the set of expanded paths changes. The registry
+  // is recreated alongside it so stale ids don't leak between renders.
+  const { transformed, registry } = useMemo(() => {
+    const reg: VectorPillRegistry = new Map();
+    const out = transformWithExpansions(jsonValue, reg, expandedPaths);
+    return { transformed: out, registry: reg };
+  }, [jsonValue, expandedPaths]);
+
+  const expiry = computeExpiry(object, objectTtlConfig);
+  const primarySignal = pickPrimarySignal(object);
 
   const handleCopy = () => {
     if (copied) return;
@@ -112,8 +229,25 @@ const ObjectCard: React.FC<ObjectActionsProps> = ({
         setOpen(false);
       });
 
+  const expandVector = useCallback((path: string) => {
+    setExpandedPaths((prev) => {
+      if (prev.has(path)) return prev;
+      const next = new Set(prev);
+      next.add(path);
+      return next;
+    });
+  }, []);
+
   return (
     <>
+      <EditObjectDrawer
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        connectionID={connectionID}
+        object={object}
+        tenant={tenant}
+        onSaved={refetch}
+      />
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -136,9 +270,34 @@ const ObjectCard: React.FC<ObjectActionsProps> = ({
 
       <div className="rounded-lg border bg-card">
         <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <span className="truncate font-mono text-xs text-muted-foreground">
-            {object.id}
-          </span>
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="truncate font-mono text-xs text-muted-foreground">
+              {object.id}
+            </span>
+            {expiry && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="flex shrink-0 items-center">
+                    <Clock
+                      className={cn(
+                        "h-3.5 w-3.5",
+                        expiryIconClass[expiry.status]
+                      )}
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <div className="flex flex-col gap-0.5">
+                    <span>{expiry.relative}</span>
+                    <span className="text-[10px] opacity-80">
+                      {expiry.absolute}
+                    </span>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {primarySignal && <ScoreBadge object={object} />}
+          </div>
           <div className="flex flex-shrink-0 items-center gap-1">
             <Button
               variant="ghost"
@@ -151,6 +310,32 @@ const ObjectCard: React.FC<ObjectActionsProps> = ({
                 className={`h-3.5 w-3.5 ${copied ? "text-green-600" : ""}`}
               />
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setEditOpen(true)}
+              title="Edit properties"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            {onShowSimilar && object.id && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => onShowSimilar(object.id!)}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Find similar objects
+                </TooltipContent>
+              </Tooltip>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -171,7 +356,7 @@ const ObjectCard: React.FC<ObjectActionsProps> = ({
             enableClipboard={false}
             collapsed={2}
             shortenTextAfterLength={120}
-            value={jsonValue}
+            value={transformed as object}
             highlightUpdates={false}
             style={{
               maxWidth: "100%",
@@ -181,7 +366,37 @@ const ObjectCard: React.FC<ObjectActionsProps> = ({
               lineHeight: "1.6",
               background: "transparent",
             }}
-          />
+          >
+            <JsonView.String
+              render={(props, { value }) => {
+                if (typeof value === "string") {
+                  const id = parseSentinel(value);
+                  if (id) {
+                    const entry = registry.get(id);
+                    if (entry) {
+                      return (
+                        <VectorPill
+                          values={entry.values}
+                          onExpand={() => expandVector(entry.path)}
+                        />
+                      );
+                    }
+                  }
+                }
+                // Fall back to the library's default rendering. The render
+                // prop signature expects us to spread the props back onto a
+                // <span>.
+                const {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                  children,
+                  ...rest
+                } = props as React.HTMLAttributes<HTMLSpanElement> & {
+                  children?: React.ReactNode;
+                };
+                return <span {...rest}>{children}</span>;
+              }}
+            />
+          </JsonView>
         </div>
       </div>
     </>
