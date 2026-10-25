@@ -25,6 +25,8 @@ import { ChevronDown, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { extractWeaviateError } from "@/lib/utils";
 import { collectionDetailsQueryKey } from "./constants";
+import { ReferenceChips } from "./ReferenceChips";
+import { referencesByProperty } from "./referenceTransform";
 
 type EditableInputType = "text" | "int" | "number" | "boolean" | "date";
 
@@ -309,6 +311,8 @@ const EditObjectDrawer: React.FC<Props> = ({
     [collection?.properties, currentProperties]
   );
 
+  const references = useMemo(() => referencesByProperty(object), [object]);
+
   const defaultValues = useMemo(() => buildDefaults(editable), [editable]);
 
   const {
@@ -576,9 +580,17 @@ const EditObjectDrawer: React.FC<Props> = ({
                             {field.dataType}
                           </Badge>
                         </div>
-                        <span className="text-muted-foreground text-xs">
-                          {field.reason}
-                        </span>
+                        {references.has(field.name) ? (
+                          <div className="flex min-w-0 justify-end">
+                            <ReferenceChips
+                              reference={references.get(field.name)}
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">
+                            {field.reason}
+                          </span>
+                        )}
                       </div>
                     ))}
                   </CollapsibleContent>

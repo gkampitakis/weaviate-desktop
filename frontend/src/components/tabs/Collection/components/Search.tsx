@@ -606,10 +606,14 @@ const FieldsPicker: React.FC<{
   onChange: (next: string[]) => void;
 }> = ({ schema, value, onChange }) => {
   const names = useMemo(
+    () => schema.filter((p) => p.name).map((p) => p.name),
+    [schema]
+  );
+  const referenceNames = useMemo(
     () =>
-      schema
-        .filter((p) => p.name && !isCrossReference(p.dataType))
-        .map((p) => p.name),
+      new Set(
+        schema.filter((p) => isCrossReference(p.dataType)).map((p) => p.name)
+      ),
     [schema]
   );
   // Empty value === "all selected" semantically — we keep the set empty on
@@ -690,6 +694,11 @@ const FieldsPicker: React.FC<{
                     className="size-3.5 accent-green-600"
                   />
                   <span className="truncate font-mono text-[11px]">{name}</span>
+                  {referenceNames.has(name) && (
+                    <span className="ml-auto shrink-0 rounded border px-1 py-px text-[9px] font-medium tracking-wide text-muted-foreground uppercase">
+                      ref
+                    </span>
+                  )}
                 </label>
               </li>
             );

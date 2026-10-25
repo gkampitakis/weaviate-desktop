@@ -5,6 +5,7 @@ import {
   Clock,
   Copy,
   Database,
+  Link2,
   LoaderCircle,
   Pencil,
   SearchX,
@@ -38,6 +39,11 @@ import { computeExpiry, type ExpiryStatus } from "./formatExpiry";
 import { VectorPill } from "./VectorPill";
 import { VECTOR_PILL_THRESHOLD } from "./vectorPillTransform";
 import { ScoreBadge, pickPrimarySignal } from "./scoreBadge";
+import { ReferenceChips } from "./ReferenceChips";
+import {
+  collectReferenceColumns,
+  referencesByProperty,
+} from "./referenceTransform";
 import EditObjectDrawer from "./EditObjectDrawer";
 
 interface Props {
@@ -119,6 +125,11 @@ const ObjectsTable: React.FC<Props> = ({
 
   const propertyColumns = useMemo(
     () => collectPropertyColumns(objects),
+    [objects]
+  );
+
+  const referenceColumns = useMemo(
+    () => collectReferenceColumns(objects),
     [objects]
   );
 
@@ -220,6 +231,17 @@ const ObjectsTable: React.FC<Props> = ({
                 {col}
               </th>
             ))}
+            {referenceColumns.map((col) => (
+              <th
+                key={`ref-${col}`}
+                className="flex shrink-0 items-center gap-1 px-3 py-2 font-mono font-medium text-muted-foreground"
+                style={{ width: 220 }}
+                title={`${col} (reference)`}
+              >
+                <Link2 className="h-3 w-3 shrink-0 opacity-70" />
+                <span className="truncate">{col}</span>
+              </th>
+            ))}
             <th
               className="ml-auto shrink-0 px-3 py-2 text-right font-medium text-muted-foreground"
               style={{ width: 110 }}
@@ -251,6 +273,7 @@ const ObjectsTable: React.FC<Props> = ({
                 index={virtualRow.index}
                 object={obj}
                 propertyColumns={propertyColumns}
+                referenceColumns={referenceColumns}
                 hasAnyScore={hasAnyScore}
                 tenant={tenant}
                 connectionID={connectionID}
@@ -269,6 +292,7 @@ const ObjectsTable: React.FC<Props> = ({
 interface RowProps {
   object: weaviate.w_WeaviateObject;
   propertyColumns: string[];
+  referenceColumns: string[];
   hasAnyScore: boolean;
   tenant?: string;
   connectionID: number;
@@ -283,6 +307,7 @@ interface RowProps {
 const ObjectRow: React.FC<RowProps> = ({
   object,
   propertyColumns,
+  referenceColumns,
   hasAnyScore,
   tenant = "",
   connectionID,
@@ -314,6 +339,7 @@ const ObjectRow: React.FC<RowProps> = ({
 
   const expiry = computeExpiry(object, objectTtlConfig);
   const props = (object.properties as Record<string, unknown>) || {};
+  const references = referencesByProperty(object);
   const primary = pickPrimarySignal(object);
   const CopyIcon = copied ? Check : Copy;
 
@@ -387,6 +413,15 @@ const ObjectRow: React.FC<RowProps> = ({
             style={{ width: 200 }}
           >
             <PropertyCell value={props[col]} />
+          </td>
+        ))}
+        {referenceColumns.map((col) => (
+          <td
+            key={`ref-${col}`}
+            className="flex shrink-0 items-center overflow-hidden px-3 py-2 text-[11px]"
+            style={{ width: 220 }}
+          >
+            <ReferenceChips reference={references.get(col)} />
           </td>
         ))}
         <td

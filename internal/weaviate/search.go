@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -12,6 +13,7 @@ import (
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/filters"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/graphql"
 	"github.com/weaviate/weaviate/entities/models"
+	"github.com/weaviate/weaviate/entities/schema"
 	pb "github.com/weaviate/weaviate/grpc/generated/protocol/v1"
 	"github.com/weaviate/weaviate/usecases/byteops"
 )
@@ -111,13 +113,16 @@ func (w *Weaviate) Search(
 		limit = 100
 	}
 
+	targets := referenceTargets(col.Properties, opts.Properties)
+
 	search := c.w.Experimental().Search().
 		WithCollection(collection).
 		WithTenant(tenant).
 		WithLimit(limit).
 		WithOffset(opts.Offset).
 		WithMetadata(searchMetadata(searchType)).
-		WithProperties(projectedProperties(col.Properties, opts.Properties)...)
+		WithProperties(projectedProperties(col.Properties, opts.Properties)...).
+		WithReferences(c.referenceRequests(ctx, targets)...)
 
 	search, err = applySearchOperator(search, searchType, query, opts)
 	if err != nil {
@@ -147,7 +152,7 @@ func (w *Weaviate) Search(
 	}
 
 	return &PaginatedObjectResponse{
-		Objects:       buildSearchObjects(results, collection, searchType),
+		Objects:       buildSearchObjects(results, collection, searchType, targets),
 		TotalResults:  len(results),
 		ExecutionTime: time.Since(now).String(),
 	}, nil
@@ -269,14 +274,11 @@ func projectedProperties(props []*models.Property, projection []string) []string
 		return nil
 	}
 
-	allowed := make(map[string]struct{}, len(projection))
-	for _, p := range projection {
-		allowed[p] = struct{}{}
-	}
+	allowed := nameSet(projection)
 
 	out := make([]string, 0, len(projection))
 	for _, prop := range props {
-		if _, ok := allowed[prop.Name]; !ok {
+		if !allowed[prop.Name] {
 			continue
 		}
 		if isCrossReference(prop.DataType) {
@@ -288,9 +290,262 @@ func projectedProperties(props []*models.Property, projection []string) []string
 	return out
 }
 
+func nameSet(names []string) map[string]bool {
+	out := make(map[string]bool, len(names))
+	for _, name := range names {
+		out[name] = true
+	}
+
+	return out
+}
+
+type referenceTarget struct {
+	property   string
+	collection string
+}
+
+func referenceTargets(props []*models.Property, projection []string) []referenceTarget {
+	allowed := nameSet(projection)
+
+	out := make([]referenceTarget, 0)
+	for _, prop := range props {
+		if !isCrossReference(prop.DataType) {
+			continue
+		}
+		if len(projection) > 0 && !allowed[prop.Name] {
+			continue
+		}
+		for _, collection := range prop.DataType {
+			if collection == "" {
+				continue
+			}
+			out = append(out, referenceTarget{property: prop.Name, collection: collection})
+		}
+	}
+
+	return out
+}
+
+func (c *WClient) referenceRequests(
+	ctx context.Context,
+	targets []referenceTarget,
+) []*graphql.Reference {
+	if len(targets) == 0 {
+		return nil
+	}
+
+	labels := make(map[string]*string, len(targets))
+
+	out := make([]*graphql.Reference, 0, len(targets))
+	for _, target := range targets {
+		label, cached := labels[target.collection]
+		if !cached {
+			label = c.referenceLabel(ctx, target.collection)
+			labels[target.collection] = label
+		}
+		if label == nil {
+			continue
+		}
+
+		reference := &graphql.Reference{
+			TargetCollection:  target.collection,
+			ReferenceProperty: target.property,
+			Metadata:          &graphql.Metadata{ID: true},
+		}
+		if *label != "" {
+			reference.Properties = []string{*label}
+		}
+		out = append(out, reference)
+	}
+
+	return out
+}
+
+func (c *WClient) referenceLabel(ctx context.Context, collection string) *string {
+	col, err := c.w.Schema().ClassGetter().WithClassName(collection).Do(ctx)
+	if err != nil {
+		slog.Debug(
+			"skipping reference target, failed retrieving its schema",
+			slog.String("collection", collection),
+			slog.Any("error", err),
+		)
+		return nil
+	}
+
+	label := referenceLabelProperty(col.Properties)
+
+	return &label
+}
+
+var preferredLabelNames = map[string]bool{
+	"name":        true,
+	"title":       true,
+	"label":       true,
+	"identifier":  true,
+	"slug":        true,
+	"displayname": true,
+}
+
+func referenceLabelProperty(props []*models.Property) string {
+	best, bestRank := "", 0
+	for _, prop := range props {
+		if rank := labelRank(prop); rank > bestRank {
+			best, bestRank = prop.Name, rank
+		}
+	}
+
+	return best
+}
+
+var labelTextTypes = map[schema.DataType]bool{
+	schema.DataTypeText:   true,
+	schema.DataTypeString: true,
+}
+
+var labelScalarTypes = map[schema.DataType]bool{
+	schema.DataTypeInt:     true,
+	schema.DataTypeNumber:  true,
+	schema.DataTypeBoolean: true,
+	schema.DataTypeDate:    true,
+	schema.DataTypeUUID:    true,
+}
+
+func labelRank(prop *models.Property) int {
+	if len(prop.DataType) == 0 || isCrossReference(prop.DataType) {
+		return 0
+	}
+
+	dataType := schema.DataType(prop.DataType[0])
+
+	switch {
+	case dataType == schema.DataTypeBlob:
+		return 0
+	case labelTextTypes[dataType] && preferredLabelNames[strings.ToLower(prop.Name)]:
+		return 4
+	case labelTextTypes[dataType]:
+		return 3
+	case labelScalarTypes[dataType]:
+		return 2
+	default:
+		return 1
+	}
+}
+
+func buildReferences(
+	results []graphql.ReferenceResult,
+	targets []referenceTarget,
+) []ObjectReference {
+	if len(results) == 0 {
+		return nil
+	}
+
+	collections := targetCollections(targets)
+	consumed := make(map[string]int, len(results))
+	position := make(map[string]int, len(results))
+
+	out := make([]ObjectReference, 0, len(results))
+	for _, result := range results {
+		collection := nthCollection(collections[result.Name], consumed[result.Name])
+		consumed[result.Name]++
+
+		at, ok := position[result.Name]
+		if !ok {
+			out = append(out, ObjectReference{Property: result.Name})
+			at = len(out) - 1
+			position[result.Name] = at
+		}
+		out[at].Targets = appendTargets(
+			out[at].Targets,
+			result.ReferenceProperties,
+			collection,
+		)
+	}
+
+	return nonEmptyReferences(out)
+}
+
+func targetCollections(targets []referenceTarget) map[string][]string {
+	out := make(map[string][]string, len(targets))
+	for _, target := range targets {
+		out[target.property] = append(out[target.property], target.collection)
+	}
+
+	return out
+}
+
+func nthCollection(values []string, i int) string {
+	if i < 0 || i >= len(values) {
+		return ""
+	}
+
+	return values[i]
+}
+
+func appendTargets(
+	existing []ReferenceTarget,
+	results []graphql.ReferencePropertiesResult,
+	collection string,
+) []ReferenceTarget {
+	for _, result := range results {
+		id := result.Metadata.ID
+		if id == "" || containsTarget(existing, id) {
+			continue
+		}
+		existing = append(existing, ReferenceTarget{
+			ID:         id,
+			Collection: collection,
+			Properties: referenceProperties(result.Properties),
+		})
+	}
+
+	return existing
+}
+
+func containsTarget(targets []ReferenceTarget, id string) bool {
+	for _, target := range targets {
+		if target.ID == id {
+			return true
+		}
+	}
+
+	return false
+}
+
+func referenceProperties(props map[string]any) map[string]any {
+	out := make(map[string]any, len(props))
+	for name, value := range props {
+		plain := plainValue(value)
+		if plain == nil {
+			continue
+		}
+		out[name] = plain
+	}
+	if len(out) == 0 {
+		return nil
+	}
+
+	return out
+}
+
+func nonEmptyReferences(references []ObjectReference) []ObjectReference {
+	out := make([]ObjectReference, 0, len(references))
+	for _, reference := range references {
+		if len(reference.Targets) == 0 {
+			continue
+		}
+		out = append(out, reference)
+	}
+	if len(out) == 0 {
+		return nil
+	}
+
+	return out
+}
+
 func buildSearchObjects(
 	results []graphql.SearchResult,
 	collection, searchType string,
+	targets []referenceTarget,
 ) []WeaviateObject {
 	keepScore, keepVectorSignals := relevantSignals(searchType)
 
@@ -302,6 +557,7 @@ func buildSearchObjects(
 			CreationTimeUnix:   result.Metadata.CreationTimeUnix,
 			LastUpdateTimeUnix: result.Metadata.LastUpdateTimeUnix,
 			Properties:         plainProperties(result.Properties),
+			References:         buildReferences(result.References, targets),
 		}
 		if keepScore {
 			object.Score = signalValue(result.Metadata.Score)
