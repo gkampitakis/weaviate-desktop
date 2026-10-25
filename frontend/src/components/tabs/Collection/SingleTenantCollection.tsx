@@ -27,7 +27,11 @@ import ResultsToolbar from "./components/ResultsToolbar";
 import { Props } from "./types";
 import CollectionDetails from "./components/CollectionDetails/index";
 import { objectsQueryKey, totalObjectsQueryKey } from "../constants";
-import { collectionDetailsQueryKey } from "./components/constants";
+import {
+  BROWSE_WHERE_FILTER,
+  collectionDetailsQueryKey,
+  toWireFilter,
+} from "./components/constants";
 import {
   useExplorerHistoryStore,
   useResultsViewMode,
@@ -84,11 +88,21 @@ const SingleTenantCollection: React.FC<Props> = ({
     isLoading: loadingTotal,
     refetch: refetchTotal,
   } = useQuery({
-    queryKey: totalObjectsQueryKey(connection.id, name),
+    queryKey: totalObjectsQueryKey(
+      connection.id,
+      name,
+      undefined,
+      BROWSE_WHERE_FILTER
+    ),
     initialData: 0,
     queryFn: async () => {
       try {
-        const total = await GetTotalObjects(connection.id, name, "");
+        const total = await GetTotalObjects(
+          connection.id,
+          name,
+          "",
+          toWireFilter(BROWSE_WHERE_FILTER)
+        );
 
         // reset cursor history and page size
         setCursorHistory([]);

@@ -32,7 +32,11 @@ import {
   tenantsQueryKey,
   totalObjectsQueryKey,
 } from "@/components/tabs/constants";
-import { collectionDetailsQueryKey } from "./components/constants";
+import {
+  BROWSE_WHERE_FILTER,
+  collectionDetailsQueryKey,
+  toWireFilter,
+} from "./components/constants";
 import {
   useExplorerHistoryStore,
   useResultsViewMode,
@@ -120,14 +124,20 @@ const MultiTenantCollection: React.FC<Props> = ({
     isLoading: loadingTotal,
     refetch: refetchTotal,
   } = useQuery({
-    queryKey: totalObjectsQueryKey(connection.id, name, selectedTenant),
+    queryKey: totalObjectsQueryKey(
+      connection.id,
+      name,
+      selectedTenant,
+      BROWSE_WHERE_FILTER
+    ),
     initialData: 0,
     queryFn: async () => {
       try {
         const total = await GetTotalObjects(
           connection.id,
           name,
-          selectedTenant
+          selectedTenant,
+          toWireFilter(BROWSE_WHERE_FILTER)
         );
 
         return total;
