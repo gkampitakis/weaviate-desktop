@@ -30,15 +30,12 @@ runs:
     - shell: bash
       if: runner.os == 'Linux'
       run: |
-        go install github.com/wailsapp/wails/v2/cmd/wails@latest
-        wails build -tags webkit2_41
+        go tool wails build -tags webkit2_41
     - shell: pwsh
       if: runner.os == 'Windows'
       run: |
-        go install github.com/wailsapp/wails/v2/cmd/wails@latest
-        wails build
+        go tool wails build
     - shell: bash
       if: runner.os == 'macOS'
       run: |
-        go install github.com/wailsapp/wails/v2/cmd/wails@latest
-        wails build -platform darwin/universal
+        go tool wails build -platform darwin/universal

@@ -19,7 +19,7 @@ test-verbose: ## Run tests with verbose output
 	go test -shuffle on -v -cover ./...
 
 dev: ## Run wails dev server
-	wails dev -browser
+	go tool wails dev -browser
 
 release: ## Run commit-and-tag-version
 	(cd frontend && npm run release)
@@ -28,4 +28,4 @@ mocks: ## Generate mocks
 	mockery
 
 build: ## Build the project
-	wails build
+	go tool wails build
