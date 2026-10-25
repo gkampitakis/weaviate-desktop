@@ -39,15 +39,27 @@ type Weaviate struct {
 }
 
 type WeaviateObject struct {
-	ID                 string   `json:"id"`
-	Class              string   `json:"class"`
-	LastUpdateTimeUnix int64    `json:"lastUpdateTimeUnix,omitempty"`
-	CreationTimeUnix   int64    `json:"creationTimeUnix,omitempty"`
-	Tenant             string   `json:"tenant,omitempty"`
-	Properties         any      `json:"properties,omitempty"`
-	Score              *float64 `json:"score,omitempty"`
-	Distance           *float64 `json:"distance,omitempty"`
-	Certainty          *float64 `json:"certainty,omitempty"`
+	ID                 string            `json:"id"`
+	Class              string            `json:"class"`
+	LastUpdateTimeUnix int64             `json:"lastUpdateTimeUnix,omitempty"`
+	CreationTimeUnix   int64             `json:"creationTimeUnix,omitempty"`
+	Tenant             string            `json:"tenant,omitempty"`
+	Properties         any               `json:"properties,omitempty"`
+	References         []ObjectReference `json:"references,omitempty"`
+	Score              *float64          `json:"score,omitempty"`
+	Distance           *float64          `json:"distance,omitempty"`
+	Certainty          *float64          `json:"certainty,omitempty"`
+}
+
+type ObjectReference struct {
+	Property string            `json:"property"`
+	Targets  []ReferenceTarget `json:"targets"`
+}
+
+type ReferenceTarget struct {
+	ID         string         `json:"id"`
+	Collection string         `json:"collection,omitempty"`
+	Properties map[string]any `json:"properties,omitempty"`
 }
 
 type Storage interface {

@@ -178,7 +178,7 @@ func TestBuildSearchObjects(t *testing.T) {
 	}
 
 	t.Run("should keep only the score for keyword searches", func(t *testing.T) {
-		objects := buildSearchObjects(results, "Article", "bm25")
+		objects := buildSearchObjects(results, "Article", "bm25", nil)
 
 		assert.Len(t, objects, 1)
 		assert.Equal(t, "4f9c", objects[0].ID)
@@ -192,7 +192,7 @@ func TestBuildSearchObjects(t *testing.T) {
 	})
 
 	t.Run("should keep only the vector signals for vector searches", func(t *testing.T) {
-		objects := buildSearchObjects(results, "Article", "nearText")
+		objects := buildSearchObjects(results, "Article", "nearText", nil)
 
 		assert.Len(t, objects, 1)
 		assert.Nil(t, objects[0].Score)
@@ -201,7 +201,7 @@ func TestBuildSearchObjects(t *testing.T) {
 	})
 
 	t.Run("should return an empty slice for no results", func(t *testing.T) {
-		assert.Equal(t, []WeaviateObject{}, buildSearchObjects(nil, "Article", "bm25"))
+		assert.Equal(t, []WeaviateObject{}, buildSearchObjects(nil, "Article", "bm25", nil))
 	})
 }
 
@@ -440,4 +440,318 @@ func TestIsCrossReference(t *testing.T) {
 			assert.Equal(t, test.expected, isCrossReference(test.dataType))
 		})
 	}
+}
+
+func TestReferenceTargets(t *testing.T) {
+	props := []*weaviate_models.Property{
+		{Name: "title", DataType: []string{"text"}},
+		{Name: "author", DataType: []string{"Author"}},
+		{Name: "mentions", DataType: []string{"Article", "Blog"}},
+		{Name: "broken", DataType: []string{""}},
+	}
+
+	tests := []struct {
+		name       string
+		props      []*weaviate_models.Property
+		projection []string
+		expected   []referenceTarget
+	}{
+		{
+			name:  "requests every reference when no projection was given",
+			props: props,
+			expected: []referenceTarget{
+				{property: "author", collection: "Author"},
+				{property: "mentions", collection: "Article"},
+				{property: "mentions", collection: "Blog"},
+			},
+		},
+		{
+			name:       "requests only the projected references",
+			props:      props,
+			projection: []string{"title", "mentions"},
+			expected: []referenceTarget{
+				{property: "mentions", collection: "Article"},
+				{property: "mentions", collection: "Blog"},
+			},
+		},
+		{
+			name:       "returns nothing when the projection has no reference",
+			props:      props,
+			projection: []string{"title"},
+			expected:   []referenceTarget{},
+		},
+		{
+			name:     "returns nothing for a collection without references",
+			props:    []*weaviate_models.Property{{Name: "title", DataType: []string{"text"}}},
+			expected: []referenceTarget{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, referenceTargets(test.props, test.projection))
+		})
+	}
+}
+
+func TestReferenceLabelProperty(t *testing.T) {
+	tests := []struct {
+		name     string
+		props    []*weaviate_models.Property
+		expected string
+	}{
+		{
+			name: "prefers a conventionally named text property",
+			props: []*weaviate_models.Property{
+				{Name: "summary", DataType: []string{"text"}},
+				{Name: "title", DataType: []string{"text"}},
+			},
+			expected: "title",
+		},
+		{
+			name: "matches a preferred name case-insensitively",
+			props: []*weaviate_models.Property{
+				{Name: "body", DataType: []string{"text"}},
+				{Name: "Name", DataType: []string{"string"}},
+			},
+			expected: "Name",
+		},
+		{
+			name: "falls back to the first text property",
+			props: []*weaviate_models.Property{
+				{Name: "count", DataType: []string{"int"}},
+				{Name: "summary", DataType: []string{"text"}},
+				{Name: "body", DataType: []string{"text"}},
+			},
+			expected: "summary",
+		},
+		{
+			name: "falls back to a scalar when there is no text property",
+			props: []*weaviate_models.Property{
+				{Name: "tags", DataType: []string{"text[]"}},
+				{Name: "count", DataType: []string{"int"}},
+			},
+			expected: "count",
+		},
+		{
+			name: "falls back to any non-reference property as a last resort",
+			props: []*weaviate_models.Property{
+				{Name: "tags", DataType: []string{"text[]"}},
+			},
+			expected: "tags",
+		},
+		{
+			name: "never picks a reference or a blob",
+			props: []*weaviate_models.Property{
+				{Name: "author", DataType: []string{"Author"}},
+				{Name: "cover", DataType: []string{"blob"}},
+				{Name: "unknown"},
+			},
+			expected: "",
+		},
+		{
+			name:     "returns nothing for a collection without properties",
+			props:    nil,
+			expected: "",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, referenceLabelProperty(test.props))
+		})
+	}
+}
+
+func TestBuildReferences(t *testing.T) {
+	t.Run("should carry the id, collection and projection of each target", func(t *testing.T) {
+		references := buildReferences(
+			[]graphql.ReferenceResult{{
+				Name: "author",
+				ReferenceProperties: []graphql.ReferencePropertiesResult{
+					{
+						Properties: map[string]any{"name": "Jane"},
+						Metadata:   graphql.ReferenceMetadataResult{ID: "a1"},
+					},
+					{
+						Properties: map[string]any{"name": "John"},
+						Metadata:   graphql.ReferenceMetadataResult{ID: "a2"},
+					},
+				},
+			}},
+			[]referenceTarget{{property: "author", collection: "Author"}},
+		)
+
+		assert.Equal(t, []ObjectReference{{
+			Property: "author",
+			Targets: []ReferenceTarget{
+				{ID: "a1", Collection: "Author", Properties: map[string]any{"name": "Jane"}},
+				{ID: "a2", Collection: "Author", Properties: map[string]any{"name": "John"}},
+			},
+		}}, references)
+	})
+
+	t.Run("should merge the groups of a multi-target reference", func(t *testing.T) {
+		references := buildReferences(
+			[]graphql.ReferenceResult{
+				{
+					Name: "mentions",
+					ReferenceProperties: []graphql.ReferencePropertiesResult{{
+						Properties: map[string]any{"title": "an article"},
+						Metadata:   graphql.ReferenceMetadataResult{ID: "r1"},
+					}},
+				},
+				{
+					Name: "mentions",
+					ReferenceProperties: []graphql.ReferencePropertiesResult{{
+						Properties: map[string]any{"name": "a blog"},
+						Metadata:   graphql.ReferenceMetadataResult{ID: "r2"},
+					}},
+				},
+			},
+			[]referenceTarget{
+				{property: "mentions", collection: "Article"},
+				{property: "mentions", collection: "Blog"},
+			},
+		)
+
+		assert.Equal(t, []ObjectReference{{
+			Property: "mentions",
+			Targets: []ReferenceTarget{
+				{ID: "r1", Collection: "Article", Properties: map[string]any{"title": "an article"}},
+				{ID: "r2", Collection: "Blog", Properties: map[string]any{"name": "a blog"}},
+			},
+		}}, references)
+	})
+
+	t.Run("should keep the first occurrence of a repeated target", func(t *testing.T) {
+		references := buildReferences(
+			[]graphql.ReferenceResult{
+				{
+					Name: "mentions",
+					ReferenceProperties: []graphql.ReferencePropertiesResult{{
+						Properties: map[string]any{"title": "an article"},
+						Metadata:   graphql.ReferenceMetadataResult{ID: "r1"},
+					}},
+				},
+				{
+					Name: "mentions",
+					ReferenceProperties: []graphql.ReferencePropertiesResult{{
+						Properties: map[string]any{"name": nil},
+						Metadata:   graphql.ReferenceMetadataResult{ID: "r1"},
+					}},
+				},
+			},
+			[]referenceTarget{
+				{property: "mentions", collection: "Article"},
+				{property: "mentions", collection: "Blog"},
+			},
+		)
+
+		assert.Equal(t, []ObjectReference{{
+			Property: "mentions",
+			Targets: []ReferenceTarget{
+				{ID: "r1", Collection: "Article", Properties: map[string]any{"title": "an article"}},
+			},
+		}}, references)
+	})
+
+	t.Run("should drop unresolvable values and targets without an id", func(t *testing.T) {
+		references := buildReferences(
+			[]graphql.ReferenceResult{{
+				Name: "author",
+				ReferenceProperties: []graphql.ReferencePropertiesResult{
+					{
+						Properties: map[string]any{"name": nil},
+						Metadata:   graphql.ReferenceMetadataResult{ID: "a1"},
+					},
+					{Properties: map[string]any{"name": "Nobody"}},
+				},
+			}},
+			[]referenceTarget{{property: "author", collection: "Author"}},
+		)
+
+		assert.Equal(t, []ObjectReference{{
+			Property: "author",
+			Targets:  []ReferenceTarget{{ID: "a1", Collection: "Author"}},
+		}}, references)
+	})
+
+	t.Run("should flatten composite projected values", func(t *testing.T) {
+		references := buildReferences(
+			[]graphql.ReferenceResult{{
+				Name: "author",
+				ReferenceProperties: []graphql.ReferencePropertiesResult{{
+					Properties: map[string]any{"aliases": &pb.ListValue{
+						Kind: &pb.ListValue_TextValues{
+							TextValues: &pb.TextValues{Values: []string{"j", "jd"}},
+						},
+					}},
+					Metadata: graphql.ReferenceMetadataResult{ID: "a1"},
+				}},
+			}},
+			[]referenceTarget{{property: "author", collection: "Author"}},
+		)
+
+		assert.Equal(
+			t,
+			map[string]any{"aliases": []string{"j", "jd"}},
+			references[0].Targets[0].Properties,
+		)
+	})
+
+	t.Run("should leave the collection empty when a group was not requested", func(t *testing.T) {
+		references := buildReferences(
+			[]graphql.ReferenceResult{{
+				Name: "author",
+				ReferenceProperties: []graphql.ReferencePropertiesResult{{
+					Metadata: graphql.ReferenceMetadataResult{ID: "a1"},
+				}},
+			}},
+			nil,
+		)
+
+		assert.Equal(t, []ObjectReference{{
+			Property: "author",
+			Targets:  []ReferenceTarget{{ID: "a1"}},
+		}}, references)
+	})
+
+	t.Run("should return nothing when no reference resolved", func(t *testing.T) {
+		assert.Nil(t, buildReferences(nil, []referenceTarget{
+			{property: "author", collection: "Author"},
+		}))
+		assert.Nil(t, buildReferences([]graphql.ReferenceResult{{Name: "author"}}, nil))
+	})
+}
+
+func TestBuildSearchObjectsReferences(t *testing.T) {
+	objects := buildSearchObjects(
+		[]graphql.SearchResult{
+			{
+				ID:         "4f9c",
+				Properties: map[string]any{"title": "hello"},
+				References: []graphql.ReferenceResult{{
+					Name: "author",
+					ReferenceProperties: []graphql.ReferencePropertiesResult{{
+						Properties: map[string]any{"name": "Jane"},
+						Metadata:   graphql.ReferenceMetadataResult{ID: "a1"},
+					}},
+				}},
+			},
+			{ID: "8b2d", Properties: map[string]any{"title": "world"}},
+		},
+		"Article",
+		"bm25",
+		[]referenceTarget{{property: "author", collection: "Author"}},
+	)
+
+	assert.Len(t, objects, 2)
+	assert.Equal(t, []ObjectReference{{
+		Property: "author",
+		Targets: []ReferenceTarget{
+			{ID: "a1", Collection: "Author", Properties: map[string]any{"name": "Jane"}},
+		},
+	}}, objects[0].References)
+	assert.Nil(t, objects[1].References)
 }
