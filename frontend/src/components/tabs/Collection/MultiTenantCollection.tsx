@@ -12,7 +12,7 @@ import ObjectsList from "./components/ObjectsList";
 import TenantList from "./components/TenantList";
 import Pagination from "./components/Pagination";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { errorReporting } from "@/lib/utils";
+import { errorReporting, extractWeaviateError } from "@/lib/utils";
 import { Tabs as AntdTabs } from "antd";
 import type { TabsProps } from "antd";
 import { weaviate } from "wailsjs/go/models";
@@ -52,6 +52,8 @@ const MultiTenantCollection: React.FC<Props> = ({
     weaviate.w_WeaviateObject[] | undefined
   >();
   const [searchExecutionTime, setSearchExecutionTime] = useState<string>();
+  const [searchError, setSearchError] = useState<string>();
+  const [searchPending, setSearchPending] = useState(false);
   const [similarObjectId, setSimilarObjectId] = useState<string | undefined>();
   const [lastSearch, setLastSearch] = useState<{
     query: string;
@@ -218,6 +220,8 @@ const MultiTenantCollection: React.FC<Props> = ({
     }: { pushHistory?: boolean; page?: number; limit?: number } = {}
   ) => {
     setSearching(true);
+    setSearchError(undefined);
+    setSearchPending(true);
     setLastSearch({ query: v, searchType, opts });
     setSearchPage(page);
 
@@ -246,8 +250,11 @@ const MultiTenantCollection: React.FC<Props> = ({
         });
       }
     } catch (error) {
-      errorReporting(error);
-      setSearching(false);
+      setSearchError(extractWeaviateError(error));
+      setObjects([]);
+      setSearchExecutionTime(undefined);
+    } finally {
+      setSearchPending(false);
     }
   };
 
@@ -299,7 +306,9 @@ const MultiTenantCollection: React.FC<Props> = ({
 
   const resetSearch = () => {
     setSearching(false);
+    setSearchPending(false);
     setSearchExecutionTime(undefined);
+    setSearchError(undefined);
     setSimilarObjectId(undefined);
     setLastSearch(null);
     setSearchPage(1);
@@ -324,6 +333,7 @@ const MultiTenantCollection: React.FC<Props> = ({
           <SearchComponent
             handleSearch={handleSearch}
             resetSearch={resetSearch}
+            searchPending={searchPending}
             executionTime={searchExecutionTime || ""}
             changeId={`${connection.id}-${name}`}
             connectionId={connection.id}
@@ -363,7 +373,7 @@ const MultiTenantCollection: React.FC<Props> = ({
                   searchPage={searchPage}
                   resultsOnPage={resultsOnPage}
                   hasMore={searchHasMore}
-                  loading={loading}
+                  loading={searchPending}
                 />
               ) : (
                 <Pagination
@@ -395,11 +405,12 @@ const MultiTenantCollection: React.FC<Props> = ({
             />
             {viewMode === "table" ? (
               <ObjectsTable
-                loading={loading}
+                loading={loading || searchPending}
                 objects={objects || []}
                 connectionID={connection.id}
                 tenant={selectedTenant}
                 isSearch={searching}
+                searchError={searchError}
                 objectTtlConfig={collectionDetails?.objectTtlConfig}
                 refetch={refetch}
                 ref={objectsContainerRef}
@@ -407,11 +418,12 @@ const MultiTenantCollection: React.FC<Props> = ({
               />
             ) : (
               <ObjectsList
-                loading={loading}
+                loading={loading || searchPending}
                 objects={objects || []}
                 connectionID={connection.id}
                 tenant={selectedTenant}
                 isSearch={searching}
+                searchError={searchError}
                 objectTtlConfig={collectionDetails?.objectTtlConfig}
                 refetch={refetch}
                 ref={objectsContainerRef}
@@ -427,15 +439,6 @@ const MultiTenantCollection: React.FC<Props> = ({
       label: "Details",
       children: (
         <CollectionDetails connectionID={connection.id} collectionName={name} />
-      ),
-    },
-    {
-      key: "tenants",
-      label: "Tenants",
-      children: (
-        <div className="p-4">
-          <p className="text-gray-500"></p>
-        </div>
       ),
     },
   ];

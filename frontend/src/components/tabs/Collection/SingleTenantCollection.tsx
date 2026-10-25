@@ -11,7 +11,7 @@ import TabContainer from "../components/TabContainer";
 import ObjectsList from "./components/ObjectsList";
 import Pagination from "./components/Pagination";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { errorReporting } from "@/lib/utils";
+import { errorReporting, extractWeaviateError } from "@/lib/utils";
 import { Tabs as AntdTabs } from "antd";
 import type { TabsProps } from "antd";
 import { weaviate } from "wailsjs/go/models";
@@ -46,6 +46,8 @@ const SingleTenantCollection: React.FC<Props> = ({
     weaviate.w_WeaviateObject[] | undefined
   >();
   const [searchExecutionTime, setSearchExecutionTime] = useState<string>();
+  const [searchError, setSearchError] = useState<string>();
+  const [searchPending, setSearchPending] = useState(false);
   const [similarObjectId, setSimilarObjectId] = useState<string | undefined>();
   // Active search snapshot, retained so Next/Prev can re-run with a new offset.
   const [lastSearch, setLastSearch] = useState<{
@@ -179,6 +181,8 @@ const SingleTenantCollection: React.FC<Props> = ({
     }: { pushHistory?: boolean; page?: number; limit?: number } = {}
   ) => {
     setSearching(true);
+    setSearchError(undefined);
+    setSearchPending(true);
     setLastSearch({ query: v, searchType, opts });
     setSearchPage(page);
 
@@ -206,8 +210,11 @@ const SingleTenantCollection: React.FC<Props> = ({
         });
       }
     } catch (error) {
-      errorReporting(error);
-      setSearching(false);
+      setSearchError(extractWeaviateError(error));
+      setObjects([]);
+      setSearchExecutionTime(undefined);
+    } finally {
+      setSearchPending(false);
     }
   };
 
@@ -259,7 +266,9 @@ const SingleTenantCollection: React.FC<Props> = ({
 
   const resetSearch = () => {
     setSearching(false);
+    setSearchPending(false);
     setSearchExecutionTime(undefined);
+    setSearchError(undefined);
     setSimilarObjectId(undefined);
     setLastSearch(null);
     setSearchPage(1);
@@ -289,6 +298,7 @@ const SingleTenantCollection: React.FC<Props> = ({
           <SearchComponent
             handleSearch={handleSearch}
             resetSearch={resetSearch}
+            searchPending={searchPending}
             executionTime={searchExecutionTime || ""}
             changeId={`${connection.id}-${name}`}
             connectionId={connection.id}
@@ -322,7 +332,7 @@ const SingleTenantCollection: React.FC<Props> = ({
                   searchPage={searchPage}
                   resultsOnPage={resultsOnPage}
                   hasMore={searchHasMore}
-                  loading={loading}
+                  loading={searchPending}
                 />
               ) : (
                 <Pagination
@@ -353,10 +363,11 @@ const SingleTenantCollection: React.FC<Props> = ({
             />
             {viewMode === "table" ? (
               <ObjectsTable
-                loading={loading}
+                loading={loading || searchPending}
                 objects={objects || []}
                 connectionID={connection.id}
                 isSearch={searching}
+                searchError={searchError}
                 objectTtlConfig={collectionDetails?.objectTtlConfig}
                 refetch={refetch}
                 ref={objectsContainerRef}
@@ -364,10 +375,11 @@ const SingleTenantCollection: React.FC<Props> = ({
               />
             ) : (
               <ObjectsList
-                loading={loading}
+                loading={loading || searchPending}
                 objects={objects || []}
                 connectionID={connection.id}
                 isSearch={searching}
+                searchError={searchError}
                 objectTtlConfig={collectionDetails?.objectTtlConfig}
                 refetch={refetch}
                 ref={objectsContainerRef}
