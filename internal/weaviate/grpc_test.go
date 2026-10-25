@@ -203,7 +203,7 @@ func TestGrpcAvailable(t *testing.T) {
 
 func TestProbeGrpc(t *testing.T) {
 	t.Run("should succeed against a serving grpc endpoint", func(t *testing.T) {
-		listener, err := net.Listen("tcp", "127.0.0.1:0")
+		listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
 		assert.NoError(t, err)
 
 		server := grpc.NewServer()
@@ -219,7 +219,7 @@ func TestProbeGrpc(t *testing.T) {
 	})
 
 	t.Run("should fail against a closed grpc endpoint", func(t *testing.T) {
-		listener, err := net.Listen("tcp", "127.0.0.1:0")
+		listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
 		assert.NoError(t, err)
 		address := listener.Addr().String()
 		assert.NoError(t, listener.Close())
