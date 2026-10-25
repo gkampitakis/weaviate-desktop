@@ -1,5 +1,6 @@
 import { models, weaviate } from "wailsjs/go/models";
 import {
+  AlertTriangle,
   Check,
   Clock,
   Copy,
@@ -46,6 +47,7 @@ interface Props {
   refetch: () => void;
   loading: boolean;
   isSearch: boolean;
+  searchError?: string;
   objectTtlConfig?: models.w_ObjectTTLConfig;
   ref: React.Ref<HTMLDivElement> | undefined;
   onShowSimilar?: (objectId: string) => void;
@@ -97,6 +99,7 @@ const ObjectsTable: React.FC<Props> = ({
   connectionID,
   loading,
   isSearch,
+  searchError,
   objectTtlConfig,
   refetch,
   ref,
@@ -135,7 +138,17 @@ const ObjectsTable: React.FC<Props> = ({
   if (!objects.length) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-4">
-        {loading ? (
+        {searchError ? (
+          <>
+            <AlertTriangle className="text-destructive h-12 w-12" />
+            <div className="max-w-md text-center">
+              <p className="text-lg font-medium">Search failed</p>
+              <p className="text-muted-foreground text-sm break-words">
+                {searchError}
+              </p>
+            </div>
+          </>
+        ) : loading ? (
           <LoaderCircle className="h-6 w-6 animate-spin text-muted-foreground" />
         ) : (
           <>

@@ -12,7 +12,7 @@ import ObjectsList from "./components/ObjectsList";
 import TenantList from "./components/TenantList";
 import Pagination from "./components/Pagination";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { errorReporting } from "@/lib/utils";
+import { errorReporting, extractWeaviateError } from "@/lib/utils";
 import { Tabs as AntdTabs } from "antd";
 import type { TabsProps } from "antd";
 import { weaviate } from "wailsjs/go/models";
@@ -52,6 +52,7 @@ const MultiTenantCollection: React.FC<Props> = ({
     weaviate.w_WeaviateObject[] | undefined
   >();
   const [searchExecutionTime, setSearchExecutionTime] = useState<string>();
+  const [searchError, setSearchError] = useState<string>();
   const [similarObjectId, setSimilarObjectId] = useState<string | undefined>();
   const [lastSearch, setLastSearch] = useState<{
     query: string;
@@ -218,6 +219,7 @@ const MultiTenantCollection: React.FC<Props> = ({
     }: { pushHistory?: boolean; page?: number; limit?: number } = {}
   ) => {
     setSearching(true);
+    setSearchError(undefined);
     setLastSearch({ query: v, searchType, opts });
     setSearchPage(page);
 
@@ -246,8 +248,9 @@ const MultiTenantCollection: React.FC<Props> = ({
         });
       }
     } catch (error) {
-      errorReporting(error);
-      setSearching(false);
+      setSearchError(extractWeaviateError(error));
+      setObjects([]);
+      setSearchExecutionTime(undefined);
     }
   };
 
@@ -300,6 +303,7 @@ const MultiTenantCollection: React.FC<Props> = ({
   const resetSearch = () => {
     setSearching(false);
     setSearchExecutionTime(undefined);
+    setSearchError(undefined);
     setSimilarObjectId(undefined);
     setLastSearch(null);
     setSearchPage(1);
@@ -400,6 +404,7 @@ const MultiTenantCollection: React.FC<Props> = ({
                 connectionID={connection.id}
                 tenant={selectedTenant}
                 isSearch={searching}
+                searchError={searchError}
                 objectTtlConfig={collectionDetails?.objectTtlConfig}
                 refetch={refetch}
                 ref={objectsContainerRef}
@@ -412,6 +417,7 @@ const MultiTenantCollection: React.FC<Props> = ({
                 connectionID={connection.id}
                 tenant={selectedTenant}
                 isSearch={searching}
+                searchError={searchError}
                 objectTtlConfig={collectionDetails?.objectTtlConfig}
                 refetch={refetch}
                 ref={objectsContainerRef}
