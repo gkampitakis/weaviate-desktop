@@ -41,6 +41,7 @@ import {
   type VectorPillRegistry,
 } from "./vectorPillTransform";
 import { ScoreBadge, pickPrimarySignal } from "./scoreBadge";
+import { ReferenceChips } from "./ReferenceChips";
 
 interface Props {
   objects: weaviate.w_WeaviateObject[];
@@ -209,9 +210,19 @@ const ObjectCard: React.FC<ObjectCardProps> = ({
   // surfaced by the <ScoreBadge> in the header — duplicating them here is
   // noise.
   const jsonValue = useMemo(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { class: _c, score: _s, distance: _d, certainty: _ct, ...rest } =
-      object;
+    const {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      class: _c,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      score: _s,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      distance: _d,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      certainty: _ct,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      references: _r,
+      ...rest
+    } = object;
     return rest;
   }, [object]);
 
@@ -226,6 +237,7 @@ const ObjectCard: React.FC<ObjectCardProps> = ({
 
   const expiry = computeExpiry(object, objectTtlConfig);
   const primarySignal = pickPrimarySignal(object);
+  const references = object.references ?? [];
 
   const handleCopy = () => {
     if (copied) return;
@@ -411,6 +423,24 @@ const ObjectCard: React.FC<ObjectCardProps> = ({
             />
           </JsonView>
         </div>
+        {references.length > 0 && (
+          <>
+            <Separator />
+            <div className="flex flex-col gap-1.5 p-3">
+              {references.map((reference) => (
+                <div
+                  key={reference.property}
+                  className="flex min-w-0 items-start gap-2"
+                >
+                  <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
+                    {reference.property}
+                  </span>
+                  <ReferenceChips reference={reference} />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </>
   );
