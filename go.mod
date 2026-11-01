@@ -1,6 +1,6 @@
 module weaviate-desktop
 
-go 1.26
+go 1.26.0
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
@@ -17,7 +17,7 @@ require (
 	github.com/wailsapp/wails/v2 v2.17.0
 	github.com/weaviate/weaviate v1.37.2
 	github.com/weaviate/weaviate-go-client/v5 v5.7.3
-	golang.org/x/sync v0.21.0
+	golang.org/x/sync v0.24.0
 	google.golang.org/grpc v1.80.0
 	modernc.org/sqlite v1.46.1
 )
