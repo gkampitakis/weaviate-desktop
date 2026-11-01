@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/amacneil/dbmate/v2 v2.29.3
 	github.com/denisbrodbeck/machineid v1.0.1
-	github.com/dustin/go-humanize v1.0.1
+	github.com/dustin/go-humanize v1.1.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/leaanthony/u v1.1.1
 	github.com/lib/pq v1.11.2
